@@ -1,9 +1,34 @@
 const { MongoClient } = require('mongodb');
 const crypto = require('crypto');
+const {BrowserWindow} = require('electron');
 const { openTunnel, closeTunnel } = require('./sshTunnel');
 
 const activeClients = new Map();
 const activeTunnels = new Map();
+
+function isDeadConnectionError(err) {
+  if (!err) return false;
+  if (err.name === 'MongoServerSelectionError' || err.name === 'MongoNetworkError') return true;
+  return /server selection|topology.*closed|connection.*closed/i.test(err.message || '');
+}
+
+async function cleanupClient(id) {
+  if (activeClients.has(id)) {
+    await activeClients.get(id).close().catch(() => {
+    });
+    activeClients.delete(id);
+  }
+  if (activeTunnels.has(id)) {
+    closeTunnel(activeTunnels.get(id));
+    activeTunnels.delete(id);
+  }
+}
+
+function notifyDisconnected(id) {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed()) win.webContents.send('conn:disconnected', id);
+  }
+}
 
 function buildUri(conn, override) {
   if (conn.uri && !override) return conn.uri;
@@ -62,14 +87,7 @@ function registerConnectionHandlers(ipcMain, store) {
   ipcMain.handle('conn:delete', async (event, id) => {
     const conns = store.get('connections', []).filter((c) => c.id !== id);
     store.set('connections', conns);
-    if (activeClients.has(id)) {
-      await activeClients.get(id).close().catch(() => {});
-      activeClients.delete(id);
-    }
-    if (activeTunnels.has(id)) {
-      closeTunnel(activeTunnels.get(id));
-      activeTunnels.delete(id);
-    }
+    await cleanupClient(id);
     return true;
   });
 
@@ -110,29 +128,40 @@ function registerConnectionHandlers(ipcMain, store) {
   });
 
   ipcMain.handle('conn:close', async (event, id) => {
-    if (activeClients.has(id)) {
-      await activeClients.get(id).close().catch(() => {});
-      activeClients.delete(id);
-    }
-    if (activeTunnels.has(id)) {
-      closeTunnel(activeTunnels.get(id));
-      activeTunnels.delete(id);
-    }
+    await cleanupClient(id);
     return true;
   });
 
   ipcMain.handle('conn:listDatabases', async (event, id) => {
     const client = activeClients.get(id);
     if (!client) throw new Error('Connection is not open');
-    const result = await client.db().admin().listDatabases();
-    return result.databases.map((d) => ({ name: d.name, sizeOnDisk: d.sizeOnDisk }));
+    try {
+      const result = await client.db().admin().listDatabases();
+      return result.databases.map((d) => ({name: d.name, sizeOnDisk: d.sizeOnDisk}));
+    } catch (err) {
+      if (isDeadConnectionError(err)) {
+        await cleanupClient(id);
+        notifyDisconnected(id);
+        throw new Error('Connection lost. Please reconnect.');
+      }
+      throw err;
+    }
   });
 
   ipcMain.handle('conn:listCollections', async (event, { connId, dbName }) => {
     const client = activeClients.get(connId);
     if (!client) throw new Error('Connection is not open');
-    const cols = await client.db(dbName).listCollections().toArray();
-    return cols.map((c) => ({ name: c.name, type: c.type }));
+    try {
+      const cols = await client.db(dbName).listCollections().toArray();
+      return cols.map((c) => ({name: c.name, type: c.type}));
+    } catch (err) {
+      if (isDeadConnectionError(err)) {
+        await cleanupClient(connId);
+        notifyDisconnected(connId);
+        throw new Error('Connection lost. Please reconnect.');
+      }
+      throw err;
+    }
   });
 
   ipcMain.handle('conn:pickPrivateKey', async () => {
