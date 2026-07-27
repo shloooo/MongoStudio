@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
+import React, {createContext, useCallback, useContext, useRef, useState} from 'react';
 
 const ConfirmContext = createContext(null);
 
@@ -7,6 +7,10 @@ export function ConfirmProvider({ children }) {
     const resolverRef = useRef(null);
 
     const confirm = useCallback((message, opts = {}) => {
+        if (resolverRef.current) {
+            resolverRef.current(false);
+            resolverRef.current = null;
+        }
         return new Promise((resolve) => {
             resolverRef.current = resolve;
             setState({
