@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { EJSON } from 'bson';
-import { parseShell } from '../lib/shellSyntax.js';
-import { bsonTypeOf, shortLabel, FIELD_TYPES, coerceToType, toEditableRaw } from '../lib/bsonTypes.js';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {EJSON} from 'bson';
+import {parseShell} from '../lib/shellSyntax.js';
+import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
 import DocumentEditor from './DocumentEditor.jsx';
+import ContextMenu from './ContextMenu.jsx';
 
 const PAGE_SIZE = 50;
 
@@ -60,25 +61,82 @@ function InlineCellEditor({ value, onCommit, onCancel }) {
   }
 
   return (
-    <span className="inline-value-editor cell-editor" ref={containerRef}>
+      <span className="inline-value-editor cell-editor" ref={containerRef}>
       <select className="type-badge type-badge-select" value={type} onChange={(e) => setType(e.target.value)}>
         {FIELD_TYPES.filter((t) => t !== 'Object' && t !== 'Array' && t !== 'DBRef' && t !== 'Binary').map((t) => <option key={t} value={t}>{t}</option>)}
       </select>
-      {type === 'Boolean' ? (
-        <select className="inline-input" autoFocus value={raw} onChange={(e) => setRaw(e.target.value)} onKeyDown={handleKeyDown}>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select>
-      ) : type === 'Null' ? (
-        <span className="inline-input inline-input-static">null</span>
-      ) : (
-        <input className="inline-input" autoFocus value={raw}
-          onChange={(e) => { setRaw(e.target.value); setError(''); }} onKeyDown={handleKeyDown} />
-      )}
-      <button className="tiny-btn" onMouseDown={(e) => e.preventDefault()} onClick={commit}>✓</button>
+        {type === 'Boolean' ? (
+            <select className="inline-input" autoFocus value={raw} onChange={(e) => setRaw(e.target.value)}
+                    onKeyDown={handleKeyDown}>
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+        ) : type === 'Null' ? (
+            <span className="inline-input inline-input-static">null</span>
+        ) : (
+            <input className="inline-input" autoFocus value={raw}
+                   onChange={(e) => {
+                     setRaw(e.target.value);
+                     setError('');
+                   }} onKeyDown={handleKeyDown}/>
+        )}
+        <button className="tiny-btn" onMouseDown={(e) => e.preventDefault()} onClick={commit}>✓</button>
       <button className="tiny-btn" onMouseDown={(e) => e.preventDefault()} onClick={onCancel}>✕</button>
-      {error && <span className="inline-error">{error}</span>}
+        {error && <span className="inline-error">{error}</span>}
     </span>
+  );
+}
+
+function SetFieldValueDialog({field, onApply, onClose}) {
+  const [type, setType] = useState('String');
+  const [raw, setRaw] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function handleApply() {
+    try {
+      const coerced = type === 'Null' ? null : coerceToType(raw, type);
+      setBusy(true);
+      await onApply(coerced);
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <h3>Set value for "{field}" on all matching documents</h3>
+          <p className="hint-text">Applies to every document currently matching the active filter, not just this
+            page.</p>
+          <label>Type</label>
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            {FIELD_TYPES.filter((t) => t !== 'Object' && t !== 'Array' && t !== 'DBRef' && t !== 'Binary').map((t) =>
+                <option key={t} value={t}>{t}</option>)}
+          </select>
+          {type !== 'Null' && (
+              <>
+                <label>Value</label>
+                {type === 'Boolean' ? (
+                    <select value={raw} onChange={(e) => setRaw(e.target.value)}>
+                      <option value="">Select...</option>
+                      <option value="true">true</option>
+                      <option value="false">false</option>
+                    </select>
+                ) : (
+                    <input value={raw} onChange={(e) => setRaw(e.target.value)}/>
+                )}
+              </>
+          )}
+          {error && <div className="error-banner">{error}</div>}
+          <div className="modal-actions">
+            <div className="spacer"/>
+            <button onClick={onClose}>Cancel</button>
+            <button className="primary" onClick={handleApply} disabled={busy}>{busy ? 'Applying...' : 'Apply'}</button>
+          </div>
+        </div>
+      </div>
   );
 }
 
@@ -93,6 +151,9 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   const [modalDoc, setModalDoc] = useState(null); // null | 'new' | doc-object
   const [editingCell, setEditingCell] = useState(null); // { rowIndex, field } | null
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [headerContextMenu, setHeaderContextMenu] = useState(null);
+  const [setValueField, setSetValueField] = useState(null);
+  const [showBulkUpdate, setShowBulkUpdate] = useState(false);
 
   const runQuery = useCallback(async () => {
     setLoading(true);
@@ -159,8 +220,8 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   async function persistFieldUpdate(doc, field, newValue) {
     const idFilter = EJSON.stringify({ _id: doc._id });
     const update = newValue === undefined
-      ? { $unset: { [field]: '' } }
-      : { $set: { [field]: newValue } };
+        ? {$unset: {[field]: ''}}
+        : {$set: {[field]: newValue}};
     await window.api.data.updateOne({
       connId: selection.connId,
       dbName: selection.dbName,
@@ -222,6 +283,45 @@ export default function DocumentsTab({ selection, reloadSignal }) {
     if (result.ok) runQuery();
   }
 
+  async function handleDeleteFieldOnAll(field) {
+    if (!confirm(`Remove field "${field}" from all documents matching the current filter?`)) return;
+    const filterValue = parseShell(filter || '{}');
+    await window.api.data.updateMany({
+      connId: selection.connId,
+      dbName: selection.dbName,
+      collection: selection.collection,
+      filter: EJSON.stringify(filterValue),
+      update: EJSON.stringify({$unset: {[field]: ''}})
+    });
+    runQuery();
+  }
+
+  async function handleSetFieldOnAll(field, value) {
+    const filterValue = parseShell(filter || '{}');
+    await window.api.data.updateMany({
+      connId: selection.connId,
+      dbName: selection.dbName,
+      collection: selection.collection,
+      filter: EJSON.stringify(filterValue),
+      update: EJSON.stringify({$set: {[field]: value}})
+    });
+    setSetValueField(null);
+    runQuery();
+  }
+
+  function handleHeaderContextMenu(e, field) {
+    e.preventDefault();
+    setHeaderContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {label: `Set value on all...`, onClick: () => setSetValueField(field)},
+        {separator: true},
+        {label: `Delete field on all`, danger: true, onClick: () => handleDeleteFieldOnAll(field)}
+      ]
+    });
+  }
+
   function toggleSelect(rawDoc) {
     const key = JSON.stringify(rawDoc._id);
     setSelectedIds((prev) => {
@@ -236,102 +336,123 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <div className="documents-tab">
-      <div className="query-bar">
-        <div className="query-field">
-          <label>Filter</label>
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder='{name: "value"} or {_id: ObjectId("...")}' />
+      <div className="documents-tab">
+        <div className="query-bar">
+          <div className="query-field">
+            <label>Filter</label>
+            <input value={filter} onChange={(e) => setFilter(e.target.value)}
+                   placeholder='{name: "value"} or {_id: ObjectId("...")}'/>
+          </div>
+          <div className="query-field">
+            <label>Sort</label>
+            <input value={sort} onChange={(e) => setSort(e.target.value)} placeholder='{_id: -1}'/>
+          </div>
+          <button className="primary" onClick={handleRunClick} disabled={loading}>{loading ? '...' : 'Run'}</button>
         </div>
-        <div className="query-field">
-          <label>Sort</label>
-          <input value={sort} onChange={(e) => setSort(e.target.value)} placeholder='{_id: -1}' />
+
+        <div className="toolbar">
+          <button onClick={() => setModalDoc('new')}>+ New Document</button>
+          <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}>Delete ({selectedIds.size})</button>
+          <div className="spacer"/>
+          <button onClick={handleImport}>Import</button>
+          <button onClick={() => handleExport('json')}>Export JSON</button>
+          <button onClick={() => handleExport('csv')}>Export CSV</button>
         </div>
-        <button className="primary" onClick={handleRunClick} disabled={loading}>{loading ? '...' : 'Run'}</button>
-      </div>
 
-      <div className="toolbar">
-        <button onClick={() => setModalDoc('new')}>+ New Document</button>
-        <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}>Delete ({selectedIds.size})</button>
-        <div className="spacer" />
-        <button onClick={handleImport}>Import</button>
-        <button onClick={() => handleExport('json')}>Export JSON</button>
-        <button onClick={() => handleExport('csv')}>Export CSV</button>
-      </div>
+        {error && <div className="error-banner">{error}</div>}
 
-      {error && <div className="error-banner">{error}</div>}
-
-      <div className="results-area">
-        <table className="doc-table spreadsheet-table">
-          <thead>
+        <div className="results-area">
+          <table className="doc-table spreadsheet-table">
+            <thead>
             <tr>
               <th className="col-checkbox"></th>
               <th className="col-id">_id</th>
-              {fieldColumns.map((f) => <th key={f}>{f}</th>)}
+              {fieldColumns.map((f) => <th key={f} onContextMenu={(e) => handleHeaderContextMenu(e, f)}>{f}</th>)}
               <th className="col-fill"></th>
               <th className="col-expand"></th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             {docs.map((doc, rowIndex) => (
-              <tr key={rowIndex}>
-                <td className="col-checkbox">
-                  <input
-                    type="checkbox"
-                    onChange={() => toggleSelect(doc)}
-                    checked={Array.from(selectedIds).some((s) => s.key === JSON.stringify(doc._id))}
-                  />
-                </td>
-                <td className="id-cell col-id">{idScalar(doc._id) === String(doc._id) ? String(doc._id) : idScalar(doc._id)}</td>
-                {fieldColumns.map((field) => {
-                  const isEditing = editingCell && editingCell.rowIndex === rowIndex && editingCell.field === field;
-                  const hasValue = Object.prototype.hasOwnProperty.call(doc, field);
-                  const editable = hasValue && isInlineEditable(doc[field]);
-                  return (
-                    <td key={field} className="spreadsheet-cell">
-                      {isEditing ? (
-                        <InlineCellEditor
-                          value={doc[field]}
-                          onCommit={(v) => handleCellCommit(rowIndex, field, v)}
-                          onCancel={() => setEditingCell(null)}
-                        />
-                      ) : (
-                        <span
-                          className={`cell-value-trigger ${editable ? '' : 'not-editable'}`}
-                          onClick={() => { if (editable) setEditingCell({ rowIndex, field }); }}
-                          title={!hasValue ? '' : editable ? '' : 'Open the full document editor (⤢) to edit this value'}
-                        >
+                <tr key={rowIndex}>
+                  <td className="col-checkbox">
+                    <input
+                        type="checkbox"
+                        onChange={() => toggleSelect(doc)}
+                        checked={Array.from(selectedIds).some((s) => s.key === JSON.stringify(doc._id))}
+                    />
+                  </td>
+                  <td className="id-cell col-id">{idScalar(doc._id) === String(doc._id) ? String(doc._id) : idScalar(doc._id)}</td>
+                  {fieldColumns.map((field) => {
+                    const isEditing = editingCell && editingCell.rowIndex === rowIndex && editingCell.field === field;
+                    const hasValue = Object.prototype.hasOwnProperty.call(doc, field);
+                    const editable = hasValue && isInlineEditable(doc[field]);
+                    return (
+                        <td key={field} className="spreadsheet-cell">
+                          {isEditing ? (
+                              <InlineCellEditor
+                                  value={doc[field]}
+                                  onCommit={(v) => handleCellCommit(rowIndex, field, v)}
+                                  onCancel={() => setEditingCell(null)}
+                              />
+                          ) : (
+                              <span
+                                  className={`cell-value-trigger ${editable ? '' : 'not-editable'}`}
+                                  onClick={() => {
+                                    if (editable) setEditingCell({rowIndex, field});
+                                  }}
+                                  title={!hasValue ? '' : editable ? '' : 'Open the full document editor (⤢) to edit this value'}
+                              >
                           {hasValue ? <CellValue value={doc[field]} /> : <span className="cell-empty">—</span>}
                         </span>
-                      )}
-                    </td>
-                  );
-                })}
-                <td className="col-fill"></td>
-                <td className="col-expand">
-                  <button className="tiny-btn" onClick={() => setModalDoc(doc)} title="Open full document editor">⤢</button>
-                </td>
-              </tr>
+                          )}
+                        </td>
+                    );
+                  })}
+                  <td className="col-fill"></td>
+                  <td className="col-expand">
+                    <button className="tiny-btn" onClick={() => setModalDoc(doc)} title="Open full document editor">⤢
+                    </button>
+                  </td>
+                </tr>
             ))}
             {docs.length === 0 && !loading && (
-              <tr><td colSpan={fieldColumns.length + 4} className="tree-empty">No documents found</td></tr>
+                <tr>
+                  <td colSpan={fieldColumns.length + 4} className="tree-empty">No documents found</td>
+                </tr>
             )}
-          </tbody>
-        </table>
-      </div>
+            </tbody>
+          </table>
+        </div>
 
-      <div className="pagination">
-        <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Back</button>
-        <span>Page {page + 1} / {totalPages} ({totalCount} documents)</span>
-        <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next →</button>
-      </div>
+        <div className="pagination">
+          <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Back</button>
+          <span>Page {page + 1} / {totalPages} ({totalCount} documents)</span>
+          <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next →</button>
+        </div>
 
-      {modalDoc && (
-        <DocumentEditor
-          doc={modalDoc === 'new' ? null : modalDoc}
-          onSave={handleSaveModalDoc}
-          onClose={() => setModalDoc(null)}
-        />
-      )}
-    </div>
+        {modalDoc && (
+            <DocumentEditor
+                doc={modalDoc === 'new' ? null : modalDoc}
+                onSave={handleSaveModalDoc}
+                onClose={() => setModalDoc(null)}
+            />
+        )}
+        {headerContextMenu && (
+            <ContextMenu
+                x={headerContextMenu.x}
+                y={headerContextMenu.y}
+                items={headerContextMenu.items}
+                onClose={() => setHeaderContextMenu(null)}
+            />
+        )}
+        {setValueField && (
+            <SetFieldValueDialog
+                field={setValueField}
+                onApply={(value) => handleSetFieldOnAll(setValueField, value)}
+                onClose={() => setSetValueField(null)}
+            />
+        )}
+      </div>
   );
 }

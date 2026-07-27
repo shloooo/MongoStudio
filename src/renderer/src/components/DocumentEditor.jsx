@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { parseShell, toShellText } from '../lib/shellSyntax.js';
+import React, {useMemo, useRef, useState} from 'react';
+import {parseShell, toShellText} from '../lib/shellSyntax.js';
 import DocumentTree from './DocumentTree.jsx';
+import ContextMenu from './ContextMenu.jsx';
 
 export default function DocumentEditor({ doc, onSave, onClose }) {
   const isNew = doc === null;
@@ -14,6 +15,7 @@ export default function DocumentEditor({ doc, onSave, onClose }) {
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const textareaRef = useRef(null);
+  const [nodeContextMenu, setNodeContextMenu] = useState(null);
 
   const rawParsed = useMemo(() => {
     if (mode !== 'raw') return { ok: true, value: treeValue };
@@ -59,6 +61,20 @@ export default function DocumentEditor({ doc, onSave, onClose }) {
     }
   }
 
+  function handleNodeContextMenu(e, node) {
+    const items = [];
+    if (node.startEdit) {
+      items.push({label: 'Edit', onClick: node.startEdit});
+    }
+    items.push({label: 'Copy value', onClick: node.onCopyValue});
+    items.push({label: 'Copy raw (shell syntax)', onClick: node.onCopyRaw});
+    if (node.onDelete) {
+      items.push({separator: true});
+      items.push({label: 'Delete', danger: true, onClick: node.onDelete});
+    }
+    setNodeContextMenu({x: e.clientX, y: e.clientY, items});
+  }
+
   function handleFindReplace() {
     if (!findText) return;
     let text = mode === 'raw' ? rawText : toShellText(treeValue);
@@ -86,61 +102,72 @@ export default function DocumentEditor({ doc, onSave, onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal wide" onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>
-        <div className="editor-header-row">
-          <h3>{isNew ? 'New Document' : 'Edit Document'}</h3>
-          <div className="editor-mode-toggle">
-            <button className={mode === 'tree' ? 'active' : ''} onClick={switchToTree}>Tree</button>
-            <button className={mode === 'raw' ? 'active' : ''} onClick={switchToRaw}>Raw</button>
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal wide" onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>
+          <div className="editor-header-row">
+            <h3>{isNew ? 'New Document' : 'Edit Document'}</h3>
+            <div className="editor-mode-toggle">
+              <button className={mode === 'tree' ? 'active' : ''} onClick={switchToTree}>Tree</button>
+              <button className={mode === 'raw' ? 'active' : ''} onClick={switchToRaw}>Raw</button>
+            </div>
           </div>
-        </div>
 
-        {mode === 'raw' && (
-          <p className="hint-text">
-            Supports shell syntax — <code>ObjectId("...")</code>, <code>DBRef("db.coll", ObjectId("..."))</code>,{' '}
-            <code>UUID("...")</code>, <code>ISODate("...")</code>, <code>NumberLong("...")</code>, etc.
-          </p>
-        )}
+          {mode === 'raw' && (
+              <p className="hint-text">
+                Supports shell syntax — <code>ObjectId("...")</code>, <code>DBRef("db.coll",
+                ObjectId("..."))</code>,{' '}
+                <code>UUID("...")</code>, <code>ISODate("...")</code>, <code>NumberLong("...")</code>, etc.
+              </p>
+          )}
 
-        <div className="editor-toolbar-row">
-          <button onClick={() => setShowFindReplace((s) => !s)}>{showFindReplace ? 'Hide Find/Replace' : 'Find & Replace'}</button>
-        </div>
-
-        {showFindReplace && (
-          <div className="find-replace-bar">
-            <input placeholder="Find..." value={findText} onChange={(e) => setFindText(e.target.value)} />
-            <input placeholder="Replace with..." value={replaceText} onChange={(e) => setReplaceText(e.target.value)} />
-            <button onClick={handleFindReplace} disabled={!findText}>Replace All</button>
+          <div className="editor-toolbar-row">
+            <button
+                onClick={() => setShowFindReplace((s) => !s)}>{showFindReplace ? 'Hide Find/Replace' : 'Find & Replace'}</button>
           </div>
-        )}
 
-        {mode === 'tree' ? (
-          <div className="tree-editor-scroll">
-            <DocumentTree value={treeValue} onChange={handleTreeChange} />
+          {showFindReplace && (
+              <div className="find-replace-bar">
+                <input placeholder="Find..." value={findText} onChange={(e) => setFindText(e.target.value)}/>
+                <input placeholder="Replace with..." value={replaceText}
+                       onChange={(e) => setReplaceText(e.target.value)}/>
+                <button onClick={handleFindReplace} disabled={!findText}>Replace All</button>
+              </div>
+          )}
+
+          {mode === 'tree' ? (
+              <div className="tree-editor-scroll">
+                <DocumentTree value={treeValue} onChange={handleTreeChange} onNodeContextMenu={handleNodeContextMenu}/>
+              </div>
+          ) : (
+              <textarea
+                  ref={textareaRef}
+                  className={`json-editor ${!rawParsed.ok ? 'has-error' : ''}`}
+                  value={rawText}
+                  onChange={(e) => setRawText(e.target.value)}
+                  spellCheck={false}
+                  rows={20}
+              />
+          )}
+
+          {mode === 'raw' && !rawParsed.ok && <div className="error-banner">{rawParsed.error}</div>}
+          {error && <div className="error-banner">{error}</div>}
+
+          <div className="modal-actions">
+            <div className="spacer"/>
+            <button onClick={onClose}>Cancel</button>
+            <button className="primary" onClick={handleSave} disabled={(mode === 'raw' && !rawParsed.ok) || saving}>
+              {saving ? 'Saving...' : 'Save'}
+            </button>
           </div>
-        ) : (
-          <textarea
-            ref={textareaRef}
-            className={`json-editor ${!rawParsed.ok ? 'has-error' : ''}`}
-            value={rawText}
-            onChange={(e) => setRawText(e.target.value)}
-            spellCheck={false}
-            rows={20}
-          />
-        )}
-
-        {mode === 'raw' && !rawParsed.ok && <div className="error-banner">{rawParsed.error}</div>}
-        {error && <div className="error-banner">{error}</div>}
-
-        <div className="modal-actions">
-          <div className="spacer" />
-          <button onClick={onClose}>Cancel</button>
-          <button className="primary" onClick={handleSave} disabled={(mode === 'raw' && !rawParsed.ok) || saving}>
-            {saving ? 'Saving...' : 'Save'}
-          </button>
+          {nodeContextMenu && (
+              <ContextMenu
+                  x={nodeContextMenu.x}
+                  y={nodeContextMenu.y}
+                  items={nodeContextMenu.items}
+                  onClose={() => setNodeContextMenu(null)}
+              />
+          )}
         </div>
       </div>
-    </div>
   );
 }
