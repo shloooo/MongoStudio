@@ -15,6 +15,7 @@ let settingsStore;
 let dataHandlersRegistered = false;
 let staticServerHandle = null;
 const isServeMode = ApplicationUtils.getArg('serve') != undefined;
+const isRendererDevMode = ApplicationUtils.getArg('render-dev') != undefined;
 
 async function createWindow() {
     const serve = isServeMode;
@@ -45,7 +46,7 @@ async function createWindow() {
     mainWindow.on('unmaximize', () => mainWindow.webContents.send('window:maximized', false));
 
     const isDev = !app.isPackaged;
-    if (isDev && process.env.VITE_DEV_SERVER === '1') {
+    if (isDev && isRendererDevMode) {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {

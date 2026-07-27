@@ -8,6 +8,7 @@
   "type": "commonjs",
   "scripts": {
     "dev:renderer": "vite --config vite.config.js",
+    "dev:electron": "electron . --serve --render-dev",
     "build:renderer": "vite build --config vite.config.js",
     "generate:gitinfo": "node scripts/generateGitInfo.js",
     "start": "yarn build:renderer && electron . --serve",
