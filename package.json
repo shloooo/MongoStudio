@@ -32,6 +32,9 @@
     "productName": "MongoStudio",
     "directories": { "output": "release" },
     "files": ["dist/**", "src/main/**", "src/preload/**", "package.json"],
+    "linux": {
+      "target": ["AppImage", "deb", "tar.gz"]
+    },
     "publish": {
       "provider": "github",
       "owner": "shloooo",
