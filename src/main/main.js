@@ -126,3 +126,21 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
+
+// Forward otherwise-uncaught main-process errors to the renderer so they can
+// be shown as an in-UI toast instead of a native OS/Electron error dialog.
+function forwardErrorToRenderer(message) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:error', message);
+    }
+}
+
+process.on('uncaughtException', (err) => {
+    console.error(err);
+    forwardErrorToRenderer(err && err.message ? err.message : String(err));
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error(reason);
+    forwardErrorToRenderer(reason && reason.message ? reason.message : String(reason));
+});

@@ -7,6 +7,9 @@ import VaultGate from './components/VaultGate.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import ContextMenu from './components/ContextMenu.jsx';
 import CopyCollectionDialog from './components/CopyCollectionDialog.jsx';
+import ErrorToastStack from './components/ErrorToastStack.jsx';
+import {reportError} from './lib/errorBus.js';
+import {useConfirm} from './components/ConfirmProvider.jsx';
 import './styles.css';
 
 let tabIdCounter = 0;
@@ -23,6 +26,49 @@ export default function App() {
     const [reloadSignal, setReloadSignal] = useState(0);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
+    const confirmDialog = useConfirm();
+
+    // Route every otherwise-uncaught error into the in-UI toast stack instead
+    // of a native OS/Electron error dialog or a silent console-only failure.
+    useEffect(() => {
+        const unsubscribeMain = window.api.app.onError((message) => {
+            reportError(message, 'Main process');
+        });
+
+        function handleWindowError(event) {
+            reportError(event.error?.message || event.message, 'Renderer');
+        }
+
+        function handleUnhandledRejection(event) {
+            const reason = event.reason;
+            reportError(reason?.message || String(reason), 'Renderer');
+        }
+
+        window.addEventListener('error', handleWindowError);
+        window.addEventListener('unhandledrejection', handleUnhandledRejection);
+        return () => {
+            unsubscribeMain();
+            window.removeEventListener('error', handleWindowError);
+            window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+        };
+    }, []);
+
+    // The main process closes a connection itself once it detects the Mongo
+    // server is unreachable, instead of leaving it stuck in a broken "open"
+    // state that fails every subsequent request.
+    useEffect(() => {
+        const unsubscribe = window.api.conn.onDisconnected((id) => {
+            setOpenConnIds((prev) => {
+                if (!prev.has(id)) return prev;
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
+            setTabs((prev) => prev.filter((t) => t.connId !== id));
+            reportError('Connection lost. Please reconnect.', 'Connection');
+        });
+        return unsubscribe;
+    }, []);
 
     const refreshConnections = useCallback(async () => {
         const list = await window.api.conn.list();
@@ -162,7 +208,11 @@ export default function App() {
                     label: 'Drop collection',
                     danger: true,
                     onClick: async () => {
-                        if (!confirm(`Drop collection "${dbName}.${collection}"? This deletes all its documents and cannot be undone.`)) return;
+                        const ok = await confirmDialog(
+                            `Drop collection "${dbName}.${collection}"? This deletes all its documents and cannot be undone.`,
+                            {title: 'Drop collection', confirmLabel: 'Drop'}
+                        );
+                        if (!ok) return;
                         await window.api.data.dropCollection({connId, dbName, collection});
                         setTabs((prev) => prev.filter((t) => !(t.connId === connId && t.dbName === dbName && t.collection === collection)));
                         setStatus({type: 'info', message: `Dropped ${dbName}.${collection}`});
@@ -190,8 +240,12 @@ export default function App() {
                 {
                     label: 'Delete',
                     danger: true,
-                    onClick: () => {
-                        if (confirm(`Delete connection "${conn.name}"? This cannot be undone.`)) handleDeleteConnection(conn.id);
+                    onClick: async () => {
+                        const ok = await confirmDialog(
+                            `Delete connection "${conn.name}"? This cannot be undone.`,
+                            {title: 'Delete connection', confirmLabel: 'Delete'}
+                        );
+                        if (ok) handleDeleteConnection(conn.id);
                     }
                 }
             ]
@@ -199,12 +253,18 @@ export default function App() {
     }
 
     if (!unlocked) {
-        return <VaultGate onUnlocked={() => setUnlocked(true)}/>;
+        return (
+            <>
+                <VaultGate onUnlocked={() => setUnlocked(true)}/>
+                <ErrorToastStack/>
+            </>
+        );
     }
 
     return (
         <div className="app-root">
             <TitleBar title="MongoStudio"/>
+            <ErrorToastStack/>
             <div className="app-shell">
                 <Sidebar
                     connections={connections}
@@ -253,6 +313,13 @@ export default function App() {
                             onClick={() => setShowSettings(true)}
                         >
                             <span className="collection-tab-label">⚙ Settings</span>
+                            {showSettings && (
+                                <button className="collection-tab-close" onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowSettings(false);
+                                }}>×
+                                </button>
+                            )}
                         </div>
                     </div>
                     {showSettings ? (
