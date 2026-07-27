@@ -2,6 +2,7 @@
   "name": "mongo-studio",
   "version": "0.0.1",
   "description": "A free open-source alternative for Studio3T.",
+  "author": "RisingMedia Solutions",
   "main": "src/main/main.js",
   "private": true,
   "type": "commonjs",
@@ -27,7 +28,7 @@
     "vite": "^8.1.5"
   },
   "build": {
-    "appId": "dev.shlo.mongostudio",
+    "appId": "dev.risingmedia.mongostudio",
     "productName": "MongoStudio",
     "directories": { "output": "release" },
     "files": ["dist/**", "src/main/**", "src/preload/**", "package.json"],
