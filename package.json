@@ -1,0 +1,34 @@
+{
+  "name": "mongo-studio",
+  "version": "1.0.0",
+  "description": "MongoDB GUI Client (Studio3T-Alternative, keine Lizenz)",
+  "main": "src/main/main.js",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev:renderer": "vite --config vite.config.js",
+    "build:renderer": "vite build --config vite.config.js",
+    "start": "yarn build:renderer && electron .",
+    "electron": "electron .",
+    "dist": "yarn build:renderer && electron-builder"
+  },
+  "dependencies": {
+    "mongodb": "^7.5.0",
+    "ssh2": "^1.17.0",
+    "bson": "^7.3.1"
+  },
+  "devDependencies": {
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "@vitejs/plugin-react": "^6.0.4",
+    "vite": "^8.1.5"
+  },
+  "build": {
+    "appId": "dev.tavaria.mongostudio",
+    "productName": "MongoStudio",
+    "directories": { "output": "release" },
+    "files": ["dist/**", "src/main/**", "src/preload/**", "package.json"]
+  }
+}
