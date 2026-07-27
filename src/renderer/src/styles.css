@@ -536,7 +536,7 @@ button.primary:hover {
     border-radius: var(--radius-sm);
     font-size: 12.5px;
     border: 1px solid rgba(255, 107, 107, 0.25);
-    margin: 7px 0 1px;
+    margin: 7px 0;
 }
 
 .results-area {
@@ -1397,6 +1397,7 @@ button.danger:hover {
     border-radius: var(--radius-sm);
     font-size: 12.5px;
     border: 1px solid rgba(47, 217, 138, 0.25);
+    margin: 7px 0;
 }
 
 ::-webkit-scrollbar {
