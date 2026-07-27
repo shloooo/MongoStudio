@@ -4,3 +4,4 @@ release/
 *.log
 .idea
 yarn.lock
+src/main/gitInfo.generated.json

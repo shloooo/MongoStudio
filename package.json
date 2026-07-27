@@ -1,6 +1,6 @@
 {
   "name": "mongo-studio",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A free open-source alternative for Studio3T.",
   "author": "RisingMedia Solutions",
   "main": "src/main/main.js",
@@ -9,9 +9,10 @@
   "scripts": {
     "dev:renderer": "vite --config vite.config.js",
     "build:renderer": "vite build --config vite.config.js",
+    "generate:gitinfo": "node scripts/generateGitInfo.js",
     "start": "yarn build:renderer && electron . --serve",
     "electron": "electron . --serve",
-    "dist": "yarn build:renderer && electron-builder"
+    "dist": "yarn generate:gitinfo && yarn build:renderer && electron-builder"
   },
   "dependencies": {
     "mongodb": "^7.5.0",
