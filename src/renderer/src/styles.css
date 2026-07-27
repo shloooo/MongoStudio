@@ -1548,6 +1548,36 @@ button.danger:hover {
     font-weight: 600;
 }
 
+.update-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.update-progress-bar-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.update-progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.2s ease;
+}
+
+.update-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+}
+
 .settings-close-btn {
     position: sticky;
     top: 16px;

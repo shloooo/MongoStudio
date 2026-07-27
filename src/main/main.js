@@ -7,6 +7,7 @@ const {registerSettingsHandlers} = require('./settingsStore');
 const {startStaticServer} = require('./staticServer');
 const {ApplicationUtils} = require("./utils/arg.utils");
 const {getAppInfo} = require('./appInfo');
+const {initUpdater, checkForUpdates, downloadUpdate, quitAndInstall, getState} = require('./updater');
 
 let mainWindow;
 let store;
@@ -62,10 +63,21 @@ function ensureDataHandlersRegistered() {
     dataHandlersRegistered = true;
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     store = new SecureStore({name: 'mongo-studio-connections', cwd: app.getPath('userData')});
     settingsStore = registerSettingsHandlers(ipcMain, app.getPath('userData'), store);
-    createWindow();
+    await createWindow();
+
+    initUpdater({window: mainWindow, devMode: isServeMode});
+
+    ipcMain.handle('updater:check', () => checkForUpdates());
+    ipcMain.handle('updater:download', () => downloadUpdate());
+    ipcMain.handle('updater:quitAndInstall', () => quitAndInstall());
+    ipcMain.handle('updater:getState', () => getState());
+
+    if (!isServeMode) {
+        setTimeout(() => checkForUpdates(), 3000);
+    }
 
     ipcMain.handle('vault:status', () => ({
         encryptionEnabled: store.isEncryptionEnabled(),

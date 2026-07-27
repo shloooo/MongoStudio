@@ -6,7 +6,8 @@ contextBridge.exposeInMainWorld('api', {
       const listener = (event, message) => cb(message);
       ipcRenderer.on('app:error', listener);
       return () => ipcRenderer.removeListener('app:error', listener);
-    }, getInfo: () => ipcRenderer.invoke('app:getInfo')
+    },
+    getInfo: () => ipcRenderer.invoke('app:getInfo')
   },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),
@@ -49,6 +50,17 @@ contextBridge.exposeInMainWorld('api', {
       const listener = (event, id) => cb(id);
       ipcRenderer.on('conn:disconnected', listener);
       return () => ipcRenderer.removeListener('conn:disconnected', listener);
+    }
+  },
+  updater: {
+    check: () => ipcRenderer.invoke('updater:check'),
+    download: () => ipcRenderer.invoke('updater:download'),
+    quitAndInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
+    getState: () => ipcRenderer.invoke('updater:getState'),
+    onEvent: (cb) => {
+      const listener = (event, payload) => cb(payload);
+      ipcRenderer.on('updater:event', listener);
+      return () => ipcRenderer.removeListener('updater:event', listener);
     }
   },
   data: {

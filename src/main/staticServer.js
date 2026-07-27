@@ -14,13 +14,7 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
-/**
- * Serves the built renderer (dist/) over http://127.0.0.1 instead of file://.
- * A handful of browser APIs (e.g. clipboard, some storage APIs) behave more
- * consistently or are only available under http(s) origins, so this avoids
- * file:// quirks across platforms.
- * Resolves with the server's base URL once listening.
- */
+
 function startStaticServer(rootDir) {
   return new Promise((resolve, reject) => {
     const resolvedRoot = path.resolve(rootDir);

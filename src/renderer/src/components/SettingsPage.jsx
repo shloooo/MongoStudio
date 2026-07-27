@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import UpdaterSection from './UpdaterSection.jsx';
 
 export default function SettingsPage({connections, onImported}) {
     const [settings, setSettings] = useState(null);
@@ -228,10 +229,12 @@ export default function SettingsPage({connections, onImported}) {
                     </div>
                 </div>
 
+                <UpdaterSection/>
+
                 <div className="settings-section">
                     <h3>About</h3>
                     {appInfo && appInfo.isDev && (
-                        <div className="info-banner dev-mode-banner">MongoStudio is running in dev mode</div>
+                        <div className="info-banner dev-mode-banner">Running in development mode (--serve)</div>
                     )}
                     {appInfo ? (
                         <>
