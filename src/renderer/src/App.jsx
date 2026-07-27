@@ -33,8 +33,6 @@ export default function App() {
     const confirmDialog = useConfirm();
     const promptDialog = usePrompt();
 
-    // Route every otherwise-uncaught error into the in-UI toast stack instead
-    // of a native OS/Electron error dialog or a silent console-only failure.
     useEffect(() => {
         const unsubscribeMain = window.api.app.onError((message) => {
             reportError(message, 'Main process');
@@ -58,9 +56,6 @@ export default function App() {
         };
     }, []);
 
-    // The main process closes a connection itself once it detects the Mongo
-    // server is unreachable, instead of leaving it stuck in a broken "open"
-    // state that fails every subsequent request.
     useEffect(() => {
         const unsubscribe = window.api.conn.onDisconnected((id) => {
             setOpenConnIds((prev) => {
@@ -84,8 +79,6 @@ export default function App() {
         if (unlocked) refreshConnections();
     }, [unlocked, refreshConnections]);
 
-    // F5 (or Ctrl/Cmd+R) reloads the currently active collection tab's data,
-    // instead of reloading the whole Electron window.
     useEffect(() => {
         function handleKeyDown(e) {
             if (e.key === 'F5' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r')) {
@@ -304,6 +297,10 @@ export default function App() {
         });
     }
 
+    function handleRefreshConnection(conn) {
+        setRefreshDbSignal({connId: conn.id, ts: Date.now()});
+    }
+
     function handleConnectionContextMenu(e, conn) {
         const isOpen = openConnIds.has(conn.id);
         setContextMenu({
@@ -311,6 +308,7 @@ export default function App() {
             y: e.clientY,
             items: [
                 {label: isOpen ? 'Disconnect' : 'Connect', onClick: () => handleToggleConnection(conn)},
+                {label: 'Refresh', disabled: !isOpen, onClick: () => handleRefreshConnection(conn)},
                 {
                     label: 'Edit...',
                     onClick: async () => {
@@ -378,6 +376,7 @@ export default function App() {
                     }}
                     onDeleteConnection={handleDeleteConnection}
                     onToggleConnection={handleToggleConnection}
+                    onRefreshConnection={handleRefreshConnection}
                     onSelectCollection={handleSelectCollection}
                     onOpenSettings={() => setShowSettings(true)}
                     onCollectionContextMenu={handleCollectionContextMenu}
