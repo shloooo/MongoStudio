@@ -36,6 +36,23 @@ body {
     background: transparent;
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"],
+.cell-value-trigger,
+.inline-input,
+.tree-value,
+.tree-key,
+.tree-summary,
+.dbref-ns,
+.json-editor {
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 .app-root {
