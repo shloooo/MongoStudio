@@ -3,6 +3,7 @@ import React, {useState, useEffect} from 'react';
 export default function SettingsPage({connections, onImported}) {
     const [settings, setSettings] = useState(null);
     const [vaultStatus, setVaultStatus] = useState(null);
+    const [appInfo, setAppInfo] = useState(null);
     const [mode, setMode] = useState(null); // null | 'setup' | 'change' | 'disable'
     const [currentPw, setCurrentPw] = useState('');
     const [newPw, setNewPw] = useState('');
@@ -14,6 +15,7 @@ export default function SettingsPage({connections, onImported}) {
     useEffect(() => {
         window.api.settings.get().then(setSettings);
         window.api.vault.status().then(setVaultStatus);
+        window.api.app.getInfo().then(setAppInfo);
     }, []);
 
     async function updateLanguage(lang) {
@@ -224,6 +226,34 @@ export default function SettingsPage({connections, onImported}) {
                         <button onClick={handleExport}>Export settings & connections</button>
                         <button onClick={handleImport}>Import settings & connections</button>
                     </div>
+                </div>
+
+                <div className="settings-section">
+                    <h3>About</h3>
+                    {appInfo && appInfo.isDev && (
+                        <div className="info-banner dev-mode-banner">MongoStudio is running in dev mode</div>
+                    )}
+                    {appInfo ? (
+                        <>
+                            <div className="settings-row">
+                                <span className="settings-row-label">Version</span>
+                                <span className="settings-row-value">{appInfo.version}</span>
+                            </div>
+                            <div className="settings-row">
+                                <span className="settings-row-label">Branch</span>
+                                <span className="settings-row-value">{appInfo.branch || 'unknown'}</span>
+                            </div>
+                            <div className="settings-row">
+                                <span className="settings-row-label">Commit</span>
+                                <span className="settings-row-value">
+                                    {appInfo.commit ? appInfo.commit : 'unknown'}
+                                    {appInfo.commit && appInfo.dirty ? ' (modified)' : ''}
+                                </span>
+                            </div>
+                        </>
+                    ) : (
+                        <p className="settings-section-desc">Loading...</p>
+                    )}
                 </div>
             </div>
         </div>

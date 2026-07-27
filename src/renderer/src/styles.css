@@ -1535,6 +1535,19 @@ button.danger:hover {
     color: var(--text-secondary);
 }
 
+.settings-row-value {
+    font-size: 12.5px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+.dev-mode-banner {
+    background: rgba(230, 160, 60, 0.14);
+    color: #e6a03c;
+    border-color: rgba(230, 160, 60, 0.3);
+    font-weight: 600;
+}
+
 .settings-close-btn {
     position: sticky;
     top: 16px;

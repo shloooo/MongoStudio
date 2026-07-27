@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('api', {
       const listener = (event, message) => cb(message);
       ipcRenderer.on('app:error', listener);
       return () => ipcRenderer.removeListener('app:error', listener);
-    }
+    }, getInfo: () => ipcRenderer.invoke('app:getInfo')
   },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),

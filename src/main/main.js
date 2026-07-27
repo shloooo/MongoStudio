@@ -6,15 +6,17 @@ const {registerDataHandlers} = require('./dataHandlers');
 const {registerSettingsHandlers} = require('./settingsStore');
 const {startStaticServer} = require('./staticServer');
 const {ApplicationUtils} = require("./utils/arg.utils");
+const {getAppInfo} = require('./appInfo');
 
 let mainWindow;
 let store;
 let settingsStore;
 let dataHandlersRegistered = false;
 let staticServerHandle = null;
+const isServeMode = ApplicationUtils.getArg('serve') != undefined;
 
 async function createWindow() {
-    const serve = ApplicationUtils.getArg('serve') != undefined;
+    const serve = isServeMode;
 
     mainWindow = new BrowserWindow({
         width: 1440,
@@ -46,8 +48,6 @@ async function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        // Served over http://127.0.0.1 (not file://) so WebAuthn/passkeys work -
-        // browsers only allow navigator.credentials on a secure/trustworthy origin.
         if (!staticServerHandle) {
             staticServerHandle = await startStaticServer(path.join(__dirname, '..', '..', 'dist'));
         }
@@ -67,8 +67,6 @@ app.whenReady().then(() => {
     settingsStore = registerSettingsHandlers(ipcMain, app.getPath('userData'), store);
     createWindow();
 
-    // Lock/vault handlers are always available, independent of whether the
-    // connection/data IPC surface has been unlocked yet.
     ipcMain.handle('vault:status', () => ({
         encryptionEnabled: store.isEncryptionEnabled(),
         unlocked: store.isUnlocked()
@@ -118,6 +116,12 @@ app.whenReady().then(() => {
     ipcMain.handle('window:close', () => mainWindow.close());
     ipcMain.handle('window:isMaximized', () => mainWindow.isMaximized());
 
+    ipcMain.handle('app:getInfo', () => getAppInfo({
+        appVersion: app.getVersion(),
+        projectRoot: app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', '..'),
+        isDev: isServeMode
+    }));
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
@@ -127,8 +131,6 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
 
-// Forward otherwise-uncaught main-process errors to the renderer so they can
-// be shown as an in-UI toast instead of a native OS/Electron error dialog.
 function forwardErrorToRenderer(message) {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('app:error', message);
