@@ -7,9 +7,10 @@ import VaultGate from './components/VaultGate.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import ContextMenu from './components/ContextMenu.jsx';
 import CopyCollectionDialog from './components/CopyCollectionDialog.jsx';
+import CopyDatabaseDialog from './components/CopyDatabaseDialog.jsx';
 import ErrorToastStack from './components/ErrorToastStack.jsx';
 import {reportError} from './lib/errorBus.js';
-import {useConfirm} from './components/ConfirmProvider.jsx';
+import {useConfirm, usePrompt} from './components/ConfirmProvider.jsx';
 import './styles.css';
 
 let tabIdCounter = 0;
@@ -26,7 +27,11 @@ export default function App() {
     const [reloadSignal, setReloadSignal] = useState(0);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
+    const [copyDbDialogSource, setCopyDbDialogSource] = useState(null);
+    const [openDbSignal, setOpenDbSignal] = useState(null); // { connId, dbName, force, ts }
+    const [refreshDbSignal, setRefreshDbSignal] = useState(null); // { connId, ts }
     const confirmDialog = useConfirm();
+    const promptDialog = usePrompt();
 
     // Route every otherwise-uncaught error into the in-UI toast stack instead
     // of a native OS/Electron error dialog or a silent console-only failure.
@@ -222,6 +227,83 @@ export default function App() {
         });
     }
 
+    async function handleDatabaseContextMenu(e, target) {
+        const {connId, dbName} = target;
+        setContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            items: [
+                {label: 'Open', onClick: () => setOpenDbSignal({connId, dbName, force: false, ts: Date.now()})},
+                {separator: true},
+                {
+                    label: 'Create collection...',
+                    onClick: async () => {
+                        const name = await promptDialog(`New collection name in "${dbName}":`, {
+                            title: 'Create collection',
+                            confirmLabel: 'Create'
+                        });
+                        if (!name) return;
+                        await window.api.data.createCollection({connId, dbName, collection: name});
+                        setStatus({type: 'info', message: `Created collection ${dbName}.${name}`});
+                        setOpenDbSignal({connId, dbName, force: true, ts: Date.now()});
+                    }
+                },
+                {separator: true},
+                {
+                    label: 'Export as JSON...',
+                    onClick: async () => {
+                        const res = await window.api.data.exportDatabase({connId, dbName, format: 'json'});
+                        if (res.ok) setStatus({
+                            type: 'info',
+                            message: `Exported ${res.count} document(s) across ${res.collectionCount} collection(s) to ${res.folderPath}`
+                        });
+                    }
+                },
+                {
+                    label: 'Export as CSV...',
+                    onClick: async () => {
+                        const res = await window.api.data.exportDatabase({connId, dbName, format: 'csv'});
+                        if (res.ok) setStatus({
+                            type: 'info',
+                            message: `Exported ${res.count} document(s) across ${res.collectionCount} collection(s) to ${res.folderPath}`
+                        });
+                    }
+                },
+                {
+                    label: 'Import...',
+                    onClick: async () => {
+                        const res = await window.api.data.importDatabase({connId, dbName});
+                        if (res.ok) {
+                            setStatus({
+                                type: 'info',
+                                message: `Imported ${res.insertedCount} document(s) into ${res.collectionCount} collection(s)`
+                            });
+                            setOpenDbSignal({connId, dbName, force: true, ts: Date.now()});
+                        }
+                    }
+                },
+                {separator: true},
+                {label: 'Copy to another connection...', onClick: () => setCopyDbDialogSource(target)},
+                {separator: true},
+                {
+                    label: 'Drop database',
+                    danger: true,
+                    onClick: async () => {
+                        const ok = await confirmDialog(
+                            `Drop database "${dbName}"? This deletes all its collections and cannot be undone.`,
+                            {title: 'Drop database', confirmLabel: 'Drop'}
+                        );
+                        if (!ok) return;
+                        await window.api.data.dropDatabase({connId, dbName});
+                        setTabs((prev) => prev.filter((t) => !(t.connId === connId && t.dbName === dbName)));
+                        setRefreshDbSignal({connId, ts: Date.now()});
+                        setStatus({type: 'info', message: `Dropped database ${dbName}`});
+                    }
+                }
+            ]
+        });
+    }
+
     function handleConnectionContextMenu(e, conn) {
         const isOpen = openConnIds.has(conn.id);
         setContextMenu({
@@ -234,6 +316,26 @@ export default function App() {
                     onClick: async () => {
                         const full = await window.api.conn.get(conn.id);
                         setDialogState({open: true, editing: full || conn});
+                    }
+                },
+                {separator: true},
+                {
+                    label: 'Create database...',
+                    disabled: !isOpen,
+                    onClick: async () => {
+                        const dbName = await promptDialog('New database name:', {
+                            title: 'Create database',
+                            confirmLabel: 'Continue'
+                        });
+                        if (!dbName) return;
+                        const collection = await promptDialog(
+                            `Databases only exist once they hold a collection. Name for the first collection in "${dbName}":`,
+                            {title: 'Create database', confirmLabel: 'Create', defaultValue: 'collection1'}
+                        );
+                        if (!collection) return;
+                        await window.api.conn.createDatabase({connId: conn.id, dbName, collection});
+                        setStatus({type: 'info', message: `Created database ${dbName}`});
+                        setRefreshDbSignal({connId: conn.id, ts: Date.now()});
                     }
                 },
                 {separator: true},
@@ -280,6 +382,9 @@ export default function App() {
                     onOpenSettings={() => setShowSettings(true)}
                     onCollectionContextMenu={handleCollectionContextMenu}
                     onConnectionContextMenu={handleConnectionContextMenu}
+                    onDatabaseContextMenu={handleDatabaseContextMenu}
+                    openDbSignal={openDbSignal}
+                    refreshDbSignal={refreshDbSignal}
                 />
                 <main className="main-area">
                     {status && <div
@@ -365,6 +470,14 @@ export default function App() {
                         source={copyDialogSource}
                         openConnections={connections.filter((c) => openConnIds.has(c.id))}
                         onClose={() => setCopyDialogSource(null)}
+                        onCopied={() => setReloadSignal((s) => s + 1)}
+                    />
+                )}
+                {copyDbDialogSource && (
+                    <CopyDatabaseDialog
+                        source={copyDbDialogSource}
+                        openConnections={connections.filter((c) => openConnIds.has(c.id))}
+                        onClose={() => setCopyDbDialogSource(null)}
                         onCopied={() => setReloadSignal((s) => s + 1)}
                     />
                 )}

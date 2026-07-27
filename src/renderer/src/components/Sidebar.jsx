@@ -1,18 +1,33 @@
 import React, {useEffect, useState} from 'react';
 import {useConfirm} from './ConfirmProvider.jsx';
 
-function DatabaseNode({ connId, dbName, isOpen, onSelectCollection, onCollectionContextMenu }) {
+function DatabaseNode({ connId, dbName, isOpen, onSelectCollection, onCollectionContextMenu, onDatabaseContextMenu, openSignal }) {
     const [expanded, setExpanded] = useState(false);
     const [collections, setCollections] = useState(null);
     const [search, setSearch] = useState('');
 
-    async function toggle() {
-        if (!expanded && collections === null) {
+    async function expand(forceRefresh) {
+        if (collections === null || forceRefresh) {
             const cols = await window.api.conn.listCollections(connId, dbName);
             setCollections([...cols].sort((a, b) => a.name.localeCompare(b.name)));
         }
-        setExpanded((e) => !e);
+        setExpanded(true);
     }
+
+    async function toggle() {
+        if (!expanded) {
+            await expand();
+        } else {
+            setExpanded(false);
+        }
+    }
+
+    useEffect(() => {
+        if (openSignal && openSignal.connId === connId && openSignal.dbName === dbName) {
+            expand(openSignal.force);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openSignal]);
 
     const filtered = collections
         ? collections.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
@@ -20,7 +35,12 @@ function DatabaseNode({ connId, dbName, isOpen, onSelectCollection, onCollection
 
     return (
         <div className="tree-node">
-            <div className="tree-row" onClick={toggle}>
+            <div className="tree-row"
+                 onClick={toggle}
+                 onContextMenu={(e) => {
+                     e.preventDefault();
+                     onDatabaseContextMenu(e, {connId, dbName});
+                 }}>
                 <i className={`fa-solid fa-chevron-right twisty ${expanded ? 'is-expanded' : ''}`}/>
                 <i className="fa-solid fa-database tree-icon"/> {dbName}
             </div>
@@ -59,7 +79,7 @@ function DatabaseNode({ connId, dbName, isOpen, onSelectCollection, onCollection
     );
 }
 
-function ConnectionNode({ conn, isOpen, onToggle, onEdit, onDelete, onSelectCollection, onCollectionContextMenu, onConnectionContextMenu }) {
+function ConnectionNode({ conn, isOpen, onToggle, onEdit, onDelete, onSelectCollection, onCollectionContextMenu, onConnectionContextMenu, onDatabaseContextMenu, openDbSignal }) {
     const [expanded, setExpanded] = useState(false);
     const [databases, setDatabases] = useState(null);
     const confirmDialog = useConfirm();
@@ -129,6 +149,8 @@ function ConnectionNode({ conn, isOpen, onToggle, onEdit, onDelete, onSelectColl
                                 dbName={db.name}
                                 onSelectCollection={onSelectCollection}
                                 onCollectionContextMenu={onCollectionContextMenu}
+                                onDatabaseContextMenu={onDatabaseContextMenu}
+                                openSignal={openDbSignal}
                             />
                         ))}
                     </div>
@@ -141,7 +163,7 @@ function ConnectionNode({ conn, isOpen, onToggle, onEdit, onDelete, onSelectColl
 export default function Sidebar({
                                     connections, openConnIds, onAddConnection, onEditConnection,
                                     onDeleteConnection, onToggleConnection, onSelectCollection, onOpenSettings,
-                                    onCollectionContextMenu, onConnectionContextMenu
+                                    onCollectionContextMenu, onConnectionContextMenu, onDatabaseContextMenu, openDbSignal
                                 }) {
     return (
         <aside className="sidebar">
@@ -162,6 +184,8 @@ export default function Sidebar({
                         onSelectCollection={onSelectCollection}
                         onCollectionContextMenu={onCollectionContextMenu}
                         onConnectionContextMenu={onConnectionContextMenu}
+                        onDatabaseContextMenu={onDatabaseContextMenu}
+                        openDbSignal={openDbSignal}
                     />
                 ))}
             </div>
