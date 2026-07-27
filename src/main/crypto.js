@@ -9,10 +9,6 @@ function deriveKey(passphrase, salt) {
   return crypto.scryptSync(passphrase, salt, KEY_BYTES, SCRYPT_OPTS);
 }
 
-/**
- * Encrypts a UTF-8 string with a passphrase-derived key.
- * Returns a self-contained envelope: { salt, iv, tag, ciphertext } as hex.
- */
 function encrypt(plaintext, passphrase) {
   const salt = crypto.randomBytes(SALT_BYTES);
   const iv = crypto.randomBytes(IV_BYTES);
@@ -28,10 +24,6 @@ function encrypt(plaintext, passphrase) {
   };
 }
 
-/**
- * Decrypts an envelope produced by encrypt(). Throws if the passphrase is
- * wrong or the data has been tampered with (GCM auth tag mismatch).
- */
 function decrypt(envelope, passphrase) {
   const salt = Buffer.from(envelope.salt, 'hex');
   const iv = Buffer.from(envelope.iv, 'hex');
@@ -44,7 +36,6 @@ function decrypt(envelope, passphrase) {
   return plaintext.toString('utf-8');
 }
 
-/** Produces a verifier envelope for a known plaintext, used to check a passphrase without decrypting real data. */
 function makeVerifier(passphrase) {
   return encrypt('mongostudio-verify', passphrase);
 }

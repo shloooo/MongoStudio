@@ -2,17 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { encrypt, decrypt, makeVerifier, checkVerifier } = require('./crypto');
 
-/**
- * A small JSON-file-backed key/value store with optional passphrase
- * encryption. When locked (a master password is configured), the entire
- * data object is written to disk as a single AES-256-GCM envelope; the
- * plaintext only exists in memory after a successful unlock() call.
- *
- * Meta info (whether encryption is enabled, and the passphrase verifier)
- * lives in a separate, always-plaintext sibling file so the app can tell
- * "needs unlock" from "no master password set" before any secret is
- * touched.
- */
 class SecureStore {
   constructor({ name, cwd }) {
     this.dataPath = path.join(cwd, `${name}.json`);

@@ -47,11 +47,6 @@ function buildUri(conn, override) {
   return `${scheme}://${auth}${hostPart}/${query}`;
 }
 
-/**
- * Resolves the effective Mongo connection URI for a given connection config,
- * transparently opening an SSH tunnel first if conn.useSsh is set.
- * Returns { uri, tunnel } - tunnel is null when SSH is not used.
- */
 async function resolveConnection(conn) {
   if (!conn.useSsh) {
     return { uri: buildUri(conn), tunnel: null };
