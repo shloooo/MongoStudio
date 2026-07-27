@@ -1,6 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
+  app: {
+    onError: (cb) => {
+      const listener = (event, message) => cb(message);
+      ipcRenderer.on('app:error', listener);
+      return () => ipcRenderer.removeListener('app:error', listener);
+    }
+  },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     toggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
@@ -37,7 +44,12 @@ contextBridge.exposeInMainWorld('api', {
     close: (id) => ipcRenderer.invoke('conn:close', id),
     listDatabases: (id) => ipcRenderer.invoke('conn:listDatabases', id),
     listCollections: (connId, dbName) => ipcRenderer.invoke('conn:listCollections', { connId, dbName }),
-    pickPrivateKey: () => ipcRenderer.invoke('conn:pickPrivateKey')
+    pickPrivateKey: () => ipcRenderer.invoke('conn:pickPrivateKey'),
+    onDisconnected: (cb) => {
+      const listener = (event, id) => cb(id);
+      ipcRenderer.on('conn:disconnected', listener);
+      return () => ipcRenderer.removeListener('conn:disconnected', listener);
+    }
   },
   data: {
     find: (args) => ipcRenderer.invoke('data:find', args),
