@@ -1,6 +1,6 @@
 {
   "name": "mongo-studio",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A free open-source alternative for Studio3T.",
   "main": "src/main/main.js",
   "private": true,
