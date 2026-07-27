@@ -1,9 +1,11 @@
-name: Package-Build
+name: Build
+
 on:
   push:
-    branches: ["**"]
-    tags: ["v*"]
-  pull_request:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
 
 jobs:
   macOS-Build:
