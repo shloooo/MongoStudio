@@ -1,0 +1,174 @@
+name: Package-Build
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag, das released werden soll (z.B. v1.0.0)"
+        required: true
+
+jobs:
+  macOS-Build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Installing Node
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: |
+          npm i -g yarn
+          yarn --network-timeout 1000000
+
+      - name: Build renderer
+        run: yarn build:renderer
+
+      - name: Build and sign packages
+        run: yarn electron-builder --mac --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          USE_HARD_LINKS: false
+
+      - name: Package artifacts
+        run: |
+          mkdir artifact-dmg
+          mv release/*.dmg artifact-dmg/
+          mkdir artifact-zip
+          mv release/*.zip artifact-zip/
+
+      - uses: actions/upload-artifact@v4
+        name: Upload DMG
+        with:
+          name: macOS-dmg
+          path: artifact-dmg
+
+      - uses: actions/upload-artifact@v4
+        name: Upload ZIP
+        with:
+          name: macOS-zip
+          path: artifact-zip
+
+  Linux-Build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Installing Node
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfontconfig1-dev libsecret-1-dev
+
+      - name: Install npm modules
+        run: |
+          npm i -g yarn
+          yarn --network-timeout 1000000
+
+      - name: Build renderer
+        run: yarn build:renderer
+
+      - name: Build packages
+        run: yarn electron-builder --linux --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USE_HARD_LINKS: false
+
+      - uses: actions/upload-artifact@v4
+        name: Upload AppImage
+        with:
+          name: Linux-AppImage
+          path: release/*.AppImage
+
+      - uses: actions/upload-artifact@v4
+        name: Upload DEB
+        with:
+          name: Linux-DEB
+          path: release/*.deb
+
+      - uses: actions/upload-artifact@v4
+        name: Upload tarball
+        with:
+          name: Linux-tarball
+          path: release/*.tar.gz
+
+  Windows-Build:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Installing Node
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install npm modules
+        shell: powershell
+        run: |
+          npm i -g yarn
+          yarn --network-timeout 1000000
+
+      - name: Build renderer
+        run: yarn build:renderer
+
+      - name: Build packages
+        shell: powershell
+        run: yarn electron-builder --win --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          USE_HARD_LINKS: false
+
+      - uses: actions/upload-artifact@v4
+        name: Upload installer/portable
+        with:
+          name: Windows-build
+          path: |
+            release/*.exe
+            release/*.zip
+
+  Release:
+    needs: [macOS-Build, Linux-Build, Windows-Build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release with assets
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: false
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
