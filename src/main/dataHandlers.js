@@ -97,7 +97,123 @@ function registerDataHandlers(ipcMain) {
     return name;
   });
 
-  // Exports an entire collection (not just the currently-loaded page) straight from the sidebar context menu.
+  ipcMain.handle('data:dropDatabase', async (event, { connId, dbName }) => {
+    const client = getClient(connId);
+    await client.db(dbName).dropDatabase();
+    return true;
+  });
+
+  ipcMain.handle('data:exportDatabase', async (event, { connId, dbName, format }) => {
+    const client = getClient(connId);
+    const db = client.db(dbName);
+    const collections = await db.listCollections().toArray();
+    const win = require('electron').BrowserWindow.getFocusedWindow();
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: `Export ${dbName} - choose destination folder`,
+      properties: ['openDirectory', 'createDirectory']
+    });
+    if (canceled || !filePaths.length) return { ok: false };
+    const targetDir = require('path').join(filePaths[0], dbName);
+    fs.mkdirSync(targetDir, { recursive: true });
+    let totalCount = 0;
+    const perCollection = [];
+    for (const c of collections) {
+      const docs = EJSON.serialize(await db.collection(c.name).find({}).toArray());
+      const ext = format === 'csv' ? 'csv' : 'json';
+      const filePath = require('path').join(targetDir, `${c.name}.${ext}`);
+      if (format === 'csv') {
+        const rows = docs.map((d) => flattenObject(d));
+        const headers = Array.from(rows.reduce((set, r) => {
+          Object.keys(r).forEach((k) => set.add(k));
+          return set;
+        }, new Set()));
+        const lines = [headers.join(',')];
+        for (const row of rows) lines.push(headers.map((h) => csvEscape(row[h])).join(','));
+        fs.writeFileSync(filePath, lines.join('\n'), 'utf-8');
+      } else {
+        fs.writeFileSync(filePath, JSON.stringify(docs, null, 2), 'utf-8');
+      }
+      totalCount += docs.length;
+      perCollection.push({ collection: c.name, count: docs.length });
+    }
+    return { ok: true, folderPath: targetDir, collectionCount: collections.length, count: totalCount, perCollection };
+  });
+
+  ipcMain.handle('data:importDatabase', async (event, { connId, dbName }) => {
+    const win = require('electron').BrowserWindow.getFocusedWindow();
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: `Import into ${dbName} - choose folder or files`,
+      properties: ['openFile', 'openDirectory', 'multiSelections'],
+      filters: [
+        { name: 'JSON/CSV', extensions: ['json', 'csv'] },
+        { name: 'All files', extensions: ['*'] }
+      ]
+    });
+    if (canceled || !filePaths.length) return { ok: false };
+
+    const path = require('path');
+    const files = [];
+    for (const p of filePaths) {
+      const stat = fs.statSync(p);
+      if (stat.isDirectory()) {
+        for (const entry of fs.readdirSync(p)) {
+          if (entry.endsWith('.json') || entry.endsWith('.csv')) files.push(path.join(p, entry));
+        }
+      } else {
+        files.push(p);
+      }
+    }
+
+    const client = getClient(connId);
+    const db = client.db(dbName);
+    const results = [];
+    for (const filePath of files) {
+      const collectionName = path.basename(filePath, path.extname(filePath));
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      let docs;
+      if (filePath.endsWith('.csv')) {
+        docs = parseCsv(raw);
+      } else {
+        const trimmed = raw.trim();
+        if (trimmed.startsWith('[')) {
+          docs = JSON.parse(trimmed);
+        } else {
+          docs = trimmed.split(/\r?\n/).filter((l) => l.trim().length).map((l) => JSON.parse(l));
+        }
+      }
+      if (!docs.length) {
+        results.push({ collection: collectionName, insertedCount: 0 });
+        continue;
+      }
+      const result = await db.collection(collectionName).insertMany(
+          docs.map((d) => EJSON.deserialize(d)),
+          { ordered: false }
+      );
+      results.push({ collection: collectionName, insertedCount: result.insertedCount });
+    }
+    const insertedCount = results.reduce((sum, r) => sum + r.insertedCount, 0);
+    return { ok: true, insertedCount, collectionCount: results.length, perCollection: results };
+  });
+
+  ipcMain.handle('data:copyDatabase', async (event, { sourceConnId, sourceDb, targetConnId, targetDb }) => {
+    const sourceClient = getClient(sourceConnId);
+    const targetClient = getClient(targetConnId);
+    const collections = await sourceClient.db(sourceDb).listCollections().toArray();
+    let copiedCount = 0;
+    const perCollection = [];
+    for (const c of collections) {
+      const docs = await sourceClient.db(sourceDb).collection(c.name).find({}).toArray();
+      let insertedCount = 0;
+      if (docs.length) {
+        const result = await targetClient.db(targetDb).collection(c.name).insertMany(docs, { ordered: false });
+        insertedCount = result.insertedCount;
+      }
+      copiedCount += insertedCount;
+      perCollection.push({ collection: c.name, count: insertedCount });
+    }
+    return { ok: true, copiedCount, collectionCount: collections.length, perCollection };
+  });
+
   ipcMain.handle('data:exportCollection', async (event, { connId, dbName, collection, format }) => {
     const client = getClient(connId);
     const docs = EJSON.serialize(await client.db(dbName).collection(collection).find({}).toArray());
@@ -105,8 +221,8 @@ function registerDataHandlers(ipcMain) {
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       defaultPath: `${collection}.${format === 'csv' ? 'csv' : 'json'}`,
       filters: format === 'csv'
-        ? [{ name: 'CSV', extensions: ['csv'] }]
-        : [{ name: 'JSON', extensions: ['json'] }]
+          ? [{ name: 'CSV', extensions: ['csv'] }]
+          : [{ name: 'JSON', extensions: ['json'] }]
     });
     if (canceled || !filePath) return { ok: false };
     if (format === 'csv') {
@@ -124,7 +240,6 @@ function registerDataHandlers(ipcMain) {
     return { ok: true, filePath, count: docs.length };
   });
 
-  // Imports a file straight into a target collection from the sidebar context menu (collection may not exist yet).
   ipcMain.handle('data:importIntoCollection', async (event, { connId, dbName, collection }) => {
     const win = require('electron').BrowserWindow.getFocusedWindow();
     const { canceled, filePaths } = await dialog.showOpenDialog(win, {
@@ -147,13 +262,12 @@ function registerDataHandlers(ipcMain) {
     if (docs.length === 0) return { ok: true, insertedCount: 0 };
     const client = getClient(connId);
     const result = await client.db(dbName).collection(collection).insertMany(
-      docs.map((d) => EJSON.deserialize(d)),
-      { ordered: false }
+        docs.map((d) => EJSON.deserialize(d)),
+        { ordered: false }
     );
     return { ok: true, insertedCount: result.insertedCount };
   });
 
-  // Copies all documents of a collection from one open connection to a (possibly different) database/collection on another open connection.
   ipcMain.handle('data:copyCollection', async (event, { sourceConnId, sourceDb, sourceCollection, targetConnId, targetDb, targetCollection }) => {
     const sourceClient = getClient(sourceConnId);
     const targetClient = getClient(targetConnId);
@@ -163,14 +277,13 @@ function registerDataHandlers(ipcMain) {
     return { ok: true, copiedCount: result.insertedCount };
   });
 
-  // Exports: open save dialog, write results as JSON or CSV
   ipcMain.handle('data:exportResults', async (event, { docs, format, suggestedName }) => {
     const win = require('electron').BrowserWindow.getFocusedWindow();
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       defaultPath: suggestedName || `export.${format === 'csv' ? 'csv' : 'json'}`,
       filters: format === 'csv'
-        ? [{ name: 'CSV', extensions: ['csv'] }]
-        : [{ name: 'JSON', extensions: ['json'] }]
+          ? [{ name: 'CSV', extensions: ['csv'] }]
+          : [{ name: 'JSON', extensions: ['json'] }]
     });
     if (canceled || !filePath) return { ok: false };
 
@@ -191,7 +304,6 @@ function registerDataHandlers(ipcMain) {
     return { ok: true, filePath };
   });
 
-  // Import: open file dialog, parse JSON or CSV, insert into collection
   ipcMain.handle('data:importFile', async (event, { connId, dbName, collection }) => {
     const win = require('electron').BrowserWindow.getFocusedWindow();
     const { canceled, filePaths } = await dialog.showOpenDialog(win, {
