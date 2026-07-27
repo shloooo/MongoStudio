@@ -119,7 +119,7 @@ export default function UpdaterSection() {
 
             {phase === 'available' && (
                 <>
-                    <div className="info-banner">Update available: version {version}.</div>
+                    <div className="info-banner">Update available: {version}</div>
                     <button className="primary" onClick={handleDownload}>Download update</button>
                 </>
             )}
