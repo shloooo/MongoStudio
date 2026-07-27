@@ -239,6 +239,20 @@ select,
     padding-left: 30px;
 }
 
+.tree-children-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows .18s ease;
+}
+
+.tree-children-wrap.is-open {
+    grid-template-rows: 1fr;
+}
+
+.tree-children-wrap > .tree-children {
+    overflow: hidden;
+}
+
 .tree-children {
     padding-left: 12px;
 }

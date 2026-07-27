@@ -24,7 +24,7 @@ function DatabaseNode({ connId, dbName, isOpen, onSelectCollection, onCollection
                 <i className={`fa-solid fa-chevron-right twisty ${expanded ? 'is-expanded' : ''}`}/>
                 <i className="fa-solid fa-database tree-icon"/> {dbName}
             </div>
-            {expanded && (
+            <div className={`tree-children-wrap ${expanded ? 'is-open' : ''}`}>
                 <div className="tree-children">
                     {collections === null && <div className="tree-loading">loading...</div>}
                     {collections && collections.length > 5 && (
@@ -54,7 +54,7 @@ function DatabaseNode({ connId, dbName, isOpen, onSelectCollection, onCollection
                         </div>
                     ))}
                 </div>
-            )}
+            </div>
         </div>
     );
 }
@@ -100,8 +100,7 @@ function ConnectionNode({ conn, isOpen, onToggle, onEdit, onDelete, onSelectColl
                     onConnectionContextMenu(e, conn);
                 }}
             >
-                <i className={`fa-solid fa-chevron-right twisty ${isOpen && expanded ? 'is-expanded' : ''}`}
-                   onClick={toggleExpand}/>
+                <i className={`fa-solid fa-chevron-right twisty ${isOpen && expanded ? 'is-expanded' : ''}`} onClick={toggleExpand}/>
                 <span className={`conn-dot ${isOpen ? 'online' : 'offline'}`}/>
                 <span className="conn-name" onClick={toggleExpand}>{conn.name}</span>
                 <span className="row-actions">
@@ -119,18 +118,20 @@ function ConnectionNode({ conn, isOpen, onToggle, onEdit, onDelete, onSelectColl
           </button>
         </span>
             </div>
-            {isOpen && expanded && (
-                <div className="tree-children">
-                    {databases === null && <div className="tree-loading">loading...</div>}
-                    {databases && databases.map((db) => (
-                        <DatabaseNode
-                            key={db.name}
-                            connId={conn.id}
-                            dbName={db.name}
-                            onSelectCollection={onSelectCollection}
-                            onCollectionContextMenu={onCollectionContextMenu}
-                        />
-                    ))}
+            {isOpen && (
+                <div className={`tree-children-wrap ${expanded ? 'is-open' : ''}`}>
+                    <div className="tree-children">
+                        {databases === null && <div className="tree-loading">loading...</div>}
+                        {databases && databases.map((db) => (
+                            <DatabaseNode
+                                key={db.name}
+                                connId={conn.id}
+                                dbName={db.name}
+                                onSelectCollection={onSelectCollection}
+                                onCollectionContextMenu={onCollectionContextMenu}
+                            />
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
