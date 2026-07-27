@@ -1,9 +1,12 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {EJSON} from 'bson';
-import {parseShell} from '../lib/shellSyntax.js';
+import {parseShell, toShellText} from '../lib/shellSyntax.js';
 import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
 import DocumentEditor from './DocumentEditor.jsx';
 import ContextMenu from './ContextMenu.jsx';
+import BulkUpdateDialog from './BulkUpdateDialog.jsx';
+import {useConfirm} from './ConfirmProvider.jsx';
+import {reportError} from '../lib/errorBus.js';
 
 const PAGE_SIZE = 50;
 
@@ -152,8 +155,17 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   const [editingCell, setEditingCell] = useState(null); // { rowIndex, field } | null
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [headerContextMenu, setHeaderContextMenu] = useState(null);
+  const [rowContextMenu, setRowContextMenu] = useState(null);
   const [setValueField, setSetValueField] = useState(null);
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
+  const [defaultEditorTab, setDefaultEditorTab] = useState('tree');
+  const confirmDialog = useConfirm();
+
+  useEffect(() => {
+    window.api.settings.get().then((s) => {
+      if (s && s.defaultEditorTab) setDefaultEditorTab(s.defaultEditorTab);
+    });
+  }, []);
 
   const runQuery = useCallback(async () => {
     setLoading(true);
@@ -174,7 +186,11 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       setTotalCount(result.totalCount);
       setSelectedIds(new Set());
     } catch (err) {
-      setError(err.message);
+      if (err.message.includes('not authorized on')) {
+        setError('Error: Current user has no access to this collection');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -204,7 +220,8 @@ export default function DocumentsTab({ selection, reloadSignal }) {
 
   async function handleDeleteSelected() {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Delete ${selectedIds.size} document(s)?`)) return;
+    const ok = await confirmDialog(`Delete ${selectedIds.size} document(s)?`, {title: 'Delete documents', confirmLabel: 'Delete'});
+    if (!ok) return;
     const ids = Array.from(selectedIds);
     for (const id of ids) {
       await window.api.data.deleteOne({
@@ -215,6 +232,79 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       });
     }
     runQuery();
+  }
+
+  async function handleDeleteDoc(doc) {
+    const ok = await confirmDialog('Delete this document?', {title: 'Delete document', confirmLabel: 'Delete'});
+    if (!ok) return;
+    try {
+      await window.api.data.deleteOne({
+        connId: selection.connId,
+        dbName: selection.dbName,
+        collection: selection.collection,
+        filter: EJSON.stringify({ _id: doc._id })
+      });
+      runQuery();
+    } catch (err) {
+      reportError(err.message, 'Delete document');
+    }
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).catch((err) => reportError(err.message, 'Clipboard'));
+  }
+
+  function handleRowContextMenu(e, doc) {
+    e.preventDefault();
+    setRowContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {label: 'Edit document', onClick: () => setModalDoc(doc)},
+        {separator: true},
+        {label: 'Copy document (raw)', onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))},
+        {label: 'Copy document (shell syntax)', onClick: () => copyToClipboard(toShellText(doc))},
+        {separator: true},
+        {label: 'Delete', danger: true, onClick: () => handleDeleteDoc(doc)}
+      ]
+    });
+  }
+
+  function handleCellContextMenu(e, doc, field) {
+    e.preventDefault();
+    e.stopPropagation();
+    const hasValue = Object.prototype.hasOwnProperty.call(doc, field);
+    setRowContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {label: 'Edit document', onClick: () => setModalDoc(doc)},
+        {separator: true},
+        {label: 'Copy field value (raw)', disabled: !hasValue, onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field])))},
+        {label: 'Copy field value (shell syntax)', disabled: !hasValue, onClick: () => copyToClipboard(toShellText(doc[field]))},
+        {separator: true},
+        {label: 'Copy document (raw)', onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))},
+        {label: 'Copy document (shell syntax)', onClick: () => copyToClipboard(toShellText(doc))},
+        {separator: true},
+        {label: 'Delete field value', danger: true, disabled: !hasValue, onClick: () => handleDeleteFieldValue(doc, field)}
+      ]
+    });
+  }
+
+  async function handleDeleteFieldValue(doc, field) {
+    const ok = await confirmDialog(`Remove field "${field}" from this document?`, {title: 'Delete field', confirmLabel: 'Delete'});
+    if (!ok) return;
+    try {
+      await persistFieldUpdate(doc, field, undefined);
+      setDocs((prev) => prev.map((d) => {
+        if (d !== doc) return d;
+        const next = {...d};
+        delete next[field];
+        return next;
+      }));
+    } catch (err) {
+      reportError(err.message, 'Delete field');
+    }
   }
 
   async function persistFieldUpdate(doc, field, newValue) {
@@ -233,13 +323,17 @@ export default function DocumentsTab({ selection, reloadSignal }) {
 
   async function handleCellCommit(rowIndex, field, newValue) {
     const doc = docs[rowIndex];
-    await persistFieldUpdate(doc, field, newValue);
-    setDocs((prev) => {
-      const next = [...prev];
-      next[rowIndex] = { ...next[rowIndex], [field]: newValue };
-      return next;
-    });
-    setEditingCell(null);
+    try {
+      await persistFieldUpdate(doc, field, newValue);
+      setDocs((prev) => {
+        const next = [...prev];
+        next[rowIndex] = { ...next[rowIndex], [field]: newValue };
+        return next;
+      });
+      setEditingCell(null);
+    } catch (err) {
+      reportError(err.message, 'Update field');
+    }
   }
 
   async function handleSaveModalDoc(value, isNew) {
@@ -284,7 +378,8 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   }
 
   async function handleDeleteFieldOnAll(field) {
-    if (!confirm(`Remove field "${field}" from all documents matching the current filter?`)) return;
+    const ok = await confirmDialog(`Remove field "${field}" from all documents matching the current filter?`, {title: 'Delete field on all', confirmLabel: 'Delete'});
+    if (!ok) return;
     const filterValue = parseShell(filter || '{}');
     await window.api.data.updateMany({
       connId: selection.connId,
@@ -355,6 +450,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
           <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}>Delete ({selectedIds.size})</button>
           <div className="spacer"/>
           <button onClick={handleImport}>Import</button>
+          <button onClick={() => setShowBulkUpdate(true)}>Bulk Update</button>
           <button onClick={() => handleExport('json')}>Export JSON</button>
           <button onClick={() => handleExport('csv')}>Export CSV</button>
         </div>
@@ -374,7 +470,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
             </thead>
             <tbody>
             {docs.map((doc, rowIndex) => (
-                <tr key={rowIndex}>
+                <tr key={rowIndex} onContextMenu={(e) => handleRowContextMenu(e, doc)}>
                   <td className="col-checkbox">
                     <input
                         type="checkbox"
@@ -388,7 +484,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                     const hasValue = Object.prototype.hasOwnProperty.call(doc, field);
                     const editable = hasValue && isInlineEditable(doc[field]);
                     return (
-                        <td key={field} className="spreadsheet-cell">
+                        <td key={field} className="spreadsheet-cell" onContextMenu={(e) => handleCellContextMenu(e, doc, field)}>
                           {isEditing ? (
                               <InlineCellEditor
                                   value={doc[field]}
@@ -434,6 +530,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
         {modalDoc && (
             <DocumentEditor
                 doc={modalDoc === 'new' ? null : modalDoc}
+                defaultMode={defaultEditorTab}
                 onSave={handleSaveModalDoc}
                 onClose={() => setModalDoc(null)}
             />
@@ -446,11 +543,26 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                 onClose={() => setHeaderContextMenu(null)}
             />
         )}
+        {rowContextMenu && (
+            <ContextMenu
+                x={rowContextMenu.x}
+                y={rowContextMenu.y}
+                items={rowContextMenu.items}
+                onClose={() => setRowContextMenu(null)}
+            />
+        )}
         {setValueField && (
             <SetFieldValueDialog
                 field={setValueField}
                 onApply={(value) => handleSetFieldOnAll(setValueField, value)}
                 onClose={() => setSetValueField(null)}
+            />
+        )}
+        {showBulkUpdate && (
+            <BulkUpdateDialog
+                selection={selection}
+                onClose={() => setShowBulkUpdate(false)}
+                onApplied={() => runQuery()}
             />
         )}
       </div>
