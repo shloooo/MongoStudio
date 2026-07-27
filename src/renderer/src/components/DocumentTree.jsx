@@ -206,11 +206,9 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
     const entries = Array.isArray(value) ? value.map((v, i) => [i, v]) : Object.entries(value);
     return (
         <div className="tree-node-block">
-          <div
-              className="tree-row expandable-row"
-              onContextMenu={(e) => handleContextMenu(e, value, null, onDelete)}
-          >
-            <span className="twisty" onClick={() => setCollapsed((c) => !c)}>{collapsed ? '▸' : '▾'}</span>
+          <div className="tree-row expandable-row"
+               onContextMenu={(e) => handleContextMenu(e, value, null, onDelete)}>
+            <i className={`fa-solid fa-chevron-right twisty ${!collapsed ? 'is-expanded' : ''}`} onClick={() => setCollapsed((c) => !c)}/>
             {nodeKey !== undefined &&
                 <span className="tree-key" onClick={() => setCollapsed((c) => !c)}>{nodeKey}</span>}
             {nodeKey !== undefined && <span className="tree-colon">:</span>}
@@ -255,10 +253,8 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
   const isLeafLocked = type === 'DBRef' || type === 'Binary';
 
   return (
-      <div
-          className="tree-row leaf-row"
-          onContextMenu={(e) => handleContextMenu(e, value, isLeafLocked ? null : (() => setEditing(true)), onDelete)}
-      >
+      <div className="tree-row leaf-row"
+           onContextMenu={(e) => handleContextMenu(e, value, isLeafLocked ? null : (() => setEditing(true)), onDelete)}>
         <span className="twisty"/>
         {nodeKey !== undefined && <span className="tree-key">{nodeKey}</span>}
         {nodeKey !== undefined && <span className="tree-colon">:</span>}
@@ -292,10 +288,6 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
   );
 }
 
-/**
- * Renders a BSON document as an editable, collapsible tree.
- * `value` is the root document object. Calls onChange(newDoc) on any edit.
- */
 export default function DocumentTree({value, onChange, defaultCollapsed = false, onNodeContextMenu}) {
   return (
       <div className="document-tree">

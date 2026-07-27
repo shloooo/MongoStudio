@@ -246,8 +246,21 @@ select,
 .twisty {
     width: 12px;
     display: inline-block;
+    text-align: center;
     color: var(--text-tertiary);
     font-size: 10px;
+    transition: transform .15s ease;
+}
+
+.twisty.is-expanded {
+    transform: rotate(90deg);
+}
+
+.tree-icon {
+    width: 14px;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 12px;
 }
 
 .tree-loading, .tree-empty {
@@ -340,18 +353,29 @@ select,
 }
 
 .status-bar {
-    padding: 7px 16px;
+    position: fixed;
+    bottom: 16px;
+    left: 296px;
+    z-index: 350;
+    max-width: 420px;
+    padding: 9px 14px;
     font-size: 12px;
-    border-bottom: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background: var(--glass-panel-strong);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    border: 1px solid var(--glass-border-strong);
+    animation: error-toast-in 0.15s ease-out;
 }
 
 .status-bar.is-info {
-    background: var(--accent-dim);
+    border-left: 3px solid var(--accent);
     color: var(--accent);
 }
 
 .status-bar.is-error {
-    background: var(--danger-dim);
+    border-left: 3px solid var(--danger);
     color: var(--danger);
 }
 
@@ -1207,9 +1231,11 @@ button.primary:hover {
 .tree-row .twisty {
     width: 12px;
     flex-shrink: 0;
+    text-align: center;
     color: var(--text-tertiary);
     font-size: 10px;
     cursor: pointer;
+    transition: transform .15s ease;
 }
 
 .tree-key {
