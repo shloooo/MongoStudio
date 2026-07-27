@@ -234,7 +234,7 @@ export default function SettingsPage({connections, onImported}) {
                 <div className="settings-section">
                     <h3>About</h3>
                     {appInfo && appInfo.isDev && (
-                        <div className="info-banner dev-mode-banner">Running in development mode (--serve)</div>
+                        <div className="info-banner dev-mode-banner">Development environment detected</div>
                     )}
                     {appInfo ? (
                         <>
