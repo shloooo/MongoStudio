@@ -34,8 +34,8 @@ jobs:
         run: yarn electron-builder --mac --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          #CSC_LINK: ${{ secrets.CSC_LINK }}
+          #CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           USE_HARD_LINKS: false
 
