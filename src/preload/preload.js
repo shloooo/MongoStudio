@@ -45,6 +45,7 @@ contextBridge.exposeInMainWorld('api', {
     close: (id) => ipcRenderer.invoke('conn:close', id),
     listDatabases: (id) => ipcRenderer.invoke('conn:listDatabases', id),
     listCollections: (connId, dbName) => ipcRenderer.invoke('conn:listCollections', { connId, dbName }),
+    createDatabase: (args) => ipcRenderer.invoke('conn:createDatabase', args),
     pickPrivateKey: () => ipcRenderer.invoke('conn:pickPrivateKey'),
     onDisconnected: (cb) => {
       const listener = (event, id) => cb(id);
@@ -79,6 +80,10 @@ contextBridge.exposeInMainWorld('api', {
     importFile: (args) => ipcRenderer.invoke('data:importFile', args),
     exportCollection: (args) => ipcRenderer.invoke('data:exportCollection', args),
     importIntoCollection: (args) => ipcRenderer.invoke('data:importIntoCollection', args),
-    copyCollection: (args) => ipcRenderer.invoke('data:copyCollection', args)
+    copyCollection: (args) => ipcRenderer.invoke('data:copyCollection', args),
+    dropDatabase: (args) => ipcRenderer.invoke('data:dropDatabase', args),
+    exportDatabase: (args) => ipcRenderer.invoke('data:exportDatabase', args),
+    importDatabase: (args) => ipcRenderer.invoke('data:importDatabase', args),
+    copyDatabase: (args) => ipcRenderer.invoke('data:copyDatabase', args)
   }
 });

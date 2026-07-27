@@ -159,6 +159,22 @@ function registerConnectionHandlers(ipcMain, store) {
     }
   });
 
+  ipcMain.handle('conn:createDatabase', async (event, {connId, dbName, collection}) => {
+    const client = activeClients.get(connId);
+    if (!client) throw new Error('Connection is not open');
+    try {
+      await client.db(dbName).createCollection(collection || 'collection1');
+      return true;
+    } catch (err) {
+      if (isDeadConnectionError(err)) {
+        await cleanupClient(connId);
+        notifyDisconnected(connId);
+        throw new Error('Connection lost. Please reconnect.');
+      }
+      throw err;
+    }
+  });
+
   ipcMain.handle('conn:pickPrivateKey', async () => {
     const { dialog } = require('electron');
     const { canceled, filePaths } = await dialog.showOpenDialog({
