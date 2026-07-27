@@ -23,25 +23,29 @@ const MIME_TYPES = {
  */
 function startStaticServer(rootDir) {
   return new Promise((resolve, reject) => {
+    const resolvedRoot = path.resolve(rootDir);
+
     const server = http.createServer((req, res) => {
       let reqPath = decodeURIComponent(req.url.split('?')[0]);
       if (reqPath === '/') reqPath = '/index.html';
-      const filePath = path.join(rootDir, reqPath);
 
-      // Prevent escaping the dist directory.
-      if (!filePath.startsWith(rootDir)) {
+      const resolvedPath = path.resolve(resolvedRoot, '.' + reqPath);
+      const relative = path.relative(resolvedRoot, resolvedPath);
+      const escapesRoot = relative.startsWith('..') || path.isAbsolute(relative);
+
+      if (escapesRoot) {
         res.writeHead(403);
         res.end('Forbidden');
         return;
       }
 
-      fs.readFile(filePath, (err, data) => {
+      fs.readFile(resolvedPath, (err, data) => {
         if (err) {
           res.writeHead(404);
           res.end('Not found');
           return;
         }
-        const ext = path.extname(filePath);
+        const ext = path.extname(resolvedPath);
         res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
         res.end(data);
       });
