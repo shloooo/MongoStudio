@@ -3,10 +3,10 @@ import {parseShell, toShellText} from '../lib/shellSyntax.js';
 import DocumentTree from './DocumentTree.jsx';
 import ContextMenu from './ContextMenu.jsx';
 
-export default function DocumentEditor({ doc, onSave, onClose }) {
+export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
   const isNew = doc === null;
   const initialValue = useMemo(() => doc || { field: 'value' }, [doc]);
-  const [mode, setMode] = useState('tree'); // 'tree' | 'raw'
+  const [mode, setMode] = useState(defaultMode === 'raw' ? 'raw' : 'tree'); // 'tree' | 'raw'
   const [treeValue, setTreeValue] = useState(initialValue);
   const [rawText, setRawText] = useState(() => toShellText(initialValue));
   const [error, setError] = useState('');
@@ -66,8 +66,8 @@ export default function DocumentEditor({ doc, onSave, onClose }) {
     if (node.startEdit) {
       items.push({label: 'Edit', onClick: node.startEdit});
     }
-    items.push({label: 'Copy value', onClick: node.onCopyValue});
-    items.push({label: 'Copy raw (shell syntax)', onClick: node.onCopyRaw});
+    items.push({label: 'Copy document (raw)', onClick: node.onCopyValue});
+    items.push({label: 'Copy document (shell syntax)', onClick: node.onCopyRaw});
     if (node.onDelete) {
       items.push({separator: true});
       items.push({label: 'Delete', danger: true, onClick: node.onDelete});

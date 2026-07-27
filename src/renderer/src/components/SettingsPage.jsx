@@ -21,6 +21,11 @@ export default function SettingsPage({connections, onImported}) {
         setSettings(next);
     }
 
+    async function updateDefaultEditorTab(value) {
+        const next = await window.api.settings.set('defaultEditorTab', value);
+        setSettings(next);
+    }
+
     function resetForm() {
         setMode(null);
         setCurrentPw('');
@@ -117,6 +122,21 @@ export default function SettingsPage({connections, onImported}) {
                         <span className="settings-row-label">Interface language</span>
                         <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)}>
                             <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="settings-section">
+                    <h3>Editor</h3>
+                    <p className="settings-section-desc">Choose which view the document editor opens in.</p>
+                    <div className="settings-row">
+                        <span className="settings-row-label">Default tab editor</span>
+                        <select
+                            value={settings.defaultEditorTab || 'tree'}
+                            onChange={(e) => updateDefaultEditorTab(e.target.value)}
+                        >
+                            <option value="tree">Tree</option>
+                            <option value="raw">Raw</option>
                         </select>
                     </div>
                 </div>
