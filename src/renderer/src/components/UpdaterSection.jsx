@@ -100,7 +100,6 @@ export default function UpdaterSection() {
     return (
         <div className="settings-section">
             <h3>Updates</h3>
-            <p className="settings-section-desc">Check GitHub Releases for a newer version of MongoStudio.</p>
 
             {phase === 'idle' && (
                 <button onClick={handleCheck}>Check for updates</button>

@@ -119,8 +119,8 @@ export default function SettingsPage({connections, onImported}) {
                 {error && <div className="error-banner">{error}</div>}
 
                 <div className="settings-section">
-                    <h3>Language</h3>
-                    <p className="settings-section-desc">Choose the interface language.</p>
+                    <h3>General</h3>
+                    <p className="settings-section-desc">Here you can configure various general settings</p>
                     <div className="settings-row">
                         <span className="settings-row-label">Interface language</span>
                         <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)}>
@@ -130,14 +130,12 @@ export default function SettingsPage({connections, onImported}) {
                 </div>
 
                 <div className="settings-section">
-                    <h3>Editor</h3>
-                    <p className="settings-section-desc">Choose which view the document editor opens in.</p>
+                    <h3>Document Editor</h3>
+                    <p className="settings-section-desc">Here you can adjust various settings for the document editor..</p>
                     <div className="settings-row">
                         <span className="settings-row-label">Default tab editor</span>
-                        <select
-                            value={settings.defaultEditorTab || 'tree'}
-                            onChange={(e) => updateDefaultEditorTab(e.target.value)}
-                        >
+                        <select value={settings.defaultEditorTab || 'tree'}
+                                onChange={(e) => updateDefaultEditorTab(e.target.value)}>
                             <option value="tree">Tree</option>
                             <option value="raw">Raw</option>
                         </select>
@@ -145,11 +143,8 @@ export default function SettingsPage({connections, onImported}) {
                 </div>
 
                 <div className="settings-section">
-                    <h3>Master Password</h3>
-                    <p className="settings-section-desc">
-                        Encrypts all saved connections (including passwords and SSH keys) on disk with AES-256.
-                        You'll be asked for it every time you start the app.
-                    </p>
+                    <h3>Security</h3>
+                    <p className="settings-section-desc">Here you can adjust your security settings</p>
 
                     {!vaultStatus.encryptionEnabled && mode !== 'setup' && (
                         <button className="primary" onClick={() => {
