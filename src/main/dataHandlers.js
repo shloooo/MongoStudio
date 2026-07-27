@@ -1,6 +1,7 @@
 const { EJSON } = require('bson');
 const fs = require('fs');
-const { dialog } = require('electron');
+const path = require('path');
+const {dialog, BrowserWindow} = require('electron');
 const { getClient } = require('./connectionManager');
 
 function parseEjson(input) {
@@ -113,14 +114,14 @@ function registerDataHandlers(ipcMain) {
       properties: ['openDirectory', 'createDirectory']
     });
     if (canceled || !filePaths.length) return { ok: false };
-    const targetDir = require('path').join(filePaths[0], dbName);
+    const targetDir = path.join(filePaths[0], dbName);
     fs.mkdirSync(targetDir, { recursive: true });
     let totalCount = 0;
     const perCollection = [];
     for (const c of collections) {
       const docs = EJSON.serialize(await db.collection(c.name).find({}).toArray());
       const ext = format === 'csv' ? 'csv' : 'json';
-      const filePath = require('path').join(targetDir, `${c.name}.${ext}`);
+      const filePath = path.join(targetDir, `${c.name}.${ext}`);
       if (format === 'csv') {
         const rows = docs.map((d) => flattenObject(d));
         const headers = Array.from(rows.reduce((set, r) => {
@@ -151,7 +152,6 @@ function registerDataHandlers(ipcMain) {
     });
     if (canceled || !filePaths.length) return { ok: false };
 
-    const path = require('path');
     const files = [];
     for (const p of filePaths) {
       const stat = fs.statSync(p);
@@ -195,22 +195,37 @@ function registerDataHandlers(ipcMain) {
     return { ok: true, insertedCount, collectionCount: results.length, perCollection: results };
   });
 
-  ipcMain.handle('data:copyDatabase', async (event, { sourceConnId, sourceDb, targetConnId, targetDb }) => {
+  ipcMain.handle('data:copyDatabase', async (event, {sourceConnId, sourceDb, targetConnId, targetDb, requestId}) => {
     const sourceClient = getClient(sourceConnId);
     const targetClient = getClient(targetConnId);
+    const send = makeProgressSender(event, requestId);
+
     const collections = await sourceClient.db(sourceDb).listCollections().toArray();
+    send({phase: 'start', collections: collections.map((c) => c.name)});
+
     let copiedCount = 0;
     const perCollection = [];
     for (const c of collections) {
-      const docs = await sourceClient.db(sourceDb).collection(c.name).find({}).toArray();
-      let insertedCount = 0;
-      if (docs.length) {
-        const result = await targetClient.db(targetDb).collection(c.name).insertMany(docs, { ordered: false });
-        insertedCount = result.insertedCount;
-      }
-      copiedCount += insertedCount;
-      perCollection.push({ collection: c.name, count: insertedCount });
+      const sourceColl = sourceClient.db(sourceDb).collection(c.name);
+      const targetColl = targetClient.db(targetDb).collection(c.name);
+      const totalInCollection = await sourceColl.countDocuments();
+      send({phase: 'collection-start', collection: c.name, totalInCollection, copiedCount});
+
+      const copiedInCollection = await copyCollectionDocs(sourceColl, targetColl, (copiedInCollection) => {
+        send({
+          phase: 'progress',
+          collection: c.name,
+          copiedInCollection,
+          totalInCollection,
+          copiedCount: copiedCount + copiedInCollection
+        });
+      });
+
+      copiedCount += copiedInCollection;
+      perCollection.push({collection: c.name, count: copiedInCollection});
+      send({phase: 'collection-done', collection: c.name, copiedInCollection, totalInCollection, copiedCount});
     }
+    send({phase: 'done', copiedCount, collectionCount: collections.length});
     return { ok: true, copiedCount, collectionCount: collections.length, perCollection };
   });
 
@@ -268,13 +283,30 @@ function registerDataHandlers(ipcMain) {
     return { ok: true, insertedCount: result.insertedCount };
   });
 
-  ipcMain.handle('data:copyCollection', async (event, { sourceConnId, sourceDb, sourceCollection, targetConnId, targetDb, targetCollection }) => {
+  ipcMain.handle('data:copyCollection', async (event, {
+    sourceConnId,
+    sourceDb,
+    sourceCollection,
+    targetConnId,
+    targetDb,
+    targetCollection,
+    requestId
+  }) => {
     const sourceClient = getClient(sourceConnId);
     const targetClient = getClient(targetConnId);
-    const docs = await sourceClient.db(sourceDb).collection(sourceCollection).find({}).toArray();
-    if (docs.length === 0) return { ok: true, copiedCount: 0 };
-    const result = await targetClient.db(targetDb).collection(targetCollection).insertMany(docs, { ordered: false });
-    return { ok: true, copiedCount: result.insertedCount };
+    const send = makeProgressSender(event, requestId);
+
+    const sourceColl = sourceClient.db(sourceDb).collection(sourceCollection);
+    const targetColl = targetClient.db(targetDb).collection(targetCollection);
+    const totalInCollection = await sourceColl.countDocuments();
+    send({phase: 'start', collection: sourceCollection, totalInCollection});
+
+    const copiedCount = await copyCollectionDocs(sourceColl, targetColl, (copiedCount) => {
+      send({phase: 'progress', collection: sourceCollection, copiedCount, totalInCollection});
+    });
+
+    send({phase: 'done', collection: sourceCollection, copiedCount, totalInCollection});
+    return {ok: true, copiedCount};
   });
 
   ipcMain.handle('data:exportResults', async (event, { docs, format, suggestedName }) => {
@@ -328,6 +360,38 @@ function registerDataHandlers(ipcMain) {
     const result = await coll.insertMany(docs, { ordered: false });
     return { ok: true, insertedCount: result.insertedCount };
   });
+}
+
+const COPY_BATCH_SIZE = 500;
+
+function makeProgressSender(event, requestId) {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return (payload) => {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('data:copyProgress', {requestId, ...payload});
+    }
+  };
+}
+
+async function copyCollectionDocs(sourceColl, targetColl, onBatch) {
+  const cursor = sourceColl.find({});
+  let batch = [];
+  let copiedCount = 0;
+  while (await cursor.hasNext()) {
+    batch.push(await cursor.next());
+    if (batch.length >= COPY_BATCH_SIZE) {
+      const result = await targetColl.insertMany(batch, {ordered: false});
+      copiedCount += result.insertedCount;
+      batch = [];
+      if (onBatch) onBatch(copiedCount);
+    }
+  }
+  if (batch.length) {
+    const result = await targetColl.insertMany(batch, {ordered: false});
+    copiedCount += result.insertedCount;
+    if (onBatch) onBatch(copiedCount);
+  }
+  return copiedCount;
 }
 
 function flattenObject(obj, prefix = '') {

@@ -84,6 +84,11 @@ contextBridge.exposeInMainWorld('api', {
     dropDatabase: (args) => ipcRenderer.invoke('data:dropDatabase', args),
     exportDatabase: (args) => ipcRenderer.invoke('data:exportDatabase', args),
     importDatabase: (args) => ipcRenderer.invoke('data:importDatabase', args),
-    copyDatabase: (args) => ipcRenderer.invoke('data:copyDatabase', args)
+    copyDatabase: (args) => ipcRenderer.invoke('data:copyDatabase', args),
+    onCopyProgress: (cb) => {
+      const listener = (event, payload) => cb(payload);
+      ipcRenderer.on('data:copyProgress', listener);
+      return () => ipcRenderer.removeListener('data:copyProgress', listener);
+    }
   }
 });

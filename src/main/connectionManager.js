@@ -63,7 +63,6 @@ function registerConnectionHandlers(ipcMain, store) {
     return store.get('connections', []);
   });
 
-  // Kept for backward compatibility with the edit dialog - now equivalent to conn:list's per-item shape.
   ipcMain.handle('conn:get', (event, id) => {
     const conns = store.get('connections', []);
     return conns.find((c) => c.id === id) || null;
