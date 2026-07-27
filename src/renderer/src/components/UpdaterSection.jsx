@@ -92,7 +92,7 @@ export default function UpdaterSection() {
         return (
             <div className="settings-section">
                 <h3>Updates</h3>
-                <p className="settings-section-desc">This feature is disabled. Start MongoStudio in prod mode to enable this feature.</p>
+                <p className="settings-section-desc">This feature is not available in the current environment.</p>
             </div>
         );
     }
