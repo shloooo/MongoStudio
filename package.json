@@ -1,7 +1,7 @@
 {
   "name": "mongo-studio",
   "version": "1.0.0",
-  "description": "MongoDB GUI Client (Studio3T-Alternative, keine Lizenz)",
+  "description": "A free open-source alternative for Studio3T.",
   "main": "src/main/main.js",
   "private": true,
   "type": "commonjs",
