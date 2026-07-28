@@ -6,6 +6,16 @@ const { openTunnel, closeTunnel } = require('./sshTunnel');
 const activeClients = new Map();
 const activeTunnels = new Map();
 
+function describeError(err) {
+  if (!err) return 'Unknown error';
+  if (err.message) return err.message;
+  if (Array.isArray(err.errors) && err.errors.length) {
+    const sub = err.errors.map((e) => (e && e.message) || String(e)).filter(Boolean);
+    if (sub.length) return sub.join('; ');
+  }
+  return String(err);
+}
+
 function isDeadConnectionError(err) {
   if (!err) return false;
   if (err.name === 'MongoServerSelectionError' || err.name === 'MongoNetworkError') return true;
@@ -99,7 +109,7 @@ function registerConnectionHandlers(ipcMain, store) {
         await client.close().catch(() => {});
       }
     } catch (err) {
-      return { ok: false, error: err.message };
+      return { ok: false, error: describeError(err) };
     } finally {
       closeTunnel(tunnel);
     }
@@ -117,7 +127,7 @@ function registerConnectionHandlers(ipcMain, store) {
       if (tunnel) activeTunnels.set(conn.id, tunnel);
       return { ok: true };
     } catch (err) {
-      return { ok: false, error: err.message };
+      return { ok: false, error: describeError(err) };
     }
   });
 
