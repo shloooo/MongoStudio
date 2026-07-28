@@ -1565,6 +1565,10 @@ button.danger:hover {
     border-radius: var(--radius-md);
     padding: 18px 20px;
     margin-bottom: 16px;
+
+    &:last-child {
+        padding-bottom: 0!important;
+    }
 }
 
 .settings-section h3 {
