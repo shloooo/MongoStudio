@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { EJSON } from 'bson';
-import { parseShell } from '../lib/shellSyntax.js';
+import React, {useCallback, useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {EJSON} from 'bson';
+import {parseShell} from '../lib/shellSyntax.js';
 
 export default function IndexesTab({ selection, reloadSignal }) {
+  const {t} = useTranslation();
   const [indexes, setIndexes] = useState([]);
   const [spec, setSpec] = useState('{field: 1}');
   const [options, setOptions] = useState('{unique: false}');
@@ -39,35 +41,41 @@ export default function IndexesTab({ selection, reloadSignal }) {
   }
 
   return (
-    <div className="indexes-tab">
-      <table className="doc-table">
-        <thead><tr><th>Name</th><th>Keys</th><th>Options</th></tr></thead>
-        <tbody>
+      <div className="indexes-tab">
+        <table className="doc-table">
+          <thead>
+          <tr>
+            <th>{t('indexesTab.name')}</th>
+            <th>{t('indexesTab.keys')}</th>
+            <th>{t('indexesTab.options')}</th>
+          </tr>
+          </thead>
+          <tbody>
           {indexes.map((idx) => (
-            <tr key={idx.name}>
-              <td>{idx.name}</td>
-              <td><code>{JSON.stringify(idx.key)}</code></td>
-              <td>{idx.unique ? 'unique' : ''}</td>
-            </tr>
+              <tr key={idx.name}>
+                <td>{idx.name}</td>
+                <td><code>{JSON.stringify(idx.key)}</code></td>
+                <td>{idx.unique ? t('indexesTab.unique') : ''}</td>
+              </tr>
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
 
-      <div className="new-index-form">
-        <h4>Create New Index</h4>
-        <div className="row">
-          <div>
-            <label>Keys</label>
-            <input value={spec} onChange={(e) => setSpec(e.target.value)} />
+        <div className="new-index-form">
+          <h4>{t('indexesTab.createNewIndex')}</h4>
+          <div className="row">
+            <div>
+              <label>{t('indexesTab.keys')}</label>
+              <input value={spec} onChange={(e) => setSpec(e.target.value)}/>
+            </div>
+            <div>
+              <label>{t('indexesTab.options')}</label>
+              <input value={options} onChange={(e) => setOptions(e.target.value)}/>
+            </div>
           </div>
-          <div>
-            <label>Options</label>
-            <input value={options} onChange={(e) => setOptions(e.target.value)} />
-          </div>
+          {error && <div className="error-banner">{error}</div>}
+          <button className="primary" onClick={handleCreate}>{t('indexesTab.createIndex')}</button>
         </div>
-        {error && <div className="error-banner">{error}</div>}
-        <button className="primary" onClick={handleCreate}>Create Index</button>
       </div>
-    </div>
   );
 }

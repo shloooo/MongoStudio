@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 
 function formatBytes(bytes) {
     if (!bytes && bytes !== 0) return '';
@@ -12,16 +13,17 @@ function formatBytes(bytes) {
     return `${value.toFixed(1)} ${units[unitIndex]}`;
 }
 
-function formatEta(seconds) {
-    if (seconds === null || seconds === undefined) return 'calculating...';
-    if (seconds < 1) return 'almost done';
-    if (seconds < 60) return `${Math.ceil(seconds)}s remaining`;
+function formatEta(seconds, t) {
+    if (seconds === null || seconds === undefined) return t('updaterSection.calculating');
+    if (seconds < 1) return t('updaterSection.almostDone');
+    if (seconds < 60) return t('updaterSection.secondsRemaining', {count: Math.ceil(seconds)});
     const minutes = Math.floor(seconds / 60);
     const secs = Math.ceil(seconds % 60);
-    return `${minutes}m ${secs}s remaining`;
+    return t('updaterSection.minutesSecondsRemaining', {minutes, seconds: secs});
 }
 
 export default function UpdaterSection() {
+    const {t} = useTranslation();
     const [phase, setPhase] = useState('idle'); // idle | checking | not-available | available | downloading | downloaded | error | disabled
     const [version, setVersion] = useState(null);
     const [progress, setProgress] = useState(null); // { percent, transferred, total, bytesPerSecond, etaSeconds }
@@ -94,27 +96,27 @@ export default function UpdaterSection() {
 
     return (
         <div className="settings-section">
-            <h3>Updates</h3>
+            <h3>{t('updaterSection.heading')}</h3>
 
             {phase === 'idle' && (
-                <button onClick={handleCheck}>Check for updates</button>
+                <button onClick={handleCheck}>{t('updaterSection.checkForUpdates')}</button>
             )}
 
             {phase === 'checking' && (
-                <div className="info-banner">Checking for updates...</div>
+                <div className="info-banner">{t('updaterSection.checkingForUpdates')}</div>
             )}
 
             {phase === 'not-available' && (
                 <>
-                    <div className="info-banner">You're up to date{version ? ` (${version})` : ''}</div>
-                    <button onClick={handleCheck}>Check again</button>
+                    <div className="info-banner">{t('updaterSection.upToDate')}{version ? ` (${version})` : ''}</div>
+                    <button onClick={handleCheck}>{t('updaterSection.checkAgain')}</button>
                 </>
             )}
 
             {phase === 'available' && (
                 <>
-                    <div className="info-banner">Update available: {version}</div>
-                    <button className="primary" onClick={handleDownload}>Download update</button>
+                    <div className="info-banner">{t('updaterSection.updateAvailable', {version})}</div>
+                    <button className="primary" onClick={handleDownload}>{t('updaterSection.downloadUpdate')}</button>
                 </>
             )}
 
@@ -126,22 +128,22 @@ export default function UpdaterSection() {
                     <div className="update-progress-meta">
                         <span>{progress.percent.toFixed(0)}%</span>
                         <span>{formatBytes(progress.transferred)} / {formatBytes(progress.total)}</span>
-                        <span>{formatEta(progress.etaSeconds)}</span>
+                        <span>{formatEta(progress.etaSeconds, t)}</span>
                     </div>
                 </div>
             )}
 
             {phase === 'downloaded' && (
                 <>
-                    <div className="info-banner">Update {version} downloaded. Restart to install.</div>
-                    <button className="primary" onClick={handleInstall}>Restart and install</button>
+                    <div className="info-banner">{t('updaterSection.downloaded', {version})}</div>
+                    <button className="primary" onClick={handleInstall}>{t('updaterSection.restartAndInstall')}</button>
                 </>
             )}
 
             {phase === 'error' && (
                 <>
                     <div className="error-banner">{errorMessage}</div>
-                    <button onClick={handleCheck}>Try again</button>
+                    <button onClick={handleCheck}>{t('updaterSection.tryAgain')}</button>
                 </>
             )}
         </div>

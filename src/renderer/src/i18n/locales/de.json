@@ -242,6 +242,30 @@
       "indexes": "Indizes"
     }
   },
+  "indexesTab": {
+    "name": "Name",
+    "keys": "Keys",
+    "options": "Optionen",
+    "unique": "eindeutig",
+    "createNewIndex": "Neuen Index erstellen",
+    "createIndex": "Index erstellen"
+  },
+  "updaterSection": {
+    "heading": "Updates",
+    "checkForUpdates": "Nach Updates suchen",
+    "checkingForUpdates": "Suche nach Updates...",
+    "checkAgain": "Erneut suchen",
+    "upToDate": "Du bist auf dem neuesten Stand",
+    "updateAvailable": "Update verfügbar: {{version}}",
+    "downloadUpdate": "Update herunterladen",
+    "downloaded": "Update {{version}} heruntergeladen. Zum Installieren neu starten.",
+    "restartAndInstall": "Neu starten und installieren",
+    "tryAgain": "Erneut versuchen",
+    "calculating": "berechne...",
+    "almostDone": "fast fertig",
+    "secondsRemaining": "{{count}}s verbleibend",
+    "minutesSecondsRemaining": "{{minutes}}m {{seconds}}s verbleibend"
+  },
   "documentActions": {
     "edit": "Bearbeiten",
     "editDocument": "Dokument bearbeiten",
