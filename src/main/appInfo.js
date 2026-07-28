@@ -25,7 +25,6 @@ function readBakedGitInfo() {
 function getLiveGitInfo(projectRoot) {
     const commit = safeGitCommand('rev-parse --short HEAD', projectRoot);
     const branch = safeGitCommand('rev-parse --abbrev-ref HEAD', projectRoot);
-    const status = safeGitCommand('status --porcelain', projectRoot);
 
     return {
         commit: commit || null,
