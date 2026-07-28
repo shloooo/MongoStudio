@@ -105,7 +105,7 @@ jobs:
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --mac --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --mac --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}" -c.mac.artifactName='${productName}-${version}-${arch}.${ext}'
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           USE_HARD_LINKS: false
@@ -167,7 +167,7 @@ jobs:
 
       - name: Build packages
         shell: bash
-        run: yarn electron-builder --win nsis --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --win nsis --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}" -c.nsis.artifactName='${productName}-Setup-${version}.${ext}'
         env:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
@@ -221,7 +221,7 @@ jobs:
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --linux --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --linux --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}" -c.linux.artifactName='${name}-${version}.${ext}'
         env:
           USE_HARD_LINKS: false
 
