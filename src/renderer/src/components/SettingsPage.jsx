@@ -1,6 +1,24 @@
 import React, {useState, useEffect} from 'react';
 import UpdaterSection from './UpdaterSection.jsx';
 
+function SettingsSkeleton() {
+    return (
+        <div className="settings-overlay">
+            <div className="settings-page">
+                <h1>Settings</h1>
+                {[0, 1, 2].map((i) => (
+                    <div className="settings-section skeleton-section" key={i}>
+                        <div className="skeleton-line skeleton-line-title"/>
+                        <div className="skeleton-line skeleton-line-desc"/>
+                        <div className="skeleton-row"/>
+                        <div className="skeleton-row"/>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export default function SettingsPage({connections, onImported}) {
     const [settings, setSettings] = useState(null);
     const [vaultStatus, setVaultStatus] = useState(null);
@@ -14,9 +32,15 @@ export default function SettingsPage({connections, onImported}) {
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
-        window.api.settings.get().then(setSettings);
-        window.api.vault.status().then(setVaultStatus);
-        window.api.app.getInfo().then(setAppInfo);
+        Promise.all([
+            window.api.settings.get(),
+            window.api.vault.status(),
+            window.api.app.getInfo(),
+        ]).then(([s, v, a]) => {
+            setSettings(s);
+            setVaultStatus(v);
+            setAppInfo(a);
+        });
     }, []);
 
     async function updateLanguage(lang) {
@@ -113,18 +137,18 @@ export default function SettingsPage({connections, onImported}) {
         if (onImported) onImported();
     }
 
-    if (!settings || !vaultStatus) return null;
+    if (!settings || !vaultStatus) return <SettingsSkeleton/>;
 
     return (
         <div className="settings-overlay">
             <div className="settings-page">
                 <h1>Settings</h1>
 
-                {info && <div className="info-banner">{info}</div>}
-                {error && <div className="error-banner">{error}</div>}
+                {info && <div className="info-banner"><i className="fa-solid fa-circle-check"/> {info}</div>}
+                {error && <div className="error-banner"><i className="fa-solid fa-triangle-exclamation"/> {error}</div>}
 
                 <div className="settings-section">
-                    <h3>General</h3>
+                    <h3><i className="fa-solid fa-sliders"/> General</h3>
                     <p className="settings-section-desc">Here you can configure various general settings</p>
                     <div className="settings-row">
                         <span className="settings-row-label">Interface language</span>
@@ -142,7 +166,7 @@ export default function SettingsPage({connections, onImported}) {
                 </div>
 
                 <div className="settings-section">
-                    <h3>Document Editor</h3>
+                    <h3><i className="fa-solid fa-file-code"/> Document Editor</h3>
                     <p className="settings-section-desc">Here you can adjust various settings for the document editor</p>
                     <div className="settings-row">
                         <span className="settings-row-label">Default tab editor</span>
@@ -155,37 +179,46 @@ export default function SettingsPage({connections, onImported}) {
                 </div>
 
                 <div className="settings-section">
-                    <h3>Security</h3>
+                    <h3><i className="fa-solid fa-shield-halved"/> Security</h3>
                     <p className="settings-section-desc">Here you can adjust your security settings</p>
 
                     {!vaultStatus.encryptionEnabled && mode !== 'setup' && (
-                        <button className="primary" onClick={() => {
-                            resetForm();
-                            setMode('setup');
-                        }}>Set up master password</button>
+                        <div className="settings-row">
+                            <span className="settings-row-label">Master password is not set. Connections are stored unencrypted.</span>
+                            <button className="primary" onClick={() => {
+                                resetForm();
+                                setMode('setup');
+                            }}><i className="fa-solid fa-lock"/> Set up master password</button>
+                        </div>
                     )}
 
                     {vaultStatus.encryptionEnabled && !mode && (
-                        <div className="toolbar">
-                            <button onClick={() => {
-                                resetForm();
-                                setMode('change');
-                            }}>Change password
-                            </button>
-                            <button onClick={() => {
-                                resetForm();
-                                setMode('disable');
-                            }}>Remove master password
-                            </button>
+                        <div className="settings-row">
+                            <span className="settings-row-label"><i className="fa-solid fa-lock" style={{color: 'var(--accent)'}}/> Master password is enabled.</span>
+                            <div className="toolbar">
+                                <button onClick={() => {
+                                    resetForm();
+                                    setMode('change');
+                                }}>Change password
+                                </button>
+                                <button onClick={() => {
+                                    resetForm();
+                                    setMode('disable');
+                                }}>Remove master password
+                                </button>
+                            </div>
                         </div>
                     )}
 
                     {mode === 'setup' && (
-                        <form onSubmit={handleSetup}>
-                            <input type="password" placeholder="New master password" value={newPw}
+                        <form onSubmit={handleSetup} className="settings-form">
+                            <label className="settings-form-label">New master password</label>
+                            <input type="password" placeholder="At least 6 characters" value={newPw}
                                    onChange={(e) => setNewPw(e.target.value)} autoFocus/>
-                            <input type="password" placeholder="Confirm password" value={confirmPw}
+                            <label className="settings-form-label">Confirm password</label>
+                            <input type="password" placeholder="Repeat password" value={confirmPw}
                                    onChange={(e) => setConfirmPw(e.target.value)}/>
+                            <p className="hint-text">This password encrypts your saved connections on disk. It cannot be recovered if lost.</p>
                             <div className="modal-actions">
                                 <div className="spacer"/>
                                 <button type="button" onClick={resetForm}>Cancel</button>
@@ -196,12 +229,15 @@ export default function SettingsPage({connections, onImported}) {
                     )}
 
                     {mode === 'change' && (
-                        <form onSubmit={handleChange}>
-                            <input type="password" placeholder="Current master password" value={currentPw}
+                        <form onSubmit={handleChange} className="settings-form">
+                            <label className="settings-form-label">Current master password</label>
+                            <input type="password" placeholder="Current password" value={currentPw}
                                    onChange={(e) => setCurrentPw(e.target.value)} autoFocus/>
-                            <input type="password" placeholder="New master password" value={newPw}
+                            <label className="settings-form-label">New master password</label>
+                            <input type="password" placeholder="At least 6 characters" value={newPw}
                                    onChange={(e) => setNewPw(e.target.value)}/>
-                            <input type="password" placeholder="Confirm new password" value={confirmPw}
+                            <label className="settings-form-label">Confirm new password</label>
+                            <input type="password" placeholder="Repeat password" value={confirmPw}
                                    onChange={(e) => setConfirmPw(e.target.value)}/>
                             <div className="modal-actions">
                                 <div className="spacer"/>
@@ -213,9 +249,11 @@ export default function SettingsPage({connections, onImported}) {
                     )}
 
                     {mode === 'disable' && (
-                        <form onSubmit={handleDisable}>
-                            <input type="password" placeholder="Current master password" value={currentPw}
+                        <form onSubmit={handleDisable} className="settings-form">
+                            <label className="settings-form-label">Current master password</label>
+                            <input type="password" placeholder="Current password" value={currentPw}
                                    onChange={(e) => setCurrentPw(e.target.value)} autoFocus/>
+                            <p className="hint-text">Connections will be stored unencrypted on disk after this.</p>
                             <div className="modal-actions">
                                 <div className="spacer"/>
                                 <button type="button" onClick={resetForm}>Cancel</button>
@@ -227,36 +265,30 @@ export default function SettingsPage({connections, onImported}) {
                 </div>
 
                 <div className="settings-section">
-                    <h3>Backup</h3>
+                    <h3><i className="fa-solid fa-box-archive"/> Backup</h3>
                     <p className="settings-section-desc">Export or import all settings and saved connections as a single
                         JSON file.</p>
                     <div className="toolbar">
-                        <button onClick={handleExport}>Export settings & connections</button>
-                        <button onClick={handleImport}>Import settings & connections</button>
+                        <button onClick={handleExport}><i className="fa-solid fa-file-export"/> Export settings & connections</button>
+                        <button onClick={handleImport}><i className="fa-solid fa-file-import"/> Import settings & connections</button>
                     </div>
                 </div>
 
                 <UpdaterSection/>
 
                 <div className="settings-section">
-                    <h3>About</h3>
-                    {appInfo ? (
-                        <>
-                            <div className="settings-row">
-                                <span className="settings-row-label">Version</span>
-                                <span className="settings-row-value">{appInfo.version}</span>
-                            </div>
-                            <div className="settings-row">
-                                <span className="settings-row-label">Git</span>
-                                <span className="settings-row-value">
-                                    {appInfo.commit ? appInfo.commit : 'unknown'}
-                                    <span className="settings-row-value-child">    @ {appInfo.branch || 'unknown'}</span>
-                                </span>
-                            </div>
-                        </>
-                    ) : (
-                        <p className="settings-section-desc">Loading...</p>
-                    )}
+                    <h3><i className="fa-solid fa-circle-info"/> About</h3>
+                    <div className="settings-row">
+                        <span className="settings-row-label">Version</span>
+                        <span className="settings-row-value">{appInfo.version}</span>
+                    </div>
+                    <div className="settings-row">
+                        <span className="settings-row-label">Git</span>
+                        <span className="settings-row-value">
+                            {appInfo.commit ? appInfo.commit : 'unknown'}
+                            <span className="settings-row-value-child">    @ {appInfo.branch || 'unknown'}</span>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
