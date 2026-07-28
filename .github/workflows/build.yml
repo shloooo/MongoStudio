@@ -114,8 +114,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ needs.create-release.outputs.TAG_NAME }}
+          CHANNEL: ${{ needs.create-release.outputs.CHANNEL }}
         run: |
-          gh release upload "$TAG_NAME" release/*.dmg release/*.zip --clobber
+          shopt -s nullglob
+          gh release upload "$TAG_NAME" release/*.dmg release/*.zip release/*.blockmap release/"$CHANNEL"*.yml --clobber
 
       - name: Package artifacts
         run: |
@@ -165,7 +167,7 @@ jobs:
 
       - name: Build packages
         shell: bash
-        run: yarn electron-builder --win --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --win nsis --publish never -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
         env:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
@@ -176,16 +178,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ needs.create-release.outputs.TAG_NAME }}
+          CHANNEL: ${{ needs.create-release.outputs.CHANNEL }}
         run: |
-          gh release upload "$TAG_NAME" release/*.exe release/*.zip --clobber
+          shopt -s nullglob
+          gh release upload "$TAG_NAME" release/*.exe release/*.blockmap release/"$CHANNEL"*.yml --clobber
 
       - uses: actions/upload-artifact@v5
-        name: Upload installer/portable
+        name: Upload installer
         with:
           name: Windows-build
-          path: |
-            release/*.exe
-            release/*.zip
+          path: release/*.exe
 
   Linux-Build:
     needs: create-release
@@ -227,8 +229,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ needs.create-release.outputs.TAG_NAME }}
+          CHANNEL: ${{ needs.create-release.outputs.CHANNEL }}
         run: |
-          gh release upload "$TAG_NAME" release/*.AppImage release/*.deb release/*.tar.gz --clobber
+          shopt -s nullglob
+          gh release upload "$TAG_NAME" release/*.AppImage release/*.deb release/*.tar.gz release/*.blockmap release/"$CHANNEL"*.yml --clobber
 
       - uses: actions/upload-artifact@v5
         name: Upload AppImage
