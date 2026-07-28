@@ -1111,6 +1111,8 @@ button.primary:hover {
     overflow-x: auto;
     flex-shrink: 0;
     border-bottom: 1px solid var(--glass-border);
+    min-height: 38px;
+    max-height: 38px;
 }
 
 .collection-tab {
@@ -1164,14 +1166,6 @@ button.primary:hover {
 .collection-tab-close:hover {
     opacity: 1;
     background: rgba(255, 255, 255, 0.1);
-}
-
-.collection-tab-spacer {
-    flex: 1;
-}
-
-.settings-tab {
-    flex-shrink: 0;
 }
 
 /* ---------- DBRef display ---------- */

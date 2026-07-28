@@ -23,7 +23,6 @@ export default function App() {
     const [tabs, setTabs] = useState([]); // [{ id, connId, dbName, collection }]
     const [activeTabId, setActiveTabId] = useState(null);
     const [status, setStatus] = useState(null); // { type: 'info' | 'error', message } | null
-    const [showSettings, setShowSettings] = useState(false);
     const [reloadSignal, setReloadSignal] = useState(0);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
@@ -142,6 +141,14 @@ export default function App() {
             setActiveTabId(newTab.id);
             return [...prev, newTab];
         });
+    }
+
+    function handleOpenSettings() {
+        setTabs((prev) => {
+            if (prev.some((t) => t.isSettings)) return prev;
+            return [...prev, {id: 'settings-tab', isSettings: true}];
+        });
+        setActiveTabId('settings-tab');
     }
 
     function handleCloseTab(tabId) {
@@ -377,7 +384,7 @@ export default function App() {
                          onToggleConnection={handleToggleConnection}
                          onRefreshConnection={handleRefreshConnection}
                          onSelectCollection={handleSelectCollection}
-                         onOpenSettings={() => setShowSettings(true)}
+                         onOpenSettings={handleOpenSettings}
                          onCollectionContextMenu={handleCollectionContextMenu}
                          onConnectionContextMenu={handleConnectionContextMenu}
                          onDatabaseContextMenu={handleDatabaseContextMenu}
@@ -390,16 +397,19 @@ export default function App() {
                     <div className="collection-tab-bar">
                         {tabs.map((tab) => (
                             <div key={tab.id}
-                                 className={`collection-tab ${!showSettings && tab.id === activeTabId ? 'active' : ''}`}
-                                 onClick={() => {
-                                     setShowSettings(false);
-                                     setActiveTabId(tab.id);
-                                 }}
-                                 title={`${tab.dbName}.${tab.collection}`}>
+                                 className={`collection-tab ${tab.id === activeTabId ? 'active' : ''}`}
+                                 onClick={() => setActiveTabId(tab.id)}
+                                 title={tab.isSettings ? 'Settings' : `${tab.dbName}.${tab.collection}`}>
                                 <span className="collection-tab-label">
-                                    <span className="collection-tab-db">{tab.dbName}</span>
-                                    <span className="collection-tab-sep">.</span>
-                                    <span className="collection-tab-name">{tab.collection}</span>
+                                    {tab.isSettings ? (
+                                        '⚙ Settings'
+                                    ) : (
+                                        <>
+                                            <span className="collection-tab-db">{tab.dbName}</span>
+                                            <span className="collection-tab-sep">.</span>
+                                            <span className="collection-tab-name">{tab.collection}</span>
+                                        </>
+                                    )}
                                 </span>
                                 <button className="collection-tab-close" onClick={(e) => {
                                     e.stopPropagation();
@@ -408,28 +418,16 @@ export default function App() {
                                 </button>
                             </div>
                         ))}
-                        <div className="collection-tab-spacer"/>
-                        <div className={`collection-tab settings-tab ${showSettings ? 'active' : ''}`}
-                             onClick={() => setShowSettings(true)}>
-                            <span className="collection-tab-label">⚙ Settings</span>
-                            {showSettings && (
-                                <button className="collection-tab-close" onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowSettings(false);
-                                }}>×
-                                </button>
-                            )}
-                        </div>
                     </div>
-                    {showSettings ? (
+                    {activeTabId === 'settings-tab' ? (
                         <SettingsPage connections={connections} onImported={refreshConnections}/>
-                    ) : tabs.length === 0 ? (
+                    ) : tabs.filter((t) => !t.isSettings).length === 0 ? (
                         <div className="empty-state">
                             <h2>MongoStudio</h2>
                             <p>Select a connection and collection on the left to get started.</p>
                         </div>
                     ) : (
-                        tabs.map((tab) => (
+                        tabs.filter((t) => !t.isSettings).map((tab) => (
                             <div key={tab.id} style={{
                                 display: tab.id === activeTabId ? 'flex' : 'none',
                                 flex: 1,
