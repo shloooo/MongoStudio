@@ -1,9 +1,9 @@
 name: Build
 on:
   push:
-    branches: ["nightly", "release"]
+    branches: ["release"]
     tags: ["v*"]
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -31,11 +31,32 @@ jobs:
       - name: Generate git details
         run: yarn generate:gitinfo
 
+      - name: Calculate version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pkg = require('./package.json');
+            const base = pkg.version.split('-')[0];
+            const ref = context.ref;
+
+            let ver = pkg.version;
+
+            if (ref.startsWith('refs/heads/')) {
+              const rawBranch = ref.replace('refs/heads/', '');
+              const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+              const channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+              ver = `${base}-${channel}.${context.runNumber}`;
+            } else if (ref.startsWith('refs/tags/')) {
+              ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
+            }
+
+            core.exportVariable('APP_VERSION', ver);
+
       - name: Build renderer
         run: yarn build:renderer
 
       - name: Build, sign packages
-        run: yarn electron-builder --mac --publish onTag
+        run: yarn electron-builder --mac --publish onTag -c.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
@@ -83,12 +104,33 @@ jobs:
       - name: Generate git details
         run: yarn generate:gitinfo
 
+      - name: Calculate version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pkg = require('./package.json');
+            const base = pkg.version.split('-')[0];
+            const ref = context.ref;
+
+            let ver = pkg.version;
+
+            if (ref.startsWith('refs/heads/')) {
+              const rawBranch = ref.replace('refs/heads/', '');
+              const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+              const channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+              ver = `${base}-${channel}.${context.runNumber}`;
+            } else if (ref.startsWith('refs/tags/')) {
+              ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
+            }
+
+            core.exportVariable('APP_VERSION', ver);
+
       - name: Build renderer
         run: yarn build:renderer
 
       - name: Build packages
         shell: powershell
-        run: yarn electron-builder --win --publish onTag
+        run: yarn electron-builder --win --publish onTag -c.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
@@ -102,7 +144,6 @@ jobs:
           path: |
             release/*.exe
             release/*.zip
-
 
   Linux-Build:
     runs-on: ubuntu-24.04
@@ -131,11 +172,32 @@ jobs:
       - name: Generate git details
         run: yarn generate:gitinfo
 
+      - name: Calculate version
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pkg = require('./package.json');
+            const base = pkg.version.split('-')[0];
+            const ref = context.ref;
+
+            let ver = pkg.version;
+
+            if (ref.startsWith('refs/heads/')) {
+              const rawBranch = ref.replace('refs/heads/', '');
+              const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+              const channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+              ver = `${base}-${channel}.${context.runNumber}`;
+            } else if (ref.startsWith('refs/tags/')) {
+              ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
+            }
+
+            core.exportVariable('APP_VERSION', ver);
+
       - name: Build renderer
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --linux --publish onTag
+        run: yarn electron-builder --linux --publish onTag -c.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USE_HARD_LINKS: false
