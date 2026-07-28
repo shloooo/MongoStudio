@@ -29,8 +29,7 @@ function getLiveGitInfo(projectRoot) {
 
     return {
         commit: commit || null,
-        branch: branch || null,
-        dirty: status ? status.length > 0 : null
+        branch: branch || null
     };
 }
 
@@ -41,7 +40,6 @@ function getAppInfo({appVersion, projectRoot, isDev}) {
         version: appVersion,
         commit: gitInfo?.commit || null,
         branch: gitInfo?.branch || null,
-        dirty: typeof gitInfo?.dirty === 'boolean' ? gitInfo.dirty : null,
         isDev: !!isDev
     };
 }
