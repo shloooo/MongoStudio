@@ -1551,7 +1551,6 @@ button.danger:hover {
 .settings-page {
     width: 100%;
     max-width: 640px;
-    padding: 32px 24px 20px;
     height: fit-content;
 }
 
