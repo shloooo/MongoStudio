@@ -212,6 +212,22 @@
       "errorMixedFields": "Felder und Update-Operatoren dürfen nicht gemischt werden (gefunden: {{plainKeys}} neben {{opKeys}}). Verwende entweder reine Feld:Wert-Paare oder ausschließlich Operatoren wie $set/$unset/$inc.",
       "errorNoChanges": "Keine Änderungen angegeben. Trag in mindestens einem Feld einen Wert oder `undefined` (zum Entfernen) ein."
     },
+    "vaultGate": {
+      "lockedHeading": "MongoStudio ist gesperrt",
+      "lockedHint": "Gib dein Master-Passwort ein, um MongoStudio zu entsperren.",
+      "placeholder": "Master-Passwort",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen",
+      "incorrect": "Master-Passwort ist falsch.",
+      "unlock": "Entsperren",
+      "unlocking": "Wird entsperrt...",
+      "forgotPassword": "Master-Passwort vergessen?",
+      "resetHeading": "Alle Daten zurücksetzen?",
+      "resetHint": "Dadurch werden alle gespeicherten Verbindungen gelöscht und die Verschlüsselung deaktiviert. Das kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "resetEverything": "Bestätigen",
+      "resetting": "Wird zurückgesetzt..."
+    },
     "errorBoundary": {
       "heading": "Etwas ist schiefgelaufen",
       "subtext": "Ein unerwarteter Fehler hat die Anwendung zum Absturz gebracht. Deine Daten sind sicher — du kannst die App neu starten.",
@@ -288,8 +304,8 @@
   "documentEditor": {
     "newDocument": "Neues Dokument",
     "editDocument": "Dokument bearbeiten",
-    "tree": "Baum",
-    "raw": "Roh",
+    "tree": "Tree",
+    "raw": "Raw",
     "shellSyntaxHint": "Unterstützt Shell-Syntax — <0>ObjectId(\"...\")</0>, <1>DBRef(\"db.coll\", ObjectId(\"...\"))</1>, <2>UUID(\"...\")</2>, <3>ISODate(\"...\")</3>, <4>NumberLong(\"...\")</4>, usw.",
     "findReplace": "Suchen & Ersetzen",
     "hideFindReplace": "Suchen/Ersetzen ausblenden",
@@ -393,8 +409,8 @@
       "description": "Einstellungen für den Editor",
       "defaultTab": "Standardmäßiger Tab",
       "tab": {
-        "tree": "Baum",
-        "raw": "Roh"
+        "tree": "Tree",
+        "raw": "Raw"
       }
     },
     "security": {

@@ -212,6 +212,22 @@
       "errorMixedFields": "Fields and update operators must not be mixed (found: {{plainKeys}} next to {{opKeys}}). Use either pure field:value pairs or exclusively operators such as $set/$unset/$inc.",
       "errorNoChanges": "No changes specified. Enter a value or `undefined` (to remove) in at least one field."
     },
+    "vaultGate": {
+      "lockedHeading": "MongoStudio is locked",
+      "lockedHint": "Enter your master password to unlock MongoStudio.",
+      "placeholder": "Master password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "incorrect": "Incorrect master password.",
+      "unlock": "Unlock",
+      "unlocking": "Unlocking...",
+      "forgotPassword": "Forgot your master password?",
+      "resetHeading": "Reset all data?",
+      "resetHint": "This deletes all saved connections and disables encryption. This can't be undone.",
+      "cancel": "Cancel",
+      "resetEverything": "Confirm",
+      "resetting": "Resetting..."
+    },
     "errorBoundary": {
       "heading": "Something went wrong",
       "subtext": "An unexpected error crashed the app. Your data is safe — you can restart the app.",
