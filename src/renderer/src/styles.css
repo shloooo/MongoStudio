@@ -534,7 +534,15 @@ select {
     color-scheme: dark;
 }
 
-select:focus {
+select:disabled {
+    cursor: not-allowed;
+
+    &:hover {
+        border-color: var(--danger);
+    }
+}
+
+select:focus, select:hover {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim);
@@ -1549,7 +1557,8 @@ button.danger:hover {
 .settings-page {
     width: 100%;
     max-width: 640px;
-    padding: 32px 24px 60px;
+    padding: 32px 24px 20px;
+    height: fit-content;
 }
 
 .settings-page h1 {
