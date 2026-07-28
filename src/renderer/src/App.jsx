@@ -371,11 +371,6 @@ export default function App() {
                         setRefreshDbSignal({connId: conn.id, ts: Date.now()});
                     }
                 },
-                {
-                    label: t('app.menu.manageUsersAdmin'),
-                    disabled: !isOpen,
-                    onClick: () => handleOpenDatabaseUsers({connId: conn.id, dbName: 'admin'})
-                },
                 {separator: true},
                 {
                     label: t('app.menu.delete'),
@@ -435,7 +430,7 @@ export default function App() {
 
     return (
         <div className="app-root">
-            <TitleBar title={t('app.title')}/>
+            <TitleBar title="MongoStudio"/>
             <ErrorToastStack/>
             <div className="app-shell">
                 <Sidebar connections={connections}
@@ -478,7 +473,7 @@ export default function App() {
                         <SettingsPage connections={connections} onImported={refreshConnections}/>
                     ) : contentTabs.length === 0 ? (
                         <div className="empty-state">
-                            <h2>{t('app.emptyState.heading')}</h2>
+                            <h2>MongoStudio</h2>
                             <p>{t('app.emptyState.body')}</p>
                         </div>
                     ) : (
