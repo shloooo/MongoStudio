@@ -1599,6 +1599,12 @@ button.danger:hover {
     font-family: var(--font-mono);
 }
 
+.settings-row-value-child {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+}
+
 .dev-mode-banner {
     background: rgba(230, 160, 60, 0.14);
     color: #e6a03c;
