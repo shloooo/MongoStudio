@@ -1,5 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {useConfirm} from './ConfirmProvider.jsx';
+import {filterVisibleCollections} from '../lib/systemNamespaces.js';
+
+function sortCollections(collections, dbName) {
+    return filterVisibleCollections(dbName, collections).sort((a, b) => a.name.localeCompare(b.name));
+}
 
 function DatabaseNode({
                           connId,
@@ -18,7 +23,7 @@ function DatabaseNode({
     async function expand(forceRefresh) {
         if (collections === null || forceRefresh) {
             const cols = await window.api.conn.listCollections(connId, dbName);
-            setCollections([...cols].sort((a, b) => a.name.localeCompare(b.name)));
+            setCollections(sortCollections(cols, dbName));
         }
         setExpanded(true);
     }
@@ -41,7 +46,7 @@ function DatabaseNode({
     useEffect(() => {
         if (connRefreshSignal && connRefreshSignal.connId === connId && collections !== null) {
             window.api.conn.listCollections(connId, dbName).then((cols) => {
-                setCollections([...cols].sort((a, b) => a.name.localeCompare(b.name)));
+                setCollections(sortCollections(cols, dbName));
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -157,11 +162,13 @@ function ConnectionNode({
                 <span className={`conn-dot ${isOpen ? 'online' : 'offline'}`}/>
                 <span className="conn-name" onClick={toggleExpand}>{conn.name}</span>
                 <span className="row-actions">
-          <button title={isOpen ? 'Disconnect' : 'Connect'} onClick={() => onToggle(conn)}>{isOpen ? '⏻' : '▶'}</button>
+          <button title={isOpen ? 'Disconnect' : 'Connect'} onClick={() => onToggle(conn)}>
+                        <i className={`fa-solid ${isOpen ? 'fa-plug-circle-xmark' : 'fa-plug'}`}/>
+                    </button>
                     {isOpen && (
-                        <button title="Refresh" onClick={() => onRefresh(conn)}>⟳</button>
+                        <button title="Refresh" onClick={() => onRefresh(conn)}><i className="fa-solid fa-rotate"/></button>
                     )}
-                    <button title="Edit" onClick={() => onEdit(conn)}>✎</button>
+                    <button title="Edit" onClick={() => onEdit(conn)}><i className="fa-solid fa-pen"/></button>
           <button title="Delete"
                   className="delete-icon-btn"
                   onClick={handleDeleteClick}>
