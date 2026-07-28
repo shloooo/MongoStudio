@@ -62,6 +62,11 @@ export default function SettingsPage({connections, onImported}) {
         setSettings(next);
     }
 
+    async function updateMultiColumnSort(value) {
+        const next = await window.api.settings.set('multiColumnSort', value);
+        setSettings(next);
+    }
+
     function resetForm() {
         setMode(null);
         setCurrentPw('');
@@ -180,6 +185,16 @@ export default function SettingsPage({connections, onImported}) {
                             <option value="tree">{t('settings.editor.tab.tree')}</option>
                             <option value="raw">{t('settings.editor.tab.raw')}</option>
                         </select>
+                    </div>
+                </div>
+
+                <div className="settings-section">
+                    <h3><i className="fa-solid fa-arrow-down-wide-short"/> {t('settings.documentsTable.heading')}</h3>
+                    <p className="settings-section-desc">{t('settings.documentsTable.description')}</p>
+                    <div className="settings-row">
+                        <span className="settings-row-label">{t('settings.documentsTable.multiColumnSort')}</span>
+                        <input type="checkbox" checked={!!settings.multiColumnSort}
+                               onChange={(e) => updateMultiColumnSort(e.target.checked)}/>
                     </div>
                 </div>
 

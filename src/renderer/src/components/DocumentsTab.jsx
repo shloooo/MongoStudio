@@ -158,20 +158,23 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   const [setValueField, setSetValueField] = useState(null);
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
   const [defaultEditorTab, setDefaultEditorTab] = useState('tree');
+  const [multiColumnSort, setMultiColumnSort] = useState(false);
+  const [hasExplicitSort, setHasExplicitSort] = useState(false);
   const confirmDialog = useConfirm();
 
   useEffect(() => {
     window.api.settings.get().then((s) => {
       if (s && s.defaultEditorTab) setDefaultEditorTab(s.defaultEditorTab);
+      setMultiColumnSort(s && s.multiColumnSort);
     });
   }, []);
 
-  const runQuery = useCallback(async () => {
+  const runQuery = useCallback(async (overrides = {}) => {
     setLoading(true);
     setError('');
     try {
       const filterValue = parseShell(filter || '{}');
-      const sortValue = parseShell(sort || '{}');
+      const sortValue = parseShell(overrides.sort ?? sort ?? '{}');
       const result = await window.api.data.find({
         connId: selection.connId,
         dbName: selection.dbName,
@@ -179,7 +182,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
         filter: EJSON.stringify(filterValue),
         sort: EJSON.stringify(sortValue),
         limit: PAGE_SIZE,
-        skip: page * PAGE_SIZE
+        skip: (overrides.page ?? page) * PAGE_SIZE
       });
       setDocs(result.docs.map((d) => EJSON.parse(JSON.stringify(d))));
       setTotalCount(result.totalCount);
@@ -198,7 +201,6 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   useEffect(() => { runQuery(); }, [selection, page]);
   useEffect(() => { if (reloadSignal !== undefined) runQuery(); }, [reloadSignal]);
 
-  // Union of field names across the loaded page, in first-seen order, _id always first.
   const fieldColumns = useMemo(() => {
     const seen = new Set();
     const cols = [];
@@ -212,9 +214,53 @@ export default function DocumentsTab({ selection, reloadSignal }) {
     return cols;
   }, [docs]);
 
+  const currentSortEntries = useMemo(() => {
+    try {
+      const parsed = parseShell(sort || '{}');
+      return Object.keys(parsed).map((field) => ({
+        field,
+        direction: Number(parsed[field]) < 0 ? -1 : 1
+      }));
+    } catch {
+      return [];
+    }
+  }, [sort]);
+
+  function sortInfoFor(field) {
+    const index = currentSortEntries.findIndex((e) => e.field === field);
+    if (index === -1) return null;
+    return {direction: currentSortEntries[index].direction, priority: index + 1};
+  }
+
+  function serializeSort(entries) {
+    if (entries.length === 0) return '{ _id: -1 }';
+    return '{ ' + entries.map(({field, direction}) => `${field}: ${direction}`).join(', ') + ' }';
+  }
+
   function handleRunClick() {
+    setHasExplicitSort(true);
     setPage(0);
     runQuery();
+  }
+
+  function handleSortClick(field) {
+    const activeEntries = hasExplicitSort ? currentSortEntries : [];
+    const index = activeEntries.findIndex((e) => e.field === field);
+    let nextEntries;
+
+    if (index === -1) {
+      nextEntries = multiColumnSort ? [...activeEntries, {field, direction: 1}] : [{field, direction: 1}];
+    } else if (activeEntries[index].direction === 1) {
+      nextEntries = activeEntries.map((e, i) => (i === index ? {field, direction: -1} : e));
+    } else {
+      nextEntries = activeEntries.filter((e) => e.field !== field);
+    }
+
+    const newSort = serializeSort(nextEntries);
+    setSort(newSort);
+    setHasExplicitSort(nextEntries.length > 0);
+    setPage(0);
+    runQuery({sort: newSort, page: 0});
   }
 
   async function handleDeleteSelected() {
@@ -514,8 +560,36 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                     disabled={docs.length === 0}
                 />
               </th>
-              <th className="col-id">_id</th>
-              {fieldColumns.map((f) => <th key={f} onContextMenu={(e) => handleHeaderContextMenu(e, f)}>{f}</th>)}
+              <th className="col-id sortable" onClick={() => handleSortClick('_id')} title={t('documentsTab.sortByField', {field: '_id'})}>
+                {(() => {
+                  const info = sortInfoFor('_id');
+                  return (
+                      <span className={`sort-header ${info ? 'is-active' : ''}`}>
+                        _id
+                        {info && currentSortEntries.length > 1 && <span className="sort-priority">{info.priority}</span>}
+                        <i className={`fa-solid sort-icon ${info ? (info.direction === 1 ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}`}/>
+                      </span>
+                  );
+                })()}
+              </th>
+              {fieldColumns.map((f) => {
+                const info = sortInfoFor(f);
+                return (
+                    <th
+                        key={f}
+                        className="sortable"
+                        onClick={() => handleSortClick(f)}
+                        onContextMenu={(e) => handleHeaderContextMenu(e, f)}
+                        title={t('documentsTab.sortByField', {field: f})}
+                    >
+                      <span className={`sort-header ${info ? 'is-active' : ''}`}>
+                        {f}
+                        {info && currentSortEntries.length > 1 && <span className="sort-priority">{info.priority}</span>}
+                        <i className={`fa-solid sort-icon ${info ? (info.direction === 1 ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'}`}/>
+                      </span>
+                    </th>
+                );
+              })}
               <th className="col-fill"></th>
             </tr>
             </thead>

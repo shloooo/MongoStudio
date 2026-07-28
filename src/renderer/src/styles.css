@@ -606,6 +606,66 @@ button.primary:hover {
     flex: 1;
 }
 
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    min-width: 15px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    border-radius: 4px;
+    border: 1px solid var(--glass-border-strong);
+    background: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+}
+
+input[type="checkbox"]:hover {
+    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+input[type="checkbox"]:checked,
+input[type="checkbox"]:indeterminate {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid #06170f;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+input[type="checkbox"]:indeterminate::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 6px;
+    width: 7px;
+    height: 2px;
+    border-radius: 1px;
+    background: #06170f;
+}
+
+input[type="checkbox"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent-glow);
+    outline-offset: 1px;
+}
+
 .error-banner {
     background: var(--danger-dim);
     color: var(--danger);
@@ -638,9 +698,48 @@ button.primary:hover {
 }
 
 .spreadsheet-table .col-checkbox {
-    width: 32px;
-    max-width: 32px;
-    white-space: normal;
+    width: 35px;
+    max-width: 45px;
+}
+
+.doc-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.doc-table th.sortable:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.sort-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sort-header .sort-icon {
+    font-size: 9px;
+    opacity: 0.3;
+}
+
+.sort-header .sort-priority {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-radius: 3px;
+    padding: 0 3px;
+    line-height: 1.4;
+}
+
+.sort-header.is-active {
+    color: var(--accent);
+}
+
+.sort-header.is-active .sort-icon {
+    opacity: 1;
+    color: var(--accent);
 }
 
 .spreadsheet-table .col-id {
