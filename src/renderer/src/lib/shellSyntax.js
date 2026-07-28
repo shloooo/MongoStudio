@@ -1,4 +1,4 @@
-import { ObjectId, DBRef, UUID, Long, Decimal128, Binary, Timestamp, MinKey, MaxKey } from 'bson';
+import { ObjectId, DBRef, UUID, Long, Decimal128, Binary, Timestamp, MinKey, MaxKey, Int32, Double } from 'bson';
 
 // ---------------------------------------------------------------------------
 // Tokenizer
@@ -111,7 +111,7 @@ const CONSTRUCTORS = {
   ISODate: (args) => new Date(args[0]),
   Date: (args) => (args.length ? new Date(args[0]) : new Date()),
   NumberLong: (args) => Long.fromString(String(args[0])),
-  NumberInt: (args) => Number.parseInt(args[0], 10),
+  NumberInt: (args) => new Int32(Number.parseInt(args[0], 10)),
   NumberDecimal: (args) => Decimal128.fromString(String(args[0])),
   Timestamp: (args) => new Timestamp({ t: Number(args[0]) || 0, i: Number(args[1]) || 0 }),
   BinData: (args) => new Binary(Buffer.from(String(args[1] ?? ''), 'base64'), Number(args[0]) || 0),
@@ -250,10 +250,10 @@ function quoteString(str) {
 
 function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v) &&
-    !(v instanceof ObjectId) && !(v instanceof UUID) && !(v instanceof DBRef) &&
-    !(v instanceof Date) && !(v instanceof Long) && !(v instanceof Decimal128) &&
-    !(v instanceof Binary) && !(v instanceof Timestamp) &&
-    !(v instanceof MinKey) && !(v instanceof MaxKey);
+      !(v instanceof ObjectId) && !(v instanceof UUID) && !(v instanceof DBRef) &&
+      !(v instanceof Date) && !(v instanceof Long) && !(v instanceof Int32) && !(v instanceof Double) &&
+      !(v instanceof Decimal128) && !(v instanceof Binary) && !(v instanceof Timestamp) &&
+      !(v instanceof MinKey) && !(v instanceof MaxKey);
 }
 
 export function valueToShell(value, indent = 0, pretty = true) {
@@ -276,6 +276,8 @@ export function valueToShell(value, indent = 0, pretty = true) {
   if (value instanceof UUID) return `UUID(${quoteString(value.toString())})`;
   if (value instanceof Date) return `ISODate(${quoteString(value.toISOString())})`;
   if (value instanceof Long) return `NumberLong(${quoteString(value.toString())})`;
+  if (value instanceof Int32) return `NumberInt(${value.value})`;
+  if (value instanceof Double) return Number.isInteger(value.value) ? `${value.value}.0` : String(value.value);
   if (value instanceof Decimal128) return `NumberDecimal(${quoteString(value.toString())})`;
   if (value instanceof Timestamp) return `Timestamp(${value.t}, ${value.i})`;
   if (value instanceof Binary) return `BinData(${value.sub_type}, ${quoteString(value.toString('base64'))})`;
