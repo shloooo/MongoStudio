@@ -346,6 +346,12 @@ select,
     justify-content: center;
 }
 
+.row-actions button i {
+    width: 12px;
+    font-size: 11px;
+    text-align: center;
+}
+
 .row-actions button:hover {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary);
@@ -1804,4 +1810,237 @@ button.danger:hover {
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.18);
+}
+/* ---------- Users tab ---------- */
+.users-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 18px;
+    height: 100%;
+    min-height: 0;
+}
+
+.users-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.muted-text {
+    color: var(--text-tertiary);
+}
+
+.users-table-wrap {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed;
+}
+
+.users-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-tertiary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+}
+
+.users-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: top;
+    color: var(--text-primary);
+}
+
+.users-table tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.users-table .col-user { width: 16%; }
+.users-table .col-authdb { width: 12%; }
+.users-table .col-roles { width: 24%; }
+.users-table .col-mechanisms { width: 16%; }
+.users-table .col-granted { width: 18%; }
+.users-table .col-actions-list { width: auto; }
+.users-table .col-row-actions { width: 56px; }
+
+.users-table .user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.users-table code {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.row-actions.is-static {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.role-chip, .resource-chip, .action-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border-strong);
+    color: var(--text-secondary);
+}
+
+.role-chip {
+    color: var(--text-primary);
+    background: var(--accent-dim);
+    border-color: rgba(47, 217, 138, 0.25);
+}
+
+.role-chip-db {
+    color: var(--text-tertiary);
+    margin-left: 2px;
+}
+
+.resource-chip.is-wildcard, .privilege-resource.is-wildcard {
+    color: var(--accent);
+    border-color: rgba(47, 217, 138, 0.3);
+}
+
+.action-chip {
+    font-family: var(--font-mono);
+}
+
+.chip-more {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.chip-more:hover {
+    text-decoration: underline;
+}
+
+/* ---------- User editor dialog ---------- */
+.user-editor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.user-editor-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+}
+
+.user-editor-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-editor-section-head h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-editor-section-head button {
+    font-size: 11.5px;
+    padding: 4px 9px;
+}
+
+.role-editor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.role-editor-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.role-editor-row select {
+    flex: 1;
+    min-width: 0;
+}
+
+.role-editor-on {
+    color: var(--text-tertiary);
+    font-size: 11.5px;
+    flex-shrink: 0;
+}
+
+.icon-btn {
+    flex-shrink: 0;
+}
+
+.privilege-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.privilege-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.privilege-resource {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-secondary);
+}
+
+.privilege-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }

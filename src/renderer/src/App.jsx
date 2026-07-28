@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import ConnectionDialog from './components/ConnectionDialog.jsx';
 import CollectionView from './components/CollectionView.jsx';
+import UsersView from './components/UsersView.jsx';
 import TitleBar from './components/TitleBar.jsx';
 import VaultGate from './components/VaultGate.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
@@ -20,7 +21,8 @@ export default function App() {
     const [connections, setConnections] = useState([]);
     const [openConnIds, setOpenConnIds] = useState(new Set());
     const [dialogState, setDialogState] = useState({open: false, editing: null});
-    const [tabs, setTabs] = useState([]); // [{ id, connId, dbName, collection }]
+    // [{ id, kind: 'collection' | 'users' | 'collection-users' | 'settings', connId, dbName, collection }]
+    const [tabs, setTabs] = useState([]);
     const [activeTabId, setActiveTabId] = useState(null);
     const [status, setStatus] = useState(null); // { type: 'info' | 'error', message } | null
     const [reloadSignal, setReloadSignal] = useState(0);
@@ -128,25 +130,36 @@ export default function App() {
         }
     }
 
-    function handleSelectCollection(selection) {
+    function openTab(kind, target, key) {
         setTabs((prev) => {
-            const existing = prev.find(
-                (t) => t.connId === selection.connId && t.dbName === selection.dbName && t.collection === selection.collection
-            );
+            const existing = prev.find((t) => t.key === key);
             if (existing) {
                 setActiveTabId(existing.id);
                 return prev;
             }
-            const newTab = {id: `tab-${++tabIdCounter}`, ...selection};
+            const newTab = {id: `tab-${++tabIdCounter}`, key, kind, ...target};
             setActiveTabId(newTab.id);
             return [...prev, newTab];
         });
     }
 
+    function handleSelectCollection(selection) {
+        const {connId, dbName, collection} = selection;
+        openTab('collection', {connId, dbName, collection}, `collection:${connId}:${dbName}:${collection}`);
+    }
+
+    function handleOpenDatabaseUsers({connId, dbName}) {
+        openTab('users', {connId, dbName}, `users:${connId}:${dbName}`);
+    }
+
+    function handleOpenCollectionUsers({connId, dbName, collection}) {
+        openTab('collection-users', {connId, dbName, collection}, `collection-users:${connId}:${dbName}:${collection}`);
+    }
+
     function handleOpenSettings() {
         setTabs((prev) => {
-            if (prev.some((t) => t.isSettings)) return prev;
-            return [...prev, {id: 'settings-tab', isSettings: true}];
+            if (prev.some((t) => t.kind === 'settings')) return prev;
+            return [...prev, {id: 'settings-tab', key: 'settings', kind: 'settings'}];
         });
         setActiveTabId('settings-tab');
     }
@@ -170,6 +183,7 @@ export default function App() {
             y: e.clientY,
             items: [
                 {label: 'Open', onClick: () => handleSelectCollection(target)},
+                {label: 'List users with access...', onClick: () => handleOpenCollectionUsers(target)},
                 {separator: true},
                 {
                     label: 'Export as JSON...',
@@ -248,6 +262,7 @@ export default function App() {
                         setOpenDbSignal({connId, dbName, force: true, ts: Date.now()});
                     }
                 },
+                {label: 'Manage users...', onClick: () => handleOpenDatabaseUsers(target)},
                 {separator: true},
                 {
                     label: 'Export as JSON...',
@@ -343,6 +358,11 @@ export default function App() {
                         setRefreshDbSignal({connId: conn.id, ts: Date.now()});
                     }
                 },
+                {
+                    label: 'Manage users (admin)...',
+                    disabled: !isOpen,
+                    onClick: () => handleOpenDatabaseUsers({connId: conn.id, dbName: 'admin'})
+                },
                 {separator: true},
                 {
                     label: 'Delete',
@@ -358,6 +378,38 @@ export default function App() {
             ]
         });
     }
+
+    function getConnName(connId) {
+        return connections.find((c) => c.id === connId)?.name || connId;
+    }
+
+    function tabLabel(tab) {
+        switch (tab.kind) {
+            case 'settings':
+                return 'Settings';
+            case 'users':
+                return `${tab.dbName} users`;
+            case 'collection-users':
+                return `${tab.collection} users`;
+            default:
+                return tab.collection || tab.dbName;
+        }
+    }
+
+    function tabTitle(tab) {
+        if (tab.kind === 'settings') return 'Settings';
+        const connName = getConnName(tab.connId);
+        switch (tab.kind) {
+            case 'users':
+                return `${connName} / ${tab.dbName} / users`;
+            case 'collection-users':
+                return `${connName} / ${tab.dbName} / ${tab.collection} / users`;
+            default:
+                return `${connName} / ${tab.dbName} / ${tab.collection}`;
+        }
+    }
+
+    const contentTabs = tabs.filter((t) => t.kind !== 'settings');
 
     if (!unlocked) {
         return (
@@ -399,18 +451,8 @@ export default function App() {
                             <div key={tab.id}
                                  className={`collection-tab ${tab.id === activeTabId ? 'active' : ''}`}
                                  onClick={() => setActiveTabId(tab.id)}
-                                 title={tab.isSettings ? 'Settings' : `${tab.dbName}.${tab.collection}`}>
-                                <span className="collection-tab-label">
-                                    {tab.isSettings ? (
-                                        '⚙ Settings'
-                                    ) : (
-                                        <>
-                                            <span className="collection-tab-db">{tab.dbName}</span>
-                                            <span className="collection-tab-sep">.</span>
-                                            <span className="collection-tab-name">{tab.collection}</span>
-                                        </>
-                                    )}
-                                </span>
+                                 title={tabTitle(tab)}>
+                                <span className="collection-tab-label">{tabLabel(tab)}</span>
                                 <button className="collection-tab-close" onClick={(e) => {
                                     e.stopPropagation();
                                     handleCloseTab(tab.id);
@@ -421,23 +463,31 @@ export default function App() {
                     </div>
                     {activeTabId === 'settings-tab' ? (
                         <SettingsPage connections={connections} onImported={refreshConnections}/>
-                    ) : tabs.filter((t) => !t.isSettings).length === 0 ? (
+                    ) : contentTabs.length === 0 ? (
                         <div className="empty-state">
                             <h2>MongoStudio</h2>
                             <p>Select a connection and collection on the left to get started.</p>
                         </div>
                     ) : (
-                        tabs.filter((t) => !t.isSettings).map((tab) => (
+                        contentTabs.map((tab) => (
                             <div key={tab.id} style={{
                                 display: tab.id === activeTabId ? 'flex' : 'none',
                                 flex: 1,
                                 minWidth: 0,
                                 overflow: 'hidden'
                             }}>
-                                <CollectionView
-                                    selection={tab}
-                                    reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
-                                />
+                                {tab.kind === 'users' || tab.kind === 'collection-users' ? (
+                                    <UsersView
+                                        selection={tab}
+                                        mode={tab.kind === 'collection-users' ? 'collection' : 'database'}
+                                        reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
+                                    />
+                                ) : (
+                                    <CollectionView
+                                        selection={tab}
+                                        reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
+                                    />
+                                )}
                             </div>
                         ))
                     )}

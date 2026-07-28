@@ -101,7 +101,52 @@ function registerDataHandlers(ipcMain) {
   ipcMain.handle('data:listUsers', async (event, { connId, dbName }) => {
     const client = getClient(connId);
     const result = await client.db(dbName).command({ usersInfo: 1 });
-    return result.users || [];
+    return dedupeUsers(result.users || []);
+  });
+
+  ipcMain.handle('data:listAllUsers', async (event, { connId }) => {
+    const client = getClient(connId);
+    return listAllUsers(client);
+  });
+
+  ipcMain.handle('data:listRoles', async (event, { connId, dbName }) => {
+    const client = getClient(connId);
+    const result = await client.db(dbName).command({ rolesInfo: 1, showBuiltinRoles: true });
+    return (result.roles || [])
+        .map((r) => ({ role: r.role, db: r.db, isBuiltin: !!r.isBuiltin }))
+        .sort((a, b) => a.role.localeCompare(b.role));
+  });
+
+  ipcMain.handle('data:userPrivileges', async (event, { connId, dbName, user }) => {
+    const client = getClient(connId);
+    return loadUserDetail(client, dbName, user);
+  });
+
+  // Lists every user in the cluster that holds at least one privilege on dbName.collection,
+  // together with the actions that privilege grants there.
+  ipcMain.handle('data:collectionUsers', async (event, { connId, dbName, collection }) => {
+    const client = getClient(connId);
+    const all = await listAllUsers(client);
+    const out = [];
+    for (const u of all) {
+      let detail;
+      try {
+        detail = await loadUserDetail(client, u.db, u.user);
+      } catch {
+        continue; // the user's auth db may not be readable with the current credentials
+      }
+      const matched = detail.privileges.filter((p) => resourceCoversCollection(p.resource, dbName, collection));
+      if (!matched.length) continue;
+      out.push({
+        user: detail.user,
+        db: detail.db,
+        roles: detail.roles,
+        mechanisms: detail.mechanisms,
+        actions: Array.from(new Set(matched.flatMap((p) => p.actions || []))).sort(),
+        resources: matched.map((p) => p.resource)
+      });
+    }
+    return out;
   });
 
   ipcMain.handle('data:createUser', async (event, { connId, dbName, user, pwd, roles }) => {
@@ -387,6 +432,63 @@ function registerDataHandlers(ipcMain) {
     const result = await coll.insertMany(docs, { ordered: false });
     return { ok: true, insertedCount: result.insertedCount };
   });
+}
+
+// `usersInfo: { forAllDBs: true }` needs MongoDB 4.0+ and cluster-wide viewUser rights;
+// where it is unavailable we sweep every database instead.
+async function listAllUsers(client) {
+  const admin = client.db('admin');
+  try {
+    const result = await admin.command({ usersInfo: { forAllDBs: true } });
+    return dedupeUsers(result.users || []);
+  } catch {
+    const { databases } = await admin.admin().listDatabases();
+    const users = [];
+    for (const d of databases) {
+      try {
+        const result = await client.db(d.name).command({ usersInfo: 1 });
+        users.push(...(result.users || []));
+      } catch {
+        // not authorized to read users on this database
+      }
+    }
+    return dedupeUsers(users);
+  }
+}
+
+function dedupeUsers(users) {
+  const byKey = new Map();
+  for (const u of users) byKey.set(`${u.db}.${u.user}`, u);
+  return Array.from(byKey.values()).sort((a, b) =>
+      a.db === b.db ? a.user.localeCompare(b.user) : a.db.localeCompare(b.db)
+  );
+}
+
+async function loadUserDetail(client, dbName, user) {
+  const result = await client.db(dbName).command({
+    usersInfo: { user, db: dbName },
+    showPrivileges: true
+  });
+  const found = (result.users || [])[0];
+  if (!found) throw new Error(`User "${user}" does not exist on "${dbName}".`);
+  return {
+    user: found.user,
+    db: found.db,
+    roles: found.roles || [],
+    mechanisms: found.mechanisms || [],
+    customData: found.customData,
+    privileges: found.inheritedPrivileges || found.privileges || []
+  };
+}
+
+// A privilege resource covers db.collection when both parts match; an empty string is a wildcard.
+function resourceCoversCollection(resource, dbName, collection) {
+  if (!resource) return false;
+  if (resource.anyResource) return true;
+  if (resource.cluster) return false; // cluster actions are not collection-scoped
+  if (typeof resource.db !== 'string' || typeof resource.collection !== 'string') return false;
+  return (resource.db === '' || resource.db === dbName)
+      && (resource.collection === '' || resource.collection === collection);
 }
 
 const COPY_BATCH_SIZE = 500;

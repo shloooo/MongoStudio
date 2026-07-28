@@ -1,168 +1,138 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {parseShell} from '../lib/shellSyntax.js';
 import {useConfirm} from './ConfirmProvider.jsx';
+import UserEditorDialog from './UserEditorDialog.jsx';
+import {formatResource, isWildcardResource} from '../lib/mongoPrivileges.js';
 
-function formatRoles(roles) {
-    return (roles || []).map((r) => `${r.role}@${r.db}`).join(', ');
-}
+const ACTION_PREVIEW_COUNT = 8;
 
-export default function UserManagementTab({selection, reloadSignal}) {
+// mode 'database': every user whose authentication database is selection.dbName.
+// mode 'collection': every user in the cluster holding a privilege on selection.collection.
+export default function UserManagementTab({selection, mode = 'database', reloadSignal}) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [editor, setEditor] = useState(null); // { authDb, username } | { authDb } for create
     const confirmDialog = useConfirm();
 
-    const [newUser, setNewUser] = useState('');
-    const [newPwd, setNewPwd] = useState('');
-    const [newRoles, setNewRoles] = useState(`[{role: 'readWrite', db: '${selection.dbName}'}]`);
-
-    const [editingUser, setEditingUser] = useState(null);
-    const [editPwd, setEditPwd] = useState('');
-    const [editRoles, setEditRoles] = useState('');
+    const isCollectionMode = mode === 'collection';
 
     const load = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            const list = await window.api.data.listUsers({connId: selection.connId, dbName: selection.dbName});
+            const list = isCollectionMode
+                ? await window.api.data.collectionUsers({
+                    connId: selection.connId,
+                    dbName: selection.dbName,
+                    collection: selection.collection
+                })
+                : await window.api.data.listUsers({connId: selection.connId, dbName: selection.dbName});
             setUsers(list);
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
-    }, [selection]);
+    }, [selection.connId, selection.dbName, selection.collection, isCollectionMode]);
 
     useEffect(() => {
         load();
     }, [load]);
+
     useEffect(() => {
         if (reloadSignal !== undefined && reloadSignal > 0) load();
     }, [reloadSignal]);
 
-    async function handleCreate() {
+    async function handleDrop(user) {
         setError('');
-        if (!newUser.trim()) {
-            setError('Username is required.');
-            return;
-        }
-        if (!newPwd) {
-            setError('Password is required.');
-            return;
-        }
-        try {
-            const roles = parseShell(newRoles);
-            if (!Array.isArray(roles)) throw new Error('Roles must be an array, e.g. [{role: "readWrite", db: "mydb"}]');
-            await window.api.data.createUser({
-                connId: selection.connId,
-                dbName: selection.dbName,
-                user: newUser.trim(),
-                pwd: newPwd,
-                roles
-            });
-            setNewUser('');
-            setNewPwd('');
-            load();
-        } catch (err) {
-            setError(err.message);
-        }
-    }
-
-    function startEdit(u) {
-        setError('');
-        setEditingUser(u.user);
-        setEditPwd('');
-        setEditRoles(JSON.stringify((u.roles || []).map((r) => ({role: r.role, db: r.db}))));
-    }
-
-    function cancelEdit() {
-        setEditingUser(null);
-        setEditPwd('');
-        setEditRoles('');
-    }
-
-    async function handleSaveEdit() {
-        setError('');
-        try {
-            const payload = {connId: selection.connId, dbName: selection.dbName, user: editingUser};
-            if (editPwd) payload.pwd = editPwd;
-            if (editRoles.trim()) {
-                const roles = parseShell(editRoles);
-                if (!Array.isArray(roles)) throw new Error('Roles must be an array, e.g. [{role: "readWrite", db: "mydb"}]');
-                payload.roles = roles;
-            }
-            await window.api.data.updateUser(payload);
-            cancelEdit();
-            load();
-        } catch (err) {
-            setError(err.message);
-        }
-    }
-
-    async function handleDrop(username) {
-        setError('');
-        const ok = await confirmDialog(`Drop user "${username}"? This cannot be undone.`, {
+        const authDb = user.db || selection.dbName;
+        const ok = await confirmDialog(`Drop user "${user.user}" from "${authDb}"? This cannot be undone.`, {
             title: 'Drop user',
             confirmLabel: 'Drop'
         });
         if (!ok) return;
         try {
-            await window.api.data.dropUser({connId: selection.connId, dbName: selection.dbName, user: username});
+            await window.api.data.dropUser({connId: selection.connId, dbName: authDb, user: user.user});
             load();
         } catch (err) {
             setError(err.message);
         }
     }
 
+    const emptyText = isCollectionMode
+        ? `No user has explicit privileges on ${selection.dbName}.${selection.collection}.`
+        : `No users are defined on "${selection.dbName}".`;
+
     return (
         <div className="users-tab">
+            <div className="users-toolbar">
+                <span className="results-header">
+                    {isCollectionMode
+                        ? `Users with access to ${selection.dbName}.${selection.collection}`
+                        : `Users on ${selection.dbName}`}
+                    {!loading && ` · ${users.length}`}
+                </span>
+                <div className="spacer"/>
+                <button onClick={load} disabled={loading}>Refresh</button>
+                {!isCollectionMode && (
+                    <button className="primary" onClick={() => setEditor({authDb: selection.dbName})}>
+                        + Create user
+                    </button>
+                )}
+            </div>
+
             {error && <div className="error-banner">{error}</div>}
 
-            {loading ? (
-                <div className="tree-loading">loading...</div>
-            ) : (
-                <table className="doc-table">
-                    <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Roles</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {users.length === 0 && (
+            <div className="users-table-wrap">
+                {loading ? (
+                    <div className="tree-loading">loading...</div>
+                ) : users.length === 0 ? (
+                    <div className="tree-empty">{emptyText}</div>
+                ) : (
+                    <table className="users-table">
+                        <thead>
                         <tr>
-                            <td colSpan={3} className="tree-empty">No users defined on {selection.dbName}.</td>
+                            <th className="col-user">User</th>
+                            <th className="col-authdb">Auth DB</th>
+                            <th className="col-roles">Roles</th>
+                            {isCollectionMode ? (
+                                <>
+                                    <th className="col-granted">Granted on</th>
+                                    <th className="col-actions-list">Allowed actions</th>
+                                </>
+                            ) : (
+                                <th className="col-mechanisms">Mechanisms</th>
+                            )}
+                            <th className="col-row-actions"/>
                         </tr>
-                    )}
-                    {users.map((u) => (
-                        <tr key={u.user}>
-                            <td>{u.user}</td>
-                            <td>
-                                {editingUser === u.user ? (
-                                    <input value={editRoles} onChange={(e) => setEditRoles(e.target.value)}
-                                           placeholder="Roles (leave to keep unchanged)"/>
+                        </thead>
+                        <tbody>
+                        {users.map((u) => (
+                            <tr key={`${u.db}.${u.user}`}>
+                                <td className="col-user"><span className="user-name">{u.user}</span></td>
+                                <td className="col-authdb"><code>{u.db}</code></td>
+                                <td className="col-roles"><RoleChips roles={u.roles}/></td>
+                                {isCollectionMode ? (
+                                    <>
+                                        <td className="col-granted"><ResourceChips resources={u.resources}/></td>
+                                        <td className="col-actions-list"><ActionChips actions={u.actions}/></td>
+                                    </>
                                 ) : (
-                                    <code>{formatRoles(u.roles)}</code>
+                                    <td className="col-mechanisms">
+                                        <span className="muted-text">{(u.mechanisms || []).join(', ') || '—'}</span>
+                                    </td>
                                 )}
-                            </td>
-                            <td>
-                                {editingUser === u.user ? (
-                                    <div className="row">
-                                        <input
-                                            type="password"
-                                            placeholder="New password (optional)"
-                                            value={editPwd}
-                                            onChange={(e) => setEditPwd(e.target.value)}
-                                        />
-                                        <button className="primary" onClick={handleSaveEdit}>Save</button>
-                                        <button onClick={cancelEdit}>Cancel</button>
-                                    </div>
-                                ) : (
-                                    <div className="row-actions">
-                                        <button title="Edit" onClick={() => startEdit(u)}>✎</button>
-                                        <button title="Drop" className="delete-icon-btn"
-                                                onClick={() => handleDrop(u.user)}>
+                                <td className="col-row-actions">
+                                    <div className="row-actions is-static">
+                                        <button title="Edit user"
+                                                onClick={() => setEditor({
+                                                    authDb: u.db || selection.dbName,
+                                                    username: u.user
+                                                })}>✎
+                                        </button>
+                                        <button title="Drop user"
+                                                className="delete-icon-btn"
+                                                onClick={() => handleDrop(u)}>
                                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                                                 <path
                                                     d="M2 4h12M6.5 4V2.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1V4M12.5 4l-.6 9.4a1 1 0 0 1-1 .9H5.1a1 1 0 0 1-1-.9L3.5 4"
@@ -173,32 +143,74 @@ export default function UserManagementTab({selection, reloadSignal}) {
                                             </svg>
                                         </button>
                                     </div>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            )}
-
-            <div className="new-index-form">
-                <h4>Create New User</h4>
-                <div className="row">
-                    <div>
-                        <label>Username</label>
-                        <input value={newUser} onChange={(e) => setNewUser(e.target.value)}/>
-                    </div>
-                    <div>
-                        <label>Password</label>
-                        <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)}/>
-                    </div>
-                    <div>
-                        <label>Roles</label>
-                        <input value={newRoles} onChange={(e) => setNewRoles(e.target.value)}/>
-                    </div>
-                </div>
-                <button className="primary" onClick={handleCreate}>Create User</button>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
+
+            {editor && (
+                <UserEditorDialog
+                    connId={selection.connId}
+                    authDb={editor.authDb}
+                    username={editor.username}
+                    onClose={() => setEditor(null)}
+                    onSaved={() => {
+                        setEditor(null);
+                        load();
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+function RoleChips({roles}) {
+    if (!roles || roles.length === 0) return <span className="muted-text">no roles</span>;
+    return (
+        <div className="chip-row">
+            {roles.map((r) => (
+                <span className="role-chip" key={`${r.role}@${r.db}`}>
+                    {r.role}<span className="role-chip-db">@{r.db}</span>
+                </span>
+            ))}
+        </div>
+    );
+}
+
+function ResourceChips({resources}) {
+    if (!resources || resources.length === 0) return <span className="muted-text">&mdash;</span>;
+    const labels = Array.from(new Map(
+        resources.map((r) => [formatResource(r), {label: formatResource(r), wildcard: isWildcardResource(r)}])
+    ).values());
+    return (
+        <div className="chip-row">
+            {labels.map((l) => (
+                <span className={`resource-chip ${l.wildcard ? 'is-wildcard' : ''}`} key={l.label}
+                      title={l.wildcard ? 'Wildcard - also covers collections created later' : undefined}>
+                    {l.label}
+                </span>
+            ))}
+        </div>
+    );
+}
+
+function ActionChips({actions}) {
+    const [expanded, setExpanded] = useState(false);
+    if (!actions || actions.length === 0) return <span className="muted-text">&mdash;</span>;
+    const shown = expanded ? actions : actions.slice(0, ACTION_PREVIEW_COUNT);
+    const hidden = actions.length - shown.length;
+    return (
+        <div className="chip-row">
+            {shown.map((a) => <span className="action-chip" key={a}>{a}</span>)}
+            {hidden > 0 && (
+                <button type="button" className="chip-more" onClick={() => setExpanded(true)}>+{hidden} more</button>
+            )}
+            {expanded && actions.length > ACTION_PREVIEW_COUNT && (
+                <button type="button" className="chip-more" onClick={() => setExpanded(false)}>show less</button>
+            )}
         </div>
     );
 }

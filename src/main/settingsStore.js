@@ -12,7 +12,7 @@ class SettingsFile {
     try {
       return JSON.parse(fs.readFileSync(this.filePath, 'utf-8'));
     } catch {
-      return { language: 'en', defaultEditorTab: 'tree', updateChannel: 'stable', systemUsersView: 'userManagement' };
+      return { language: 'en', defaultEditorTab: 'tree', updateChannel: 'stable' };
     }
   }
 
