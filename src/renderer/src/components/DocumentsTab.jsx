@@ -328,13 +328,13 @@ export default function DocumentsTab({ selection, reloadSignal }) {
         {separator: true},
         {
           label: t('documentActions.setFieldType'),
-          disabled: !canSetType,
+          hidden: !canSetType,
           submenu: SETTABLE_FIELD_TYPES.map((ft) => ({
             label: ft,
             onClick: () => handleSetFieldType(rowIndex, field, ft)
           }))
         },
-        {separator: true},
+        {separator: true, hidden: !canSetType},
         {label: t('documentActions.copyFieldRaw'), disabled: !hasValue, onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field])))},
         {label: t('documentActions.copyFieldShell'), disabled: !hasValue, onClick: () => copyToClipboard(toShellText(doc[field]))},
         {separator: true},
