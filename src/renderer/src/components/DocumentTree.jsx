@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
 import {toShellText} from '../lib/shellSyntax.js';
 
@@ -18,6 +19,7 @@ function TypeBadge({type, onChange, disabled}) {
 }
 
 function ValueEditor({value, onCommit, onCancel}) {
+  const {t} = useTranslation();
   const initialType = bsonTypeOf(value) === 'Undefined' ? 'String' : bsonTypeOf(value);
   const isLocked = initialType === 'DBRef' || initialType === 'Binary';
   const [type, setType] = useState(initialType);
@@ -61,7 +63,7 @@ function ValueEditor({value, onCommit, onCancel}) {
         <span className="inline-value-editor" ref={containerRef}>
         <span className="type-badge">{initialType}</span>
         <span className="inline-locked-hint">
-          {initialType === 'DBRef' ? 'DBRef values cannot be edited inline yet.' : 'Binary values cannot be edited inline.'}
+          {initialType === 'DBRef' ? t('documentTree.dbRefLocked') : t('documentTree.binaryLocked')}
         </span>
         <button className="tiny-btn" onMouseDown={(e) => e.preventDefault()} onClick={onCancel}>✕</button>
       </span>
@@ -102,6 +104,7 @@ function ValueEditor({value, onCommit, onCancel}) {
 }
 
 function NewFieldRow({isArray, onAdd, onCancel}) {
+  const {t} = useTranslation();
   const [key, setKey] = useState('');
   const [type, setType] = useState('String');
   const [raw, setRaw] = useState('');
@@ -130,26 +133,27 @@ function NewFieldRow({isArray, onAdd, onCancel}) {
   return (
       <div className="tree-row new-field-row">
         {!isArray && (
-            <input className="inline-input key-input" autoFocus placeholder="field name" value={key}
+            <input className="inline-input key-input" autoFocus placeholder={t('documentTree.fieldNamePlaceholder')} value={key}
                    onChange={(e) => setKey(e.target.value)} onKeyDown={handleKeyDown}/>
         )}
         <span className="tree-colon">:</span>
         <TypeBadge type={type} onChange={setType}/>
         {type !== 'Object' && type !== 'Array' && type !== 'Null' && (
-            <input className="inline-input" placeholder="value" value={raw}
+            <input className="inline-input" placeholder={t('documentTree.valuePlaceholder')} value={raw}
                    autoFocus={isArray} onChange={(e) => {
               setRaw(e.target.value);
               setError('');
             }} onKeyDown={handleKeyDown}/>
         )}
-        <button className="tiny-btn" onClick={commit}>Add</button>
-        <button className="tiny-btn" onClick={onCancel}>Cancel</button>
+        <button className="tiny-btn" onClick={commit}>{t('documentTree.add')}</button>
+        <button className="tiny-btn" onClick={onCancel}>{t('documentTree.cancel')}</button>
         {error && <span className="inline-error">{error}</span>}
       </div>
   );
 }
 
 function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultCollapsed, onNodeContextMenu}) {
+  const {t} = useTranslation();
   const expandable = isExpandable(value);
   const [collapsed, setCollapsed] = useState(defaultCollapsed && depth > 0);
   const [editing, setEditing] = useState(false);
@@ -217,7 +221,7 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
                 <button className="tree-delete-btn" onClick={(e) => {
                   e.stopPropagation();
                   onDelete();
-                }} title="Delete">✕</button>
+                }} title={t('documentTree.delete')}>✕</button>
             )}
           </div>
           {!collapsed && (
@@ -241,7 +245,7 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
                 ) : (
                     <div className="tree-row add-field-row" onClick={() => setAddingField(true)}>
                       <span className="twisty"/>
-                      <span className="add-field-label">+ Add {Array.isArray(value) ? 'item' : 'field'}</span>
+                      <span className="add-field-label">{Array.isArray(value) ? t('documentTree.addItem') : t('documentTree.addField')}</span>
                     </div>
                 )}
               </div>
@@ -274,7 +278,7 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
               onClick={() => {
                 if (!isLeafLocked) setEditing(true);
               }}
-              title={isLeafLocked ? `${type} values cannot be edited inline yet` : ''}
+              title={isLeafLocked ? t('documentTree.valueLockedHint', {type}) : ''}
           >
             {shortLabel(value)}
           </span>
@@ -282,7 +286,7 @@ function TreeNode({nodeKey, value, path, onChange, onDelete, depth, defaultColla
             </>
         )}
         {onDelete && (
-            <button className="tree-delete-btn" onClick={() => onDelete()} title="Delete">✕</button>
+            <button className="tree-delete-btn" onClick={() => onDelete()} title={t('documentTree.delete')}>✕</button>
         )}
       </div>
   );

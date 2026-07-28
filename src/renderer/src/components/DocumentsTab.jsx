@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {parseShell, toShellText} from '../lib/shellSyntax.js';
 import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
@@ -88,6 +89,7 @@ function InlineCellEditor({ value, onCommit, onCancel }) {
 }
 
 function SetFieldValueDialog({field, onApply, onClose}) {
+  const {t} = useTranslation();
   const [type, setType] = useState('String');
   const [raw, setRaw] = useState('');
   const [error, setError] = useState('');
@@ -107,20 +109,19 @@ function SetFieldValueDialog({field, onApply, onClose}) {
   return (
       <div className="modal-backdrop" onClick={onClose}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <h3>Set value for "{field}" on all matching documents</h3>
-          <p className="hint-text">Applies to every document currently matching the active filter, not just this
-            page.</p>
-          <label>Type</label>
+          <h3>{t('documentsTab.setFieldValueTitle', {field})}</h3>
+          <p className="hint-text">{t('documentsTab.setFieldValueHint')}</p>
+          <label>{t('documentsTab.type')}</label>
           <select value={type} onChange={(e) => setType(e.target.value)}>
-            {FIELD_TYPES.filter((t) => t !== 'Object' && t !== 'Array' && t !== 'DBRef' && t !== 'Binary').map((t) =>
-                <option key={t} value={t}>{t}</option>)}
+            {FIELD_TYPES.filter((ft) => ft !== 'Object' && ft !== 'Array' && ft !== 'DBRef' && ft !== 'Binary').map((ft) =>
+                <option key={ft} value={ft}>{ft}</option>)}
           </select>
           {type !== 'Null' && (
               <>
-                <label>Value</label>
+                <label>{t('documentsTab.value')}</label>
                 {type === 'Boolean' ? (
                     <select value={raw} onChange={(e) => setRaw(e.target.value)}>
-                      <option value="">Select...</option>
+                      <option value="">{t('documentsTab.selectPlaceholder')}</option>
                       <option value="true">true</option>
                       <option value="false">false</option>
                     </select>
@@ -132,8 +133,8 @@ function SetFieldValueDialog({field, onApply, onClose}) {
           {error && <div className="error-banner">{error}</div>}
           <div className="modal-actions">
             <div className="spacer"/>
-            <button onClick={onClose}>Cancel</button>
-            <button className="primary" onClick={handleApply} disabled={busy}>{busy ? 'Applying...' : 'Apply'}</button>
+            <button onClick={onClose}>{t('documentEditor.cancel')}</button>
+            <button className="primary" onClick={handleApply} disabled={busy}>{busy ? t('documentsTab.applying') : t('documentsTab.apply')}</button>
           </div>
         </div>
       </div>
@@ -141,6 +142,7 @@ function SetFieldValueDialog({field, onApply, onClose}) {
 }
 
 export default function DocumentsTab({ selection, reloadSignal }) {
+  const {t} = useTranslation();
   const [filter, setFilter] = useState('{}');
   const [sort, setSort] = useState('{_id: -1}');
   const [docs, setDocs] = useState([]);
@@ -184,7 +186,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       setSelectedIds(new Set());
     } catch (err) {
       if (err.message.includes('not authorized on')) {
-        setError('Error: Current user has no access to this collection');
+        setError(t('documentsTab.errorNoAccess'));
       } else {
         setError(err.message);
       }
@@ -217,7 +219,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
 
   async function handleDeleteSelected() {
     if (selectedIds.size === 0) return;
-    const ok = await confirmDialog(`Delete ${selectedIds.size} document(s)?`, {title: 'Delete documents', confirmLabel: 'Delete'});
+    const ok = await confirmDialog(t('documentsTab.confirmDeleteSelected', {count: selectedIds.size}), {title: t('documentsTab.deleteDocumentsTitle'), confirmLabel: t('documentActions.delete')});
     if (!ok) return;
     const ids = Array.from(selectedIds);
     for (const id of ids) {
@@ -232,7 +234,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   }
 
   async function handleDeleteDoc(doc) {
-    const ok = await confirmDialog('Delete this document?', {title: 'Delete document', confirmLabel: 'Delete'});
+    const ok = await confirmDialog(t('documentsTab.confirmDeleteOne'), {title: t('documentsTab.deleteDocumentTitle'), confirmLabel: t('documentActions.delete')});
     if (!ok) return;
     try {
       await window.api.data.deleteOne({
@@ -257,12 +259,12 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       x: e.clientX,
       y: e.clientY,
       items: [
-        {label: 'Edit document', onClick: () => setModalDoc(doc)},
+        {label: t('documentActions.editDocument'), onClick: () => setModalDoc(doc)},
         {separator: true},
-        {label: 'Copy document (raw)', onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))},
-        {label: 'Copy document (shell syntax)', onClick: () => copyToClipboard(toShellText(doc))},
+        {label: t('documentActions.copyDocumentRaw'), onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))},
+        {label: t('documentActions.copyDocumentShell'), onClick: () => copyToClipboard(toShellText(doc))},
         {separator: true},
-        {label: 'Delete', danger: true, onClick: () => handleDeleteDoc(doc)}
+        {label: t('documentActions.delete'), danger: true, onClick: () => handleDeleteDoc(doc)}
       ]
     });
   }
@@ -276,24 +278,24 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       x: e.clientX,
       y: e.clientY,
       items: [
-        {label: 'Edit document', onClick: () => setModalDoc(doc)},
+        {label: t('documentActions.editDocument'), onClick: () => setModalDoc(doc)},
         {separator: true},
         {
-          label: 'Set field type',
+          label: t('documentActions.setFieldType'),
           disabled: !canSetType,
-          submenu: SETTABLE_FIELD_TYPES.map((t) => ({
-            label: t,
-            onClick: () => handleSetFieldType(rowIndex, field, t)
+          submenu: SETTABLE_FIELD_TYPES.map((ft) => ({
+            label: ft,
+            onClick: () => handleSetFieldType(rowIndex, field, ft)
           }))
         },
         {separator: true},
-        {label: 'Copy field value (raw)', disabled: !hasValue, onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field])))},
-        {label: 'Copy field value (shell syntax)', disabled: !hasValue, onClick: () => copyToClipboard(toShellText(doc[field]))},
+        {label: t('documentActions.copyFieldRaw'), disabled: !hasValue, onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field])))},
+        {label: t('documentActions.copyFieldShell'), disabled: !hasValue, onClick: () => copyToClipboard(toShellText(doc[field]))},
         {separator: true},
-        {label: 'Copy document (raw)', onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))},
-        {label: 'Copy document (shell syntax)', onClick: () => copyToClipboard(toShellText(doc))},
+        {label: t('documentActions.copyDocumentRaw'), onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))},
+        {label: t('documentActions.copyDocumentShell'), onClick: () => copyToClipboard(toShellText(doc))},
         {separator: true},
-        {label: 'Delete field value', danger: true, disabled: !hasValue, onClick: () => handleDeleteFieldValue(doc, field)}
+        {label: t('documentActions.deleteField'), danger: true, disabled: !hasValue, onClick: () => handleDeleteFieldValue(doc, field)}
       ]
     });
   }
@@ -311,7 +313,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   }
 
   async function handleDeleteFieldValue(doc, field) {
-    const ok = await confirmDialog(`Remove field "${field}" from this document?`, {title: 'Delete field', confirmLabel: 'Delete'});
+    const ok = await confirmDialog(t('documentsTab.confirmDeleteField', {field}), {title: t('documentsTab.deleteFieldTitle'), confirmLabel: t('documentActions.delete')});
     if (!ok) return;
     try {
       await persistFieldUpdate(doc, field, undefined);
@@ -397,7 +399,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
   }
 
   async function handleDeleteFieldOnAll(field) {
-    const ok = await confirmDialog(`Remove field "${field}" from all documents matching the current filter?`, {title: 'Delete field on all', confirmLabel: 'Delete'});
+    const ok = await confirmDialog(t('documentsTab.confirmDeleteFieldOnAll', {field}), {title: t('documentsTab.deleteFieldOnAllTitle'), confirmLabel: t('documentActions.delete')});
     if (!ok) return;
     const filterValue = parseShell(filter || '{}');
     await window.api.data.updateMany({
@@ -429,9 +431,9 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       x: e.clientX,
       y: e.clientY,
       items: [
-        {label: `Set value on all...`, onClick: () => setSetValueField(field)},
+        {label: t('documentsTab.setValueOnAll'), onClick: () => setSetValueField(field)},
         {separator: true},
-        {label: `Delete field on all`, danger: true, onClick: () => handleDeleteFieldOnAll(field)}
+        {label: t('documentsTab.deleteFieldOnAll'), danger: true, onClick: () => handleDeleteFieldOnAll(field)}
       ]
     });
   }
@@ -475,25 +477,25 @@ export default function DocumentsTab({ selection, reloadSignal }) {
       <div className="documents-tab">
         <div className="query-bar">
           <div className="query-field">
-            <label>Filter</label>
+            <label>{t('documentsTab.filter')}</label>
             <input value={filter} onChange={(e) => setFilter(e.target.value)}
-                   placeholder='{name: "value"} or {_id: ObjectId("...")}'/>
+                   placeholder={t('documentsTab.filterPlaceholder')}/>
           </div>
           <div className="query-field">
-            <label>Sort</label>
-            <input value={sort} onChange={(e) => setSort(e.target.value)} placeholder='{_id: -1}'/>
+            <label>{t('documentsTab.sort')}</label>
+            <input value={sort} onChange={(e) => setSort(e.target.value)} placeholder={t('documentsTab.sortPlaceholder')}/>
           </div>
-          <button className="primary" onClick={handleRunClick} disabled={loading}>{loading ? '...' : 'Run'}</button>
+          <button className="primary" onClick={handleRunClick} disabled={loading}>{loading ? t('documentsTab.running') : t('documentsTab.run')}</button>
         </div>
 
         <div className="toolbar">
-          <button onClick={() => setModalDoc('new')}>+ New Document</button>
-          <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}>Delete ({selectedIds.size})</button>
+          <button onClick={() => setModalDoc('new')}>{t('documentsTab.newDocument')}</button>
+          <button onClick={handleDeleteSelected} disabled={selectedIds.size === 0}>{t('documentsTab.deleteSelected', {count: selectedIds.size})}</button>
           <div className="spacer"/>
-          <button onClick={handleImport}>Import</button>
-          <button onClick={() => setShowBulkUpdate(true)}>Bulk Update</button>
-          <button onClick={() => handleExport('json')}>Export JSON</button>
-          <button onClick={() => handleExport('csv')}>Export CSV</button>
+          <button onClick={handleImport}>{t('documentsTab.import')}</button>
+          <button onClick={() => setShowBulkUpdate(true)}>{t('documentsTab.bulkUpdate')}</button>
+          <button onClick={() => handleExport('json')}>{t('documentsTab.exportJson')}</button>
+          <button onClick={() => handleExport('csv')}>{t('documentsTab.exportCsv')}</button>
         </div>
 
         {error && <div className="error-banner">{error}</div>}
@@ -508,7 +510,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                     checked={allOnPageSelected}
                     ref={(el) => { if (el) el.indeterminate = someOnPageSelected; }}
                     onChange={toggleSelectAll}
-                    title={allOnPageSelected ? 'Deselect all' : 'Select all on this page'}
+                    title={allOnPageSelected ? t('documentsTab.deselectAll') : t('documentsTab.selectAllOnPage')}
                     disabled={docs.length === 0}
                 />
               </th>
@@ -558,7 +560,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
             ))}
             {docs.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={fieldColumns.length + 3} className="tree-empty">No documents found</td>
+                  <td colSpan={fieldColumns.length + 3} className="tree-empty">{t('documentsTab.noDocumentsFound')}</td>
                 </tr>
             )}
             </tbody>
@@ -566,9 +568,9 @@ export default function DocumentsTab({ selection, reloadSignal }) {
         </div>
 
         <div className="pagination">
-          <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Back</button>
-          <span>Page {page + 1} / {totalPages} ({totalCount} documents)</span>
-          <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next →</button>
+          <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{t('documentsTab.back')}</button>
+          <span>{t('documentsTab.pageInfo', {page: page + 1, totalPages, count: totalCount})}</span>
+          <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>{t('documentsTab.next')}</button>
         </div>
 
         {modalDoc && (

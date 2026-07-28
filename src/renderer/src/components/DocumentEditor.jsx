@@ -1,9 +1,11 @@
 import React, {useMemo, useRef, useState} from 'react';
+import {Trans, useTranslation} from 'react-i18next';
 import {parseShell, toShellText} from '../lib/shellSyntax.js';
 import DocumentTree from './DocumentTree.jsx';
 import ContextMenu from './ContextMenu.jsx';
 
 export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
+  const {t} = useTranslation();
   const isNew = doc === null;
   const initialValue = useMemo(() => doc || { field: 'value' }, [doc]);
   const [mode, setMode] = useState(defaultMode === 'raw' ? 'raw' : 'tree'); // 'tree' | 'raw'
@@ -33,7 +35,7 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
 
   function switchToTree() {
     if (!rawParsed.ok) {
-      setError('Fix the syntax error before switching to tree view: ' + rawParsed.error);
+      setError(t('documentEditor.errorFixSyntax', {error: rawParsed.error}));
       return;
     }
     setTreeValue(rawParsed.value);
@@ -47,7 +49,7 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
   async function handleSave() {
     const finalValue = mode === 'raw' ? rawParsed.value : treeValue;
     if (mode === 'raw' && !rawParsed.ok) {
-      setError('Invalid document: ' + rawParsed.error);
+      setError(t('documentEditor.errorInvalidDocument', {error: rawParsed.error}));
       return;
     }
     setSaving(true);
@@ -64,13 +66,13 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
   function handleNodeContextMenu(e, node) {
     const items = [];
     if (node.startEdit) {
-      items.push({label: 'Edit', onClick: node.startEdit});
+      items.push({label: t('documentActions.edit'), onClick: node.startEdit});
     }
-    items.push({label: 'Copy document (raw)', onClick: node.onCopyValue});
-    items.push({label: 'Copy document (shell syntax)', onClick: node.onCopyRaw});
+    items.push({label: t('documentActions.copyDocumentRaw'), onClick: node.onCopyValue});
+    items.push({label: t('documentActions.copyDocumentShell'), onClick: node.onCopyRaw});
     if (node.onDelete) {
       items.push({separator: true});
-      items.push({label: 'Delete', danger: true, onClick: node.onDelete});
+      items.push({label: t('documentActions.delete'), danger: true, onClick: node.onDelete});
     }
     setNodeContextMenu({x: e.clientX, y: e.clientY, items});
   }
@@ -85,7 +87,7 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
       try {
         setTreeValue(parseShell(next));
       } catch (err) {
-        setError('Replace produced invalid syntax: ' + err.message);
+        setError(t('documentEditor.errorReplaceInvalidSyntax', {error: err.message}));
       }
     }
   }
@@ -105,32 +107,35 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
       <div className="modal-backdrop" onClick={onClose}>
         <div className="modal wide" onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>
           <div className="editor-header-row">
-            <h3>{isNew ? 'New Document' : 'Edit Document'}</h3>
+            <h3>{isNew ? t('documentEditor.newDocument') : t('documentEditor.editDocument')}</h3>
             <div className="editor-mode-toggle">
-              <button className={mode === 'tree' ? 'active' : ''} onClick={switchToTree}>Tree</button>
-              <button className={mode === 'raw' ? 'active' : ''} onClick={switchToRaw}>Raw</button>
+              <button className={mode === 'tree' ? 'active' : ''}
+                      onClick={switchToTree}>{t('documentEditor.tree')}</button>
+              <button className={mode === 'raw' ? 'active' : ''}
+                      onClick={switchToRaw}>{t('documentEditor.raw')}</button>
             </div>
           </div>
 
           {mode === 'raw' && (
               <p className="hint-text">
-                Supports shell syntax — <code>ObjectId("...")</code>, <code>DBRef("db.coll",
-                ObjectId("..."))</code>,{' '}
-                <code>UUID("...")</code>, <code>ISODate("...")</code>, <code>NumberLong("...")</code>, etc.
+                <Trans i18nKey="documentEditor.shellSyntaxHint"
+                       components={[<code key="0"/>, <code key="1"/>, <code key="2"/>, <code key="3"/>,
+                         <code key="4"/>]}/>
               </p>
           )}
 
           <div className="editor-toolbar-row">
             <button
-                onClick={() => setShowFindReplace((s) => !s)}>{showFindReplace ? 'Hide Find/Replace' : 'Find & Replace'}</button>
+                onClick={() => setShowFindReplace((s) => !s)}>{showFindReplace ? t('documentEditor.hideFindReplace') : t('documentEditor.findReplace')}</button>
           </div>
 
           {showFindReplace && (
               <div className="find-replace-bar">
-                <input placeholder="Find..." value={findText} onChange={(e) => setFindText(e.target.value)}/>
-                <input placeholder="Replace with..." value={replaceText}
+                <input placeholder={t('documentEditor.findPlaceholder')} value={findText}
+                       onChange={(e) => setFindText(e.target.value)}/>
+                <input placeholder={t('documentEditor.replacePlaceholder')} value={replaceText}
                        onChange={(e) => setReplaceText(e.target.value)}/>
-                <button onClick={handleFindReplace} disabled={!findText}>Replace All</button>
+                <button onClick={handleFindReplace} disabled={!findText}>{t('documentEditor.replaceAll')}</button>
               </div>
           )}
 
@@ -154,9 +159,9 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
 
           <div className="modal-actions">
             <div className="spacer"/>
-            <button onClick={onClose}>Cancel</button>
+            <button onClick={onClose}>{t('documentEditor.cancel')}</button>
             <button className="primary" onClick={handleSave} disabled={(mode === 'raw' && !rawParsed.ok) || saving}>
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? t('documentEditor.saving') : t('documentEditor.save')}
             </button>
           </div>
           {nodeContextMenu && (
