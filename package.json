@@ -36,7 +36,7 @@
     "files": ["dist/**", "src/main/**", "src/preload/**", "package.json"],
     "linux": {
       "target": ["AppImage", "deb", "tar.gz"],
-      "maintainer": "RisingMedia Solutions <contact@risingmedia.dev>"
+      "maintainer": "RisingMedia Solutions <shloooo@users.noreply.github.com>"
     },
     "publish": {
       "provider": "github",
