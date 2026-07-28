@@ -515,7 +515,6 @@ export default function DocumentsTab({ selection, reloadSignal }) {
               <th className="col-id">_id</th>
               {fieldColumns.map((f) => <th key={f} onContextMenu={(e) => handleHeaderContextMenu(e, f)}>{f}</th>)}
               <th className="col-fill"></th>
-              <th className="col-expand"></th>
             </tr>
             </thead>
             <tbody>
@@ -547,7 +546,6 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                                   onClick={() => {
                                     if (editable) setEditingCell({rowIndex, field});
                                   }}
-                                  title={!hasValue ? '' : editable ? '' : 'Open the full document editor (⤢) to edit this value'}
                               >
                           {hasValue ? <CellValue value={doc[field]} /> : <span className="cell-empty">—</span>}
                         </span>
@@ -556,15 +554,11 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                     );
                   })}
                   <td className="col-fill"></td>
-                  <td className="col-expand">
-                    <button className="tiny-btn" onClick={() => setModalDoc(doc)} title="Open full document editor">⤢
-                    </button>
-                  </td>
                 </tr>
             ))}
             {docs.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={fieldColumns.length + 4} className="tree-empty">No documents found</td>
+                  <td colSpan={fieldColumns.length + 3} className="tree-empty">No documents found</td>
                 </tr>
             )}
             </tbody>

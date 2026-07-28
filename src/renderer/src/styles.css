@@ -642,11 +642,6 @@ button.primary:hover {
     min-width: 180px;
 }
 
-.spreadsheet-table .col-expand {
-    width: 36px;
-    max-width: 36px;
-}
-
 .spreadsheet-table .col-fill {
     width: 9999px;
     max-width: none;
@@ -1605,6 +1600,13 @@ button.danger:hover {
     font-size: 11.5px;
     color: var(--text-secondary);
     font-family: var(--font-mono);
+}
+
+.dev-mode-banner {
+    background: rgba(230, 160, 60, 0.14);
+    color: #e6a03c;
+    border-color: rgba(230, 160, 60, 0.3);
+    font-weight: 600;
 }
 
 .update-progress {
