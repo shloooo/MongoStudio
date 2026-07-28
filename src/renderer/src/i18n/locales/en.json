@@ -214,7 +214,15 @@
     },
     "errorBoundary": {
       "heading": "Something went wrong",
-      "reload": "Reload"
+      "subtext": "An unexpected error crashed the app. Your data is safe — you can restart the app.",
+      "errorLabel": "Error message",
+      "detailsToggle": "Technical details",
+      "versionLabel": "Version",
+      "commitLabel": "Commit",
+      "copyDetails": "Copy details",
+      "copied": "Copied ✓",
+      "reload": "Reload",
+      "restart": "Restart app"
     },
     "errorToast": {
       "errorWithSource": "Error · {{source}}",

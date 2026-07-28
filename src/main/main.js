@@ -134,6 +134,11 @@ app.whenReady().then(async () => {
         isDev: isServeMode
     }));
 
+    ipcMain.handle('app:relaunch', () => {
+        app.relaunch();
+        app.exit(0);
+    });
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

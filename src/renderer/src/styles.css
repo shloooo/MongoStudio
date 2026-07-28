@@ -997,22 +997,164 @@ button.primary:hover {
     height: 100vh;
     width: 100vw;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    background: var(--bg-void);
-    color: var(--text-primary);
-    text-align: center;
+    background:
+            radial-gradient(circle at 50% 0%, rgba(255, 107, 107, 0.10), transparent 55%),
+            var(--bg-void);
     padding: 24px;
 }
 
-.fatal-error-screen p {
+.fatal-error-card {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    padding: 36px 32px 28px;
+    background: var(--glass-panel-strong);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.fatal-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--danger-dim);
+    color: var(--danger);
+}
+
+.fatal-error-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.fatal-error-card h2 {
+    margin: 0;
+    font-size: 17px;
+    color: var(--text-primary);
+}
+
+.fatal-error-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 2px 7px;
+}
+
+.fatal-error-subtext {
+    margin: 0;
+    max-width: 420px;
     color: var(--text-secondary);
-    max-width: 480px;
-    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.fatal-error-message-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    padding: 12px 14px;
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid var(--danger-dim);
+    border-radius: var(--radius-md);
+}
+
+.fatal-error-message-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--danger);
+}
+
+.fatal-error-message-text {
     font-family: var(--font-mono);
     font-size: 12.5px;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+}
+
+.fatal-error-meta {
+    display: flex;
+    gap: 14px;
+    color: var(--text-tertiary);
+    font-size: 11.5px;
+    font-family: var(--font-mono);
+}
+
+.fatal-error-details {
+    width: 100%;
+    text-align: left;
+}
+
+.fatal-error-details-toggle {
+    background: transparent;
+    border: none;
+    padding: 4px 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fatal-error-details-toggle:hover {
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+}
+
+.fatal-error-details-toggle .twisty {
+    font-size: 10px;
+    transition: transform .12s ease;
+}
+
+.fatal-error-details-toggle .twisty.is-expanded {
+    transform: rotate(90deg);
+}
+
+.fatal-error-stack {
+    margin: 8px 0 0;
+    max-height: 220px;
+    overflow: auto;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+
+.fatal-error-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.fatal-error-actions button.primary {
+    padding: 8px 20px;
 }
 
 /* ---------- Confirm dialog (replaces window.confirm) ---------- */

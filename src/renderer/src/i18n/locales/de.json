@@ -214,7 +214,15 @@
     },
     "errorBoundary": {
       "heading": "Etwas ist schiefgelaufen",
-      "reload": "Neu laden"
+      "subtext": "Ein unerwarteter Fehler hat die Anwendung zum Absturz gebracht. Deine Daten sind sicher — du kannst die App neu starten.",
+      "errorLabel": "Fehlermeldung",
+      "detailsToggle": "Technische Details",
+      "versionLabel": "Version",
+      "commitLabel": "Commit",
+      "copyDetails": "Details kopieren",
+      "copied": "Kopiert ✓",
+      "reload": "Neu laden",
+      "restart": "App neu starten"
     },
     "errorToast": {
       "errorWithSource": "Fehler · {{source}}",
