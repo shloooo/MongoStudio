@@ -111,8 +111,8 @@ app.whenReady().then(async () => {
     ipcMain.handle('vault:reset', () => {
         SecureStore.resetAll('mongo-studio-connections', app.getPath('userData'));
         store = new SecureStore({name: 'mongo-studio-connections', cwd: app.getPath('userData')});
-        dataHandlersRegistered = false;
-        ensureDataHandlersRegistered();
+        app.relaunch();
+        app.exit(0);
         return true;
     });
 
