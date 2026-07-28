@@ -2,8 +2,6 @@ name: Build
 on:
   push:
     branches: ["release"]
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 permissions:
@@ -16,6 +14,7 @@ jobs:
       APP_VERSION: ${{ steps.calc.outputs.APP_VERSION }}
       CHANNEL: ${{ steps.calc.outputs.CHANNEL }}
       TAG_NAME: ${{ steps.calc.outputs.TAG_NAME }}
+      IS_PRERELEASE: ${{ steps.calc.outputs.IS_PRERELEASE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -28,34 +27,56 @@ jobs:
         with:
           script: |
             const pkg = require('./package.json');
-            const base = pkg.version.split('-')[0];
+            const base = pkg.version.split('-')[0].replace(/^v/, '');
             const ref = context.ref;
 
             let ver = pkg.version;
             let channel = 'latest';
+            let isPrerelease = false;
 
             if (ref.startsWith('refs/heads/')) {
               const rawBranch = ref.replace('refs/heads/', '');
               const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-              channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
-              ver = `${base}-${channel}.${context.runNumber}`;
+              isPrerelease = true;
+
+              if (cleanBranch === 'release') {
+                ver = base;
+                channel = 'latest';
+              } else {
+                channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+                ver = `${base}-${channel}.${context.runNumber}`;
+              }
             } else if (ref.startsWith('refs/tags/')) {
               ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
               channel = 'latest';
+              isPrerelease = false;
             }
 
-            const tagName = ver.startsWith('v') ? ver : `v${ver}`;
+            const cleanVer = ver.replace(/^v/, '');
+            const tagName = `v${cleanVer}`;
 
-            core.setOutput('APP_VERSION', ver);
+            core.setOutput('APP_VERSION', cleanVer);
             core.setOutput('CHANNEL', channel);
             core.setOutput('TAG_NAME', tagName);
+            core.setOutput('IS_PRERELEASE', isPrerelease ? 'true' : 'false');
 
-      - name: Create Draft Release
+      - name: Create Tag & Draft Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ steps.calc.outputs.TAG_NAME }}
+          IS_PRERELEASE: ${{ steps.calc.outputs.IS_PRERELEASE }}
         run: |
-          gh release create "$TAG_NAME" --draft --title "$TAG_NAME" --notes "Release $TAG_NAME" || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG_NAME" || true
+          git push origin "$TAG_NAME" || true
+
+          FLAGS="--draft"
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            FLAGS="$FLAGS --prerelease"
+          fi
+
+          gh release create "$TAG_NAME" $FLAGS --title "$TAG_NAME" --notes "Release $TAG_NAME" || true
 
   macOS-Build:
     needs: create-release
@@ -66,6 +87,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags
 
       - name: Installing Node
         uses: actions/setup-node@v5
@@ -84,29 +108,31 @@ jobs:
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --mac -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --mac --publish onTag -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           USE_HARD_LINKS: false
 
-      - name: Upload to Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.create-release.outputs.TAG_NAME }}
+      - name: Package artifacts
         run: |
-          gh release upload "$TAG_NAME" release/*.dmg release/*.zip --clobber
+          mkdir artifact-dmg
+          mv release/*.dmg artifact-dmg/
+          mkdir artifact-zip
+          mv release/*.zip artifact-zip/
 
       - uses: actions/upload-artifact@v5
         name: Upload DMG
         with:
           name: macOS-dmg
-          path: release/*.dmg
+          path: artifact-dmg
 
       - uses: actions/upload-artifact@v5
         name: Upload ZIP
         with:
           name: macOS-zip
-          path: release/*.zip
+          path: artifact-zip
 
   Windows-Build:
     needs: create-release
@@ -117,6 +143,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags
 
       - name: Installing Node
         uses: actions/setup-node@v5
@@ -137,19 +166,13 @@ jobs:
 
       - name: Build packages
         shell: bash
-        run: yarn electron-builder --win -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --win --publish onTag -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
           USE_HARD_LINKS: false
-
-      - name: Upload to Release
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.create-release.outputs.TAG_NAME }}
-        run: |
-          gh release upload "$TAG_NAME" release/*.exe release/*.zip --clobber
 
       - uses: actions/upload-artifact@v5
         name: Upload installer/portable
@@ -168,6 +191,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags
 
       - name: Installing Node
         uses: actions/setup-node@v5
@@ -191,16 +217,11 @@ jobs:
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --linux -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
+        run: yarn electron-builder --linux --publish onTag -c.extraMetadata.version="${{ needs.create-release.outputs.APP_VERSION }}" -c.publish.channel="${{ needs.create-release.outputs.CHANNEL }}"
         env:
-          USE_HARD_LINKS: false
-
-      - name: Upload to Release
-        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ needs.create-release.outputs.TAG_NAME }}
-        run: |
-          gh release upload "$TAG_NAME" release/*.AppImage release/*.deb release/*.tar.gz --clobber
+          USE_HARD_LINKS: false
 
       - uses: actions/upload-artifact@v5
         name: Upload AppImage
