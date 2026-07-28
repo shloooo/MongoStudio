@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useConfirm} from './ConfirmProvider.jsx';
 import UserEditorDialog from './UserEditorDialog.jsx';
 import {formatResource, isWildcardResource} from '../lib/mongoPrivileges.js';
@@ -8,6 +9,7 @@ const ACTION_PREVIEW_COUNT = 8;
 // mode 'database': every user whose authentication database is selection.dbName.
 // mode 'collection': every user in the cluster holding a privilege on selection.collection.
 export default function UserManagementTab({selection, mode = 'database', reloadSignal}) {
+    const {t} = useTranslation();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -46,9 +48,9 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
     async function handleDrop(user) {
         setError('');
         const authDb = user.db || selection.dbName;
-        const ok = await confirmDialog(`Drop user "${user.user}" from "${authDb}"? This cannot be undone.`, {
-            title: 'Drop user',
-            confirmLabel: 'Drop'
+        const ok = await confirmDialog(t('app.confirm.dropUser', {user: user.user, authDb}), {
+            title: t('app.confirm.dropUserTitle'),
+            confirmLabel: t('app.confirm.drop')
         });
         if (!ok) return;
         try {
@@ -60,23 +62,23 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
     }
 
     const emptyText = isCollectionMode
-        ? `No user has explicit privileges on ${selection.dbName}.${selection.collection}.`
-        : `No users are defined on "${selection.dbName}".`;
+        ? t('userManagementTab.emptyCollection', {path: `${selection.dbName}.${selection.collection}`})
+        : t('userManagementTab.emptyDatabase', {dbName: selection.dbName});
 
     return (
         <div className="users-tab">
             <div className="users-toolbar">
                 <span className="results-header">
                     {isCollectionMode
-                        ? `Users with access to ${selection.dbName}.${selection.collection}`
-                        : `Users on ${selection.dbName}`}
+                        ? t('userManagementTab.headerCollection', {path: `${selection.dbName}.${selection.collection}`})
+                        : t('userManagementTab.headerDatabase', {dbName: selection.dbName})}
                     {!loading && ` · ${users.length}`}
                 </span>
                 <div className="spacer"/>
-                <button onClick={load} disabled={loading}>Refresh</button>
+                <button onClick={load} disabled={loading}>{t('userManagementTab.refresh')}</button>
                 {!isCollectionMode && (
                     <button className="primary" onClick={() => setEditor({authDb: selection.dbName})}>
-                        + Create user
+                        {t('userManagementTab.createUser')}
                     </button>
                 )}
             </div>
@@ -85,23 +87,23 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
 
             <div className="users-table-wrap">
                 {loading ? (
-                    <div className="tree-loading">loading...</div>
+                    <div className="tree-loading">{t('userManagementTab.loading')}</div>
                 ) : users.length === 0 ? (
                     <div className="tree-empty">{emptyText}</div>
                 ) : (
                     <table className="users-table">
                         <thead>
                         <tr>
-                            <th className="col-user">User</th>
-                            <th className="col-authdb">Auth DB</th>
-                            <th className="col-roles">Roles</th>
+                            <th className="col-user">{t('userManagementTab.colUser')}</th>
+                            <th className="col-authdb">{t('userManagementTab.colAuthDb')}</th>
+                            <th className="col-roles">{t('userManagementTab.colRoles')}</th>
                             {isCollectionMode ? (
                                 <>
-                                    <th className="col-granted">Granted on</th>
-                                    <th className="col-actions-list">Allowed actions</th>
+                                    <th className="col-granted">{t('userManagementTab.colGranted')}</th>
+                                    <th className="col-actions-list">{t('userManagementTab.colActions')}</th>
                                 </>
                             ) : (
-                                <th className="col-mechanisms">Mechanisms</th>
+                                <th className="col-mechanisms">{t('userManagementTab.colMechanisms')}</th>
                             )}
                             <th className="col-row-actions"/>
                         </tr>
@@ -124,13 +126,13 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
                                 )}
                                 <td className="col-row-actions">
                                     <div className="row-actions is-static">
-                                        <button title="Edit user"
+                                        <button title={t('userManagementTab.editUser')}
                                                 onClick={() => setEditor({
                                                     authDb: u.db || selection.dbName,
                                                     username: u.user
                                                 })}>✎
                                         </button>
-                                        <button title="Drop user"
+                                        <button title={t('app.confirm.dropUserTitle')}
                                                 className="delete-icon-btn"
                                                 onClick={() => handleDrop(u)}>
                                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
@@ -168,7 +170,8 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
 }
 
 function RoleChips({roles}) {
-    if (!roles || roles.length === 0) return <span className="muted-text">no roles</span>;
+    const {t} = useTranslation();
+    if (!roles || roles.length === 0) return <span className="muted-text">{t('userManagementTab.noRoles')}</span>;
     return (
         <div className="chip-row">
             {roles.map((r) => (
@@ -181,6 +184,7 @@ function RoleChips({roles}) {
 }
 
 function ResourceChips({resources}) {
+    const {t} = useTranslation();
     if (!resources || resources.length === 0) return <span className="muted-text">&mdash;</span>;
     const labels = Array.from(new Map(
         resources.map((r) => [formatResource(r), {label: formatResource(r), wildcard: isWildcardResource(r)}])
@@ -189,7 +193,7 @@ function ResourceChips({resources}) {
         <div className="chip-row">
             {labels.map((l) => (
                 <span className={`resource-chip ${l.wildcard ? 'is-wildcard' : ''}`} key={l.label}
-                      title={l.wildcard ? 'Wildcard - also covers collections created later' : undefined}>
+                      title={l.wildcard ? t('userManagementTab.wildcardHint') : undefined}>
                     {l.label}
                 </span>
             ))}
@@ -198,6 +202,7 @@ function ResourceChips({resources}) {
 }
 
 function ActionChips({actions}) {
+    const {t} = useTranslation();
     const [expanded, setExpanded] = useState(false);
     if (!actions || actions.length === 0) return <span className="muted-text">&mdash;</span>;
     const shown = expanded ? actions : actions.slice(0, ACTION_PREVIEW_COUNT);
@@ -206,10 +211,12 @@ function ActionChips({actions}) {
         <div className="chip-row">
             {shown.map((a) => <span className="action-chip" key={a}>{a}</span>)}
             {hidden > 0 && (
-                <button type="button" className="chip-more" onClick={() => setExpanded(true)}>+{hidden} more</button>
+                <button type="button" className="chip-more"
+                        onClick={() => setExpanded(true)}>{t('userManagementTab.moreCount', {count: hidden})}</button>
             )}
             {expanded && actions.length > ACTION_PREVIEW_COUNT && (
-                <button type="button" className="chip-more" onClick={() => setExpanded(false)}>show less</button>
+                <button type="button" className="chip-more"
+                        onClick={() => setExpanded(false)}>{t('userManagementTab.showLess')}</button>
             )}
         </div>
     );

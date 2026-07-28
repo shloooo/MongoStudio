@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTranslation, Trans } from 'react-i18next';
+import React, {useEffect, useRef, useState} from 'react';
+import {Trans, useTranslation} from 'react-i18next';
 
 export default function CopyDatabaseDialog({ source, openConnections, onClose, onCopied }) {
     const { t } = useTranslation();
@@ -116,17 +116,15 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                             {queue.map((item) => (
                                 <div key={item.name} className={`copy-queue-item ${item.status === 'active' ? 'is-active' : ''} ${item.status === 'done' ? 'is-done' : ''}`}>
                                     <div className="copy-queue-item-head">
-                    <span className="copy-queue-item-name">
-                      {item.status === 'done' ? '✓ ' : item.status === 'active' ? '↻ ' : '· '}{item.name}
-                    </span>
+                                        <span className="copy-queue-item-name">
+                                            {item.status === 'done' ? '✓ ' : item.status === 'active' ? '↻ ' : '· '}{item.name}
+                                        </span>
                                         <span className="copy-queue-item-status">{statusLabel(item)}</span>
                                     </div>
                                     {item.status === 'active' && item.total > 0 && (
                                         <div className="update-progress-bar-track">
-                                            <div
-                                                className="update-progress-bar-fill"
-                                                style={{ width: `${Math.min(100, (item.copied / item.total) * 100)}%` }}
-                                            />
+                                            <div className="update-progress-bar-fill"
+                                                 style={{width: `${Math.min(100, (item.copied / item.total) * 100)}%`}}/>
                                         </div>
                                     )}
                                 </div>

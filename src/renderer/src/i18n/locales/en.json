@@ -48,6 +48,8 @@
       "dropCollectionTitle": "Drop collection",
       "dropDatabase": "Drop database \"{{name}}\"? This deletes all its collections and cannot be undone.",
       "dropDatabaseTitle": "Drop database",
+      "dropUser": "Drop user \"{{user}}\" from \"{{authDb}}\"? This cannot be undone.",
+      "dropUserTitle": "Drop user",
       "drop": "Drop"
     },
     "status": {
@@ -219,6 +221,46 @@
       "error": "Error",
       "dismiss": "Dismiss"
     }
+  },
+  "aggregationTab": {
+    "pipelineLabel": "Pipeline (array of stages, shell syntax supported)",
+    "running": "Running...",
+    "runPipeline": "Run Pipeline",
+    "exportJson": "Export JSON",
+    "exportCsv": "Export CSV",
+    "resultsHeader": "Results ({{count}})",
+    "noResults": "No results",
+    "errorPipelineMustBeArray": "Pipeline must be an array of stages"
+  },
+  "collectionTabBar": {
+    "closeTab": "Close tab"
+  },
+  "collectionView": {
+    "tabs": {
+      "documents": "Documents",
+      "aggregation": "Aggregation",
+      "indexes": "Indexes"
+    }
+  },
+  "userManagementTab": {
+    "headerCollection": "Users with access to {{path}}",
+    "headerDatabase": "Users on {{dbName}}",
+    "refresh": "Refresh",
+    "createUser": "+ Create user",
+    "loading": "loading...",
+    "emptyCollection": "No user has explicit privileges on {{path}}.",
+    "emptyDatabase": "No users are defined on \"{{dbName}}\".",
+    "colUser": "User",
+    "colAuthDb": "Auth DB",
+    "colRoles": "Roles",
+    "colGranted": "Granted on",
+    "colActions": "Allowed actions",
+    "colMechanisms": "Mechanisms",
+    "editUser": "Edit user",
+    "noRoles": "no roles",
+    "wildcardHint": "Wildcard - also covers collections created later",
+    "moreCount": "+{{count}} more",
+    "showLess": "show less"
   },
   "settings": {
     "title": "Settings",

@@ -48,6 +48,8 @@
       "dropCollectionTitle": "Collection löschen",
       "dropDatabase": "Datenbank \"{{name}}\" löschen? Damit gehen alle Collections darin verloren – endgültig.",
       "dropDatabaseTitle": "Datenbank löschen",
+      "dropUser": "Benutzer \"{{user}}\" aus \"{{authDb}}\" entfernen? Das lässt sich nicht rückgängig machen.",
+      "dropUserTitle": "Benutzer entfernen",
       "drop": "Löschen"
     },
     "status": {
@@ -219,6 +221,46 @@
       "error": "Fehler",
       "dismiss": "Verwerfen"
     }
+  },
+  "aggregationTab": {
+    "pipelineLabel": "Pipeline (Array von Stages, Shell-Syntax unterstützt)",
+    "running": "Läuft...",
+    "runPipeline": "Pipeline ausführen",
+    "exportJson": "Als JSON exportieren",
+    "exportCsv": "Als CSV exportieren",
+    "resultsHeader": "Ergebnisse ({{count}})",
+    "noResults": "Keine Ergebnisse",
+    "errorPipelineMustBeArray": "Die Pipeline muss ein Array von Stages sein"
+  },
+  "collectionTabBar": {
+    "closeTab": "Tab schließen"
+  },
+  "collectionView": {
+    "tabs": {
+      "documents": "Dokumente",
+      "aggregation": "Aggregation",
+      "indexes": "Indizes"
+    }
+  },
+  "userManagementTab": {
+    "headerCollection": "Benutzer mit Zugriff auf {{path}}",
+    "headerDatabase": "Benutzer auf {{dbName}}",
+    "refresh": "Aktualisieren",
+    "createUser": "+ Benutzer erstellen",
+    "loading": "lädt...",
+    "emptyCollection": "Kein Benutzer hat explizite Berechtigungen auf {{path}}.",
+    "emptyDatabase": "Auf \"{{dbName}}\" sind keine Benutzer definiert.",
+    "colUser": "Benutzer",
+    "colAuthDb": "Auth-DB",
+    "colRoles": "Rollen",
+    "colGranted": "Erteilt für",
+    "colActions": "Erlaubte Aktionen",
+    "colMechanisms": "Mechanismen",
+    "editUser": "Benutzer bearbeiten",
+    "noRoles": "keine Rollen",
+    "wildcardHint": "Platzhalter - gilt auch für später erstellte Collections",
+    "moreCount": "+{{count}} weitere",
+    "showLess": "weniger anzeigen"
   },
   "settings": {
     "title": "Einstellungen",
