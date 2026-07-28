@@ -40,23 +40,26 @@ jobs:
             const ref = context.ref;
 
             let ver = pkg.version;
+            let channel = 'latest';
 
             if (ref.startsWith('refs/heads/')) {
               const rawBranch = ref.replace('refs/heads/', '');
               const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-              const channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+              channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
               ver = `${base}-${channel}.${context.runNumber}`;
             } else if (ref.startsWith('refs/tags/')) {
               ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
+              channel = 'latest';
             }
 
             core.exportVariable('APP_VERSION', ver);
+            core.exportVariable('CHANNEL', channel);
 
       - name: Build renderer
         run: yarn build:renderer
 
       - name: Build, sign packages
-        run: yarn electron-builder --mac --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}"
+        run: yarn electron-builder --mac --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}" -c.publish.channel="${{ env.CHANNEL }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
@@ -113,24 +116,27 @@ jobs:
             const ref = context.ref;
 
             let ver = pkg.version;
+            let channel = 'latest';
 
             if (ref.startsWith('refs/heads/')) {
               const rawBranch = ref.replace('refs/heads/', '');
               const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-              const channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+              channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
               ver = `${base}-${channel}.${context.runNumber}`;
             } else if (ref.startsWith('refs/tags/')) {
               ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
+              channel = 'latest';
             }
 
             core.exportVariable('APP_VERSION', ver);
+            core.exportVariable('CHANNEL', channel);
 
       - name: Build renderer
         run: yarn build:renderer
 
       - name: Build packages
-        shell: powershell
-        run: yarn electron-builder --win --publish always --config.extraMetadata.version="${{ env.APP_VERSION }}"
+        shell: bash
+        run: yarn electron-builder --win --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}" -c.publish.channel="${{ env.CHANNEL }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
@@ -181,23 +187,26 @@ jobs:
             const ref = context.ref;
 
             let ver = pkg.version;
+            let channel = 'latest';
 
             if (ref.startsWith('refs/heads/')) {
               const rawBranch = ref.replace('refs/heads/', '');
               const cleanBranch = rawBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-              const channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
+              channel = (cleanBranch === 'dev') ? 'canary' : cleanBranch;
               ver = `${base}-${channel}.${context.runNumber}`;
             } else if (ref.startsWith('refs/tags/')) {
               ver = ref.replace('refs/tags/v', '').replace('refs/tags/', '');
+              channel = 'latest';
             }
 
             core.exportVariable('APP_VERSION', ver);
+            core.exportVariable('CHANNEL', channel);
 
       - name: Build renderer
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --linux --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}"
+        run: yarn electron-builder --linux --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}" -c.publish.channel="${{ env.CHANNEL }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USE_HARD_LINKS: false
