@@ -89,12 +89,7 @@ export default function UpdaterSection() {
     }
 
     if (phase === 'disabled') {
-        return (
-            <div className="settings-section">
-                <h3>Updates</h3>
-                <p className="settings-section-desc">This feature is not available in the current environment.</p>
-            </div>
-        );
+        return "";
     }
 
     return (
@@ -111,7 +106,7 @@ export default function UpdaterSection() {
 
             {phase === 'not-available' && (
                 <>
-                    <div className="info-banner">You're up to date{version ? ` (${version})` : ''}.</div>
+                    <div className="info-banner">You're up to date{version ? ` (${version})` : ''}</div>
                     <button onClick={handleCheck}>Check again</button>
                 </>
             )}
