@@ -27,7 +27,7 @@ export default function AggregationTab({ selection, reloadSignal }) {
         collection: selection.collection,
         pipeline: EJSON.stringify(pipeline)
       });
-      setResults(docs.map((d) => EJSON.parse(JSON.stringify(d), { relaxed: false })));
+      setResults(docs.map((d) => EJSON.parse(JSON.stringify(d))));
     } catch (err) {
       setError(err.message);
     } finally {

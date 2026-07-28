@@ -179,7 +179,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
         limit: PAGE_SIZE,
         skip: page * PAGE_SIZE
       });
-      setDocs(result.docs.map((d) => EJSON.parse(JSON.stringify(d), { relaxed: false })));
+      setDocs(result.docs.map((d) => EJSON.parse(JSON.stringify(d))));
       setTotalCount(result.totalCount);
       setSelectedIds(new Set());
     } catch (err) {
