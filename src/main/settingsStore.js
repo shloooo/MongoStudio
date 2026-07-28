@@ -4,7 +4,7 @@ const { dialog } = require('electron');
 
 class SettingsFile {
   constructor(cwd) {
-    this.filePath = path.join(cwd, 'mongo-studio-settings.json');
+    this.filePath = path.join(cwd, 'settings.json');
     this.data = this._load();
   }
 
