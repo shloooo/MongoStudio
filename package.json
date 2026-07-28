@@ -2,7 +2,7 @@
   "name": "mongo-studio",
   "version": "0.0.2",
   "description": "A free open-source alternative for Studio3T.",
-  "author": "RisingMedia Solutions",
+  "author": "RisingMedia Solutions <shloooo@users.noreply.github.com>",
   "main": "src/main/main.js",
   "private": true,
   "type": "commonjs",
@@ -35,7 +35,8 @@
     "directories": { "output": "release" },
     "files": ["dist/**", "src/main/**", "src/preload/**", "package.json"],
     "linux": {
-      "target": ["AppImage", "deb", "tar.gz"]
+      "target": ["AppImage", "deb", "tar.gz"],
+      "maintainer": "RisingMedia Solutions <contact@risingmedia.dev>"
     },
     "publish": {
       "provider": "github",
