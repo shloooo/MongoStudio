@@ -35,7 +35,7 @@ jobs:
         run: yarn build:renderer
 
       - name: Build, sign packages
-        run: yarn electron-builder --mac --publish onTagOrDraft
+        run: yarn electron-builder --mac --publish onTag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
@@ -61,7 +61,6 @@ jobs:
           path: artifact-zip
 
   Windows-Build:
-    needs: macOS-Build
     runs-on: windows-2025
 
     steps:
@@ -89,7 +88,7 @@ jobs:
 
       - name: Build packages
         shell: powershell
-        run: yarn electron-builder --win --publish onTagOrDraft
+        run: yarn electron-builder --win --publish onTag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
@@ -104,8 +103,8 @@ jobs:
             release/*.exe
             release/*.zip
 
+
   Linux-Build:
-    needs: Windows-Build
     runs-on: ubuntu-24.04
 
     steps:
@@ -136,7 +135,7 @@ jobs:
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --linux --publish onTagOrDraft
+        run: yarn electron-builder --linux --publish onTag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USE_HARD_LINKS: false
