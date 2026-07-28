@@ -28,6 +28,9 @@ jobs:
           npm i -g yarn
           yarn --network-timeout 1000000
 
+      - name: Generate git details
+        run: yarn generate:gitinfo
+
       - name: Build renderer
         run: yarn build:renderer
 
@@ -57,7 +60,52 @@ jobs:
           name: macOS-zip
           path: artifact-zip
 
+  Windows-Build:
+    needs: macOS-Build
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Installing Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install npm modules
+        shell: powershell
+        run: |
+          npm i -g yarn
+          yarn --network-timeout 1000000
+
+      - name: Generate git details
+        run: yarn generate:gitinfo
+
+      - name: Build renderer
+        run: yarn build:renderer
+
+      - name: Build packages
+        shell: powershell
+        run: yarn electron-builder --win --publish onTagOrDraft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          USE_HARD_LINKS: false
+
+      - uses: actions/upload-artifact@v5
+        name: Upload installer/portable
+        with:
+          name: Windows-build
+          path: |
+            release/*.exe
+            release/*.zip
+
   Linux-Build:
+    needs: Windows-Build
     runs-on: ubuntu-24.04
 
     steps:
@@ -80,6 +128,9 @@ jobs:
         run: |
           npm i -g yarn
           yarn --network-timeout 1000000
+
+      - name: Generate git details
+        run: yarn generate:gitinfo
 
       - name: Build renderer
         run: yarn build:renderer
@@ -107,43 +158,3 @@ jobs:
         with:
           name: Linux-tarball
           path: release/*.tar.gz
-
-  Windows-Build:
-    runs-on: windows-2025
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Installing Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 24
-
-      - name: Install npm modules
-        shell: powershell
-        run: |
-          npm i -g yarn
-          yarn --network-timeout 1000000
-
-      - name: Build renderer
-        run: yarn build:renderer
-
-      - name: Build packages
-        shell: powershell
-        run: yarn electron-builder --win --publish onTagOrDraft
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          USE_HARD_LINKS: false
-
-      - uses: actions/upload-artifact@v5
-        name: Upload installer/portable
-        with:
-          name: Windows-build
-          path: |
-            release/*.exe
-            release/*.zip
