@@ -238,14 +238,10 @@ export default function SettingsPage({connections, onImported}) {
                                 <span className="settings-row-value">{appInfo.version}</span>
                             </div>
                             <div className="settings-row">
-                                <span className="settings-row-label">Branch</span>
-                                <span className="settings-row-value">{appInfo.branch || 'unknown'}</span>
-                            </div>
-                            <div className="settings-row">
-                                <span className="settings-row-label">Commit</span>
+                                <span className="settings-row-label">Git</span>
                                 <span className="settings-row-value">
                                     {appInfo.commit ? appInfo.commit : 'unknown'}
-                                    {appInfo.commit && appInfo.dirty ? ' (modified)' : ''}
+                                    <span className="settings-row-value-child">    @ {appInfo.branch || 'unknown'}</span>
                                 </span>
                             </div>
                         </>
