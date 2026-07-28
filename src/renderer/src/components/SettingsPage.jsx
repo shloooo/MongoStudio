@@ -158,7 +158,6 @@ export default function SettingsPage({connections, onImported}) {
 
                 <div className="settings-section">
                     <h3><i className="fa-solid fa-sliders"/> {t('settings.general.heading')}</h3>
-                    <p className="settings-section-desc">{t('settings.general.description')}</p>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.general.language')}</span>
                         <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)}>
@@ -177,7 +176,6 @@ export default function SettingsPage({connections, onImported}) {
 
                 <div className="settings-section">
                     <h3><i className="fa-solid fa-file-code"/> {t('settings.editor.heading')}</h3>
-                    <p className="settings-section-desc">{t('settings.editor.description')}</p>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.editor.defaultTab')}</span>
                         <select value={settings.defaultEditorTab || 'tree'}
@@ -190,7 +188,6 @@ export default function SettingsPage({connections, onImported}) {
 
                 <div className="settings-section">
                     <h3><i className="fa-solid fa-arrow-down-wide-short"/> {t('settings.documentsTable.heading')}</h3>
-                    <p className="settings-section-desc">{t('settings.documentsTable.description')}</p>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.documentsTable.multiColumnSort')}</span>
                         <input type="checkbox" checked={!!settings.multiColumnSort}
@@ -200,7 +197,6 @@ export default function SettingsPage({connections, onImported}) {
 
                 <div className="settings-section">
                     <h3><i className="fa-solid fa-shield-halved"/> {t('settings.security.heading')}</h3>
-                    <p className="settings-section-desc">{t('settings.security.description')}</p>
 
                     {!vaultStatus.encryptionEnabled && mode !== 'setup' && (
                         <div className="settings-row">
@@ -286,8 +282,7 @@ export default function SettingsPage({connections, onImported}) {
 
                 <div className="settings-section">
                     <h3><i className="fa-solid fa-box-archive"/> {t('settings.backup.heading')}</h3>
-                    <p className="settings-section-desc">{t('settings.backup.description')}</p>
-                    <div className="toolbar">
+                    <div className="update-toolbar">
                         <button onClick={handleExport}><i className="fa-solid fa-file-export"/> {t('settings.backup.export')}</button>
                         <button onClick={handleImport}><i className="fa-solid fa-file-import"/> {t('settings.backup.import')}</button>
                     </div>

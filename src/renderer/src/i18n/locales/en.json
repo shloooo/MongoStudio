@@ -394,7 +394,6 @@
     "title": "Settings",
     "general": {
       "heading": "General",
-      "description": "Here you can configure various general settings",
       "language": "Interface language",
       "updateChannel": "Update Channel",
       "channel": {
@@ -404,7 +403,6 @@
     },
     "editor": {
       "heading": "Document Editor",
-      "description": "Here you can adjust various settings for the document editor",
       "defaultTab": "Default tab editor",
       "tab": {
         "tree": "Tree",
@@ -413,12 +411,10 @@
     },
     "documentsTable": {
       "heading": "Documents Table",
-      "description": "Here you can adjust how sorting works in the documents table",
       "multiColumnSort": "Sort by multiple columns"
     },
     "security": {
       "heading": "Security",
-      "description": "Here you can adjust your security settings",
       "notSet": "Master password is not set. Connections are stored unencrypted.",
       "enabled": "Master password is enabled.",
       "setup": "Set up",
@@ -449,7 +445,6 @@
     },
     "backup": {
       "heading": "Backup",
-      "description": "Back up or restore settings and connections as a JSON file. This data is exported in plain text.",
       "export": "Export settings & connections",
       "import": "Import settings & connections",
       "exportedTo": "Exported to {{path}}",

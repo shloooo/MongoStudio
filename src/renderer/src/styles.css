@@ -602,6 +602,13 @@ button.primary:hover {
     align-items: center;
 }
 
+.update-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 13px;
+}
+
 .spacer {
     flex: 1;
 }
