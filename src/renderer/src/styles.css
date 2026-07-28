@@ -899,7 +899,7 @@ button.primary:hover {
 .hint-text {
     font-size: 11px;
     color: var(--text-tertiary);
-    margin: 2px 0 0;
+    margin: 2px 0 3px;
 }
 
 .modal-actions {
@@ -1446,6 +1446,7 @@ button.primary:hover {
 
 .editor-toolbar-row {
     display: flex;
+    margin-bottom: 3px;
 }
 
 .find-replace-bar {
@@ -1767,6 +1768,26 @@ button.danger:hover {
     height: 1px;
     background: var(--glass-border);
     margin: 4px 2px;
+}
+
+.context-menu-item-wrapper {
+    display: flex;
+}
+
+.context-menu-item-parent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.context-menu-arrow {
+    color: var(--text-tertiary);
+    font-size: 12px;
+}
+
+.context-submenu {
+    z-index: 301;
 }
 
 ::-webkit-scrollbar-track {
