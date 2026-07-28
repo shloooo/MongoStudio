@@ -56,7 +56,7 @@ jobs:
         run: yarn build:renderer
 
       - name: Build, sign packages
-        run: yarn electron-builder --mac --publish onTag -c.extraMetadata.version="${{ env.APP_VERSION }}"
+        run: yarn electron-builder --mac --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
@@ -130,7 +130,7 @@ jobs:
 
       - name: Build packages
         shell: powershell
-        run: yarn electron-builder --win --publish onTag --config.extraMetadata.version="${{ env.APP_VERSION }}"
+        run: yarn electron-builder --win --publish always --config.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
@@ -197,7 +197,7 @@ jobs:
         run: yarn build:renderer
 
       - name: Build packages
-        run: yarn electron-builder --linux --publish onTag -c.extraMetadata.version="${{ env.APP_VERSION }}"
+        run: yarn electron-builder --linux --publish always -c.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USE_HARD_LINKS: false
