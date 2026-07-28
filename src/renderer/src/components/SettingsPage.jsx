@@ -143,7 +143,7 @@ export default function SettingsPage({connections, onImported}) {
 
                 <div className="settings-section">
                     <h3>Document Editor</h3>
-                    <p className="settings-section-desc">Here you can adjust various settings for the document editor..</p>
+                    <p className="settings-section-desc">Here you can adjust various settings for the document editor</p>
                     <div className="settings-row">
                         <span className="settings-row-label">Default tab editor</span>
                         <select value={settings.defaultEditorTab || 'tree'}
