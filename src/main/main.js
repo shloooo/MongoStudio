@@ -48,7 +48,6 @@ async function createWindow() {
     const isDev = !app.isPackaged;
     if (isDev && isRendererDevMode) {
         mainWindow.loadURL('http://localhost:5173');
-        mainWindow.webContents.openDevTools();
     } else {
         if (!staticServerHandle) {
             staticServerHandle = await startStaticServer(path.join(__dirname, '..', '..', 'dist'));
@@ -69,7 +68,7 @@ app.whenReady().then(async () => {
     settingsStore = registerSettingsHandlers(ipcMain, app.getPath('userData'), store);
     await createWindow();
 
-    initUpdater({window: mainWindow, devMode: isServeMode});
+    initUpdater({window: mainWindow, devMode: isServeMode, settingsStore});
 
     ipcMain.handle('updater:check', () => checkForUpdates());
     ipcMain.handle('updater:download', () => downloadUpdate());

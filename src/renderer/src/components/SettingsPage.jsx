@@ -24,6 +24,11 @@ export default function SettingsPage({connections, onImported}) {
         setSettings(next);
     }
 
+    async function updateUpdateChannel(value) {
+        const next = await window.api.settings.set('updateChannel', value);
+        setSettings(next);
+    }
+
     async function updateDefaultEditorTab(value) {
         const next = await window.api.settings.set('defaultEditorTab', value);
         setSettings(next);
@@ -123,8 +128,15 @@ export default function SettingsPage({connections, onImported}) {
                     <p className="settings-section-desc">Here you can configure various general settings</p>
                     <div className="settings-row">
                         <span className="settings-row-label">Interface language</span>
-                        <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)}>
+                        <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)} disabled="true">
                             <option value="en">English</option>
+                        </select>
+                    </div>
+                    <div className="settings-row">
+                        <span className="settings-row-label">Update Channel</span>
+                        <select value={settings.updateChannel || 'stable'} onChange={(e) => updateUpdateChannel(e.target.value)}>
+                            <option value="stable">Stable</option>
+                            <option value="canary">Canary</option>
                         </select>
                     </div>
                 </div>

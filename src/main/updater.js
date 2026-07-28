@@ -5,6 +5,7 @@ let isDev = false;
 let checking = false;
 let downloading = false;
 let lastCheckResult = null;
+let settingsStoreRef = null;
 
 function send(channel, payload) {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -17,9 +18,10 @@ function formatEtaSeconds(bytesPerSecond, bytesRemaining) {
     return Math.round(bytesRemaining / bytesPerSecond);
 }
 
-function initUpdater({window, devMode}) {
+function initUpdater({window, devMode, settingsStore}) {
     mainWindow = window;
     isDev = devMode;
+    settingsStoreRef = settingsStore || null;
 
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
@@ -70,6 +72,9 @@ async function checkForUpdates() {
     }
     if (checking) return {ok: true, alreadyChecking: true};
     checking = true;
+    autoUpdater.allowDowngrade = true;
+    autoUpdater.allowPrerelease = (settingsStoreRef && settingsStoreRef.get('updateChannel', 'stable')) == 'canary';
+    console.log(`Allowing pre-releases? ${autoUpdater.allowPrerelease}`)
     try {
         await autoUpdater.checkForUpdates();
         return {ok: true};
