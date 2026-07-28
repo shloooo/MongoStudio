@@ -130,7 +130,7 @@ jobs:
 
       - name: Build packages
         shell: powershell
-        run: yarn electron-builder --win --publish onTag -c.extraMetadata.version="${{ env.APP_VERSION }}"
+        run: yarn electron-builder --win --publish onTag --config.extraMetadata.version="${{ env.APP_VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
