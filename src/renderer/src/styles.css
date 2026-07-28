@@ -62,7 +62,6 @@ select,
     background: radial-gradient(ellipse 120% 80% at 15% -10%, rgba(47, 217, 138, 0.10), transparent 60%),
     radial-gradient(ellipse 100% 70% at 100% 110%, rgba(80, 120, 255, 0.06), transparent 55%),
     var(--bg-void);
-    border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--glass-border);
 }
