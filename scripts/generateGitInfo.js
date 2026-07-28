@@ -16,13 +16,12 @@ function safeGitCommand(args) {
 }
 
 const commit = safeGitCommand('rev-parse --short HEAD');
-const branch = safeGitCommand('rev-parse --abbrev-ref HEAD');
+const branch = safeGitCommand('describe --tags --exact-match') || safeGitCommand('rev-parse --abbrev-ref HEAD');
 const status = safeGitCommand('status --porcelain');
 
 const gitInfo = {
     commit: commit || null,
     branch: branch || null,
-    dirty: false,
     generatedAt: new Date().toISOString()
 };
 
