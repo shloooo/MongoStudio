@@ -14,14 +14,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Installing Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install deps
         run: |
@@ -45,13 +45,13 @@ jobs:
           mkdir artifact-zip
           mv release/*.zip artifact-zip/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload DMG
         with:
           name: macOS-dmg
           path: artifact-dmg
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload ZIP
         with:
           name: macOS-zip
@@ -62,14 +62,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Installing Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install dependencies
         run: |
@@ -90,37 +90,37 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           USE_HARD_LINKS: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload AppImage
         with:
           name: Linux-AppImage
           path: release/*.AppImage
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload DEB
         with:
           name: Linux-DEB
           path: release/*.deb
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload tarball
         with:
           name: Linux-tarball
           path: release/*.tar.gz
 
   Windows-Build:
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Installing Node
-        uses: actions/setup-node@v4.4.0
+        uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install npm modules
         shell: powershell
@@ -140,7 +140,7 @@ jobs:
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
           USE_HARD_LINKS: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         name: Upload installer/portable
         with:
           name: Windows-build
