@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback, useRef} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import ConnectionDialog from './components/ConnectionDialog.jsx';
 import CollectionView from './components/CollectionView.jsx';
@@ -366,44 +366,41 @@ export default function App() {
             <TitleBar title="MongoStudio"/>
             <ErrorToastStack/>
             <div className="app-shell">
-                <Sidebar
-                    connections={connections}
-                    openConnIds={openConnIds}
-                    onAddConnection={() => setDialogState({open: true, editing: null})}
-                    onEditConnection={async (c) => {
-                        const full = await window.api.conn.get(c.id);
-                        setDialogState({open: true, editing: full || c});
-                    }}
-                    onDeleteConnection={handleDeleteConnection}
-                    onToggleConnection={handleToggleConnection}
-                    onRefreshConnection={handleRefreshConnection}
-                    onSelectCollection={handleSelectCollection}
-                    onOpenSettings={() => setShowSettings(true)}
-                    onCollectionContextMenu={handleCollectionContextMenu}
-                    onConnectionContextMenu={handleConnectionContextMenu}
-                    onDatabaseContextMenu={handleDatabaseContextMenu}
-                    openDbSignal={openDbSignal}
-                    refreshDbSignal={refreshDbSignal}
+                <Sidebar connections={connections}
+                         openConnIds={openConnIds}
+                         onAddConnection={() => setDialogState({open: true, editing: null})}
+                         onEditConnection={async (c) => {
+                             const full = await window.api.conn.get(c.id);
+                             setDialogState({open: true, editing: full || c});
+                         }}
+                         onDeleteConnection={handleDeleteConnection}
+                         onToggleConnection={handleToggleConnection}
+                         onRefreshConnection={handleRefreshConnection}
+                         onSelectCollection={handleSelectCollection}
+                         onOpenSettings={() => setShowSettings(true)}
+                         onCollectionContextMenu={handleCollectionContextMenu}
+                         onConnectionContextMenu={handleConnectionContextMenu}
+                         onDatabaseContextMenu={handleDatabaseContextMenu}
+                         openDbSignal={openDbSignal}
+                         refreshDbSignal={refreshDbSignal}
                 />
                 <main className="main-area">
                     {status && <div
                         className={`status-bar ${status.type === 'error' ? 'is-error' : 'is-info'}`}>{status.message}</div>}
                     <div className="collection-tab-bar">
                         {tabs.map((tab) => (
-                            <div
-                                key={tab.id}
-                                className={`collection-tab ${!showSettings && tab.id === activeTabId ? 'active' : ''}`}
-                                onClick={() => {
-                                    setShowSettings(false);
-                                    setActiveTabId(tab.id);
-                                }}
-                                title={`${tab.dbName}.${tab.collection}`}
-                            >
-                <span className="collection-tab-label">
-                  <span className="collection-tab-db">{tab.dbName}</span>
-                  <span className="collection-tab-sep">.</span>
-                  <span className="collection-tab-name">{tab.collection}</span>
-                </span>
+                            <div key={tab.id}
+                                 className={`collection-tab ${!showSettings && tab.id === activeTabId ? 'active' : ''}`}
+                                 onClick={() => {
+                                     setShowSettings(false);
+                                     setActiveTabId(tab.id);
+                                 }}
+                                 title={`${tab.dbName}.${tab.collection}`}>
+                                <span className="collection-tab-label">
+                                    <span className="collection-tab-db">{tab.dbName}</span>
+                                    <span className="collection-tab-sep">.</span>
+                                    <span className="collection-tab-name">{tab.collection}</span>
+                                </span>
                                 <button className="collection-tab-close" onClick={(e) => {
                                     e.stopPropagation();
                                     handleCloseTab(tab.id);
@@ -412,10 +409,8 @@ export default function App() {
                             </div>
                         ))}
                         <div className="collection-tab-spacer"/>
-                        <div
-                            className={`collection-tab settings-tab ${showSettings ? 'active' : ''}`}
-                            onClick={() => setShowSettings(true)}
-                        >
+                        <div className={`collection-tab settings-tab ${showSettings ? 'active' : ''}`}
+                             onClick={() => setShowSettings(true)}>
                             <span className="collection-tab-label">⚙ Settings</span>
                             {showSettings && (
                                 <button className="collection-tab-close" onClick={(e) => {
