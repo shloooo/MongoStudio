@@ -98,6 +98,33 @@ function registerDataHandlers(ipcMain) {
     return name;
   });
 
+  ipcMain.handle('data:listUsers', async (event, { connId, dbName }) => {
+    const client = getClient(connId);
+    const result = await client.db(dbName).command({ usersInfo: 1 });
+    return result.users || [];
+  });
+
+  ipcMain.handle('data:createUser', async (event, { connId, dbName, user, pwd, roles }) => {
+    const client = getClient(connId);
+    await client.db(dbName).command({ createUser: user, pwd, roles: roles || [] });
+    return true;
+  });
+
+  ipcMain.handle('data:updateUser', async (event, { connId, dbName, user, pwd, roles }) => {
+    const client = getClient(connId);
+    const cmd = { updateUser: user };
+    if (pwd) cmd.pwd = pwd;
+    if (roles) cmd.roles = roles;
+    await client.db(dbName).command(cmd);
+    return true;
+  });
+
+  ipcMain.handle('data:dropUser', async (event, { connId, dbName, user }) => {
+    const client = getClient(connId);
+    await client.db(dbName).command({ dropUser: user });
+    return true;
+  });
+
   ipcMain.handle('data:dropDatabase', async (event, { connId, dbName }) => {
     const client = getClient(connId);
     await client.db(dbName).dropDatabase();

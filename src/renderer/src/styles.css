@@ -465,7 +465,7 @@ select,
     flex-direction: column;
 }
 
-.documents-tab, .aggregation-tab, .indexes-tab {
+.documents-tab, .aggregation-tab, .indexes-tab, .users-tab {
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -1068,7 +1068,7 @@ button.primary:hover {
     letter-spacing: 0.05em;
 }
 
-.indexes-tab {
+.indexes-tab, .users-tab {
     overflow-y: auto;
 }
 

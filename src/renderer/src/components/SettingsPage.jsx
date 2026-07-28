@@ -34,6 +34,11 @@ export default function SettingsPage({connections, onImported}) {
         setSettings(next);
     }
 
+    async function updateSystemUsersView(value) {
+        const next = await window.api.settings.set('systemUsersView', value);
+        setSettings(next);
+    }
+
     function resetForm() {
         setMode(null);
         setCurrentPw('');
@@ -152,6 +157,23 @@ export default function SettingsPage({connections, onImported}) {
                             <option value="raw">Raw</option>
                         </select>
                     </div>
+                </div>
+
+                <div className="settings-section">
+                    <h3>Collections</h3>
+                    <p className="settings-section-desc">Controls how the <code>system.users</code> collection is opened.</p>
+                    <div className="settings-row">
+                        <span className="settings-row-label">system.users view</span>
+                        <select value={settings.systemUsersView || 'userManagement'}
+                                onChange={(e) => updateSystemUsersView(e.target.value)}>
+                            <option value="userManagement">User management</option>
+                            <option value="collection">Collection</option>
+                        </select>
+                    </div>
+                    <p className="settings-section-desc">
+                        "User management" opens a dedicated tab for creating, editing, and removing database users.
+                        "Collection" opens it like any other collection (raw documents, aggregation, indexes).
+                    </p>
                 </div>
 
                 <div className="settings-section">
