@@ -1,11 +1,13 @@
 import React, {useState, useEffect} from 'react';
+import {useTranslation} from 'react-i18next';
 import UpdaterSection from './UpdaterSection.jsx';
 
 function SettingsSkeleton() {
+    const {t} = useTranslation();
     return (
         <div className="settings-overlay">
             <div className="settings-page">
-                <h1>Settings</h1>
+                <h1>{t('settings.title')}</h1>
                 {[0, 1, 2].map((i) => (
                     <div className="settings-section skeleton-section" key={i}>
                         <div className="skeleton-line skeleton-line-title"/>
@@ -20,6 +22,7 @@ function SettingsSkeleton() {
 }
 
 export default function SettingsPage({connections, onImported}) {
+    const {t, i18n} = useTranslation();
     const [settings, setSettings] = useState(null);
     const [vaultStatus, setVaultStatus] = useState(null);
     const [appInfo, setAppInfo] = useState(null);
@@ -46,6 +49,7 @@ export default function SettingsPage({connections, onImported}) {
     async function updateLanguage(lang) {
         const next = await window.api.settings.set('language', lang);
         setSettings(next);
+        i18n.changeLanguage(lang);
     }
 
     async function updateUpdateChannel(value) {
@@ -69,17 +73,17 @@ export default function SettingsPage({connections, onImported}) {
     async function handleSetup(e) {
         e.preventDefault();
         if (newPw !== confirmPw) {
-            setError('Passwords do not match.');
+            setError(t('settings.security.errorMismatch'));
             return;
         }
         if (newPw.length < 6) {
-            setError('Use at least 6 characters.');
+            setError(t('settings.security.errorTooShort'));
             return;
         }
         setBusy(true);
         await window.api.vault.setup(newPw);
         setBusy(false);
-        setInfo('Master password enabled. Your connections are now encrypted on disk.');
+        setInfo(t('settings.security.successSetup'));
         setVaultStatus(await window.api.vault.status());
         resetForm();
     }
@@ -87,21 +91,21 @@ export default function SettingsPage({connections, onImported}) {
     async function handleChange(e) {
         e.preventDefault();
         if (newPw !== confirmPw) {
-            setError('Passwords do not match.');
+            setError(t('settings.security.errorMismatch'));
             return;
         }
         if (newPw.length < 6) {
-            setError('Use at least 6 characters.');
+            setError(t('settings.security.errorTooShort'));
             return;
         }
         setBusy(true);
         const ok = await window.api.vault.changePassphrase(currentPw, newPw);
         setBusy(false);
         if (ok) {
-            setInfo('Master password changed.');
+            setInfo(t('settings.security.successChange'));
             resetForm();
         } else {
-            setError('Current password is incorrect.');
+            setError(t('settings.security.errorWrongCurrent'));
         }
     }
 
@@ -111,17 +115,17 @@ export default function SettingsPage({connections, onImported}) {
         const ok = await window.api.vault.disable(currentPw);
         setBusy(false);
         if (ok) {
-            setInfo('Master password removed. Connections are now stored unencrypted.');
+            setInfo(t('settings.security.successDisable'));
             setVaultStatus(await window.api.vault.status());
             resetForm();
         } else {
-            setError('Current password is incorrect.');
+            setError(t('settings.security.errorWrongCurrent'));
         }
     }
 
     async function handleExport() {
         const result = await window.api.settings.export(connections);
-        if (result.ok) setInfo(`Exported to ${result.filePath}`);
+        if (result.ok) setInfo(t('settings.backup.exportedTo', {path: result.filePath}));
     }
 
     async function handleImport() {
@@ -133,7 +137,7 @@ export default function SettingsPage({connections, onImported}) {
             return; // cancelled or failed silently (no file picked)
         }
         setSettings(result.settings);
-        setInfo(`Imported ${result.importedConnectionCount} connection(s) and settings.`);
+        setInfo(t('settings.backup.importedCount', {count: result.importedConnectionCount}));
         if (onImported) onImported();
     }
 
@@ -142,69 +146,70 @@ export default function SettingsPage({connections, onImported}) {
     return (
         <div className="settings-overlay">
             <div className="settings-page">
-                <h1>Settings</h1>
+                <h1>{t('settings.title')}</h1>
 
                 {info && <div className="info-banner"><i className="fa-solid fa-circle-check"/> {info}</div>}
                 {error && <div className="error-banner"><i className="fa-solid fa-triangle-exclamation"/> {error}</div>}
 
                 <div className="settings-section">
-                    <h3><i className="fa-solid fa-sliders"/> General</h3>
-                    <p className="settings-section-desc">Here you can configure various general settings</p>
+                    <h3><i className="fa-solid fa-sliders"/> {t('settings.general.heading')}</h3>
+                    <p className="settings-section-desc">{t('settings.general.description')}</p>
                     <div className="settings-row">
-                        <span className="settings-row-label">Interface language</span>
-                        <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)} disabled="true">
+                        <span className="settings-row-label">{t('settings.general.language')}</span>
+                        <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)}>
                             <option value="en">English</option>
+                            <option value="de">Deutsch</option>
                         </select>
                     </div>
                     <div className="settings-row">
-                        <span className="settings-row-label">Update Channel</span>
+                        <span className="settings-row-label">{t('settings.general.updateChannel')}</span>
                         <select value={settings.updateChannel || 'stable'} onChange={(e) => updateUpdateChannel(e.target.value)}>
-                            <option value="stable">Stable</option>
-                            <option value="canary">Canary</option>
+                            <option value="stable">{t('settings.general.channel.stable')}</option>
+                            <option value="canary">{t('settings.general.channel.canary')}</option>
                         </select>
                     </div>
                 </div>
 
                 <div className="settings-section">
-                    <h3><i className="fa-solid fa-file-code"/> Document Editor</h3>
-                    <p className="settings-section-desc">Here you can adjust various settings for the document editor</p>
+                    <h3><i className="fa-solid fa-file-code"/> {t('settings.editor.heading')}</h3>
+                    <p className="settings-section-desc">{t('settings.editor.description')}</p>
                     <div className="settings-row">
-                        <span className="settings-row-label">Default tab editor</span>
+                        <span className="settings-row-label">{t('settings.editor.defaultTab')}</span>
                         <select value={settings.defaultEditorTab || 'tree'}
                                 onChange={(e) => updateDefaultEditorTab(e.target.value)}>
-                            <option value="tree">Tree</option>
-                            <option value="raw">Raw</option>
+                            <option value="tree">{t('settings.editor.tab.tree')}</option>
+                            <option value="raw">{t('settings.editor.tab.raw')}</option>
                         </select>
                     </div>
                 </div>
 
                 <div className="settings-section">
-                    <h3><i className="fa-solid fa-shield-halved"/> Security</h3>
-                    <p className="settings-section-desc">Here you can adjust your security settings</p>
+                    <h3><i className="fa-solid fa-shield-halved"/> {t('settings.security.heading')}</h3>
+                    <p className="settings-section-desc">{t('settings.security.description')}</p>
 
                     {!vaultStatus.encryptionEnabled && mode !== 'setup' && (
                         <div className="settings-row">
-                            <span className="settings-row-label">Master password is not set. Connections are stored unencrypted.</span>
+                            <span className="settings-row-label">{t('settings.security.notSet')}</span>
                             <button className="primary" onClick={() => {
                                 resetForm();
                                 setMode('setup');
-                            }}><i className="fa-solid fa-lock"/> Set up master password</button>
+                            }}><i className="fa-solid fa-lock"/> {t('settings.security.setup')}</button>
                         </div>
                     )}
 
                     {vaultStatus.encryptionEnabled && !mode && (
                         <div className="settings-row">
-                            <span className="settings-row-label"><i className="fa-solid fa-lock" style={{color: 'var(--accent)'}}/> Master password is enabled.</span>
+                            <span className="settings-row-label"><i className="fa-solid fa-lock" style={{color: 'var(--accent)'}}/> {t('settings.security.enabled')}</span>
                             <div className="toolbar">
                                 <button onClick={() => {
                                     resetForm();
                                     setMode('change');
-                                }}>Change password
+                                }}>{t('settings.security.change')}
                                 </button>
                                 <button onClick={() => {
                                     resetForm();
                                     setMode('disable');
-                                }}>Remove master password
+                                }}>{t('settings.security.remove')}
                                 </button>
                             </div>
                         </div>
@@ -212,81 +217,80 @@ export default function SettingsPage({connections, onImported}) {
 
                     {mode === 'setup' && (
                         <form onSubmit={handleSetup} className="settings-form">
-                            <label className="settings-form-label">New master password</label>
-                            <input type="password" placeholder="At least 6 characters" value={newPw}
+                            <label className="settings-form-label">{t('settings.security.newPassword')}</label>
+                            <input type="password" placeholder={t('settings.security.placeholderMinChars')} value={newPw}
                                    onChange={(e) => setNewPw(e.target.value)} autoFocus/>
-                            <label className="settings-form-label">Confirm password</label>
-                            <input type="password" placeholder="Repeat password" value={confirmPw}
+                            <label className="settings-form-label">{t('settings.security.confirmPassword')}</label>
+                            <input type="password" placeholder={t('settings.security.placeholderRepeat')} value={confirmPw}
                                    onChange={(e) => setConfirmPw(e.target.value)}/>
-                            <p className="hint-text">This password encrypts your saved connections on disk. It cannot be recovered if lost.</p>
+                            <p className="hint-text">{t('settings.security.hintSetup')}</p>
                             <div className="modal-actions">
                                 <div className="spacer"/>
-                                <button type="button" onClick={resetForm}>Cancel</button>
+                                <button type="button" onClick={resetForm}>{t('settings.security.cancel')}</button>
                                 <button type="submit" className="primary"
-                                        disabled={busy}>{busy ? 'Setting up...' : 'Enable'}</button>
+                                        disabled={busy}>{busy ? t('settings.security.settingUp') : t('settings.security.enable')}</button>
                             </div>
                         </form>
                     )}
 
                     {mode === 'change' && (
                         <form onSubmit={handleChange} className="settings-form">
-                            <label className="settings-form-label">Current master password</label>
-                            <input type="password" placeholder="Current password" value={currentPw}
+                            <label className="settings-form-label">{t('settings.security.currentPassword')}</label>
+                            <input type="password" placeholder={t('settings.security.placeholderCurrent')} value={currentPw}
                                    onChange={(e) => setCurrentPw(e.target.value)} autoFocus/>
-                            <label className="settings-form-label">New master password</label>
-                            <input type="password" placeholder="At least 6 characters" value={newPw}
+                            <label className="settings-form-label">{t('settings.security.newPassword')}</label>
+                            <input type="password" placeholder={t('settings.security.placeholderMinChars')} value={newPw}
                                    onChange={(e) => setNewPw(e.target.value)}/>
-                            <label className="settings-form-label">Confirm new password</label>
-                            <input type="password" placeholder="Repeat password" value={confirmPw}
+                            <label className="settings-form-label">{t('settings.security.confirmNewPassword')}</label>
+                            <input type="password" placeholder={t('settings.security.placeholderRepeat')} value={confirmPw}
                                    onChange={(e) => setConfirmPw(e.target.value)}/>
                             <div className="modal-actions">
                                 <div className="spacer"/>
-                                <button type="button" onClick={resetForm}>Cancel</button>
+                                <button type="button" onClick={resetForm}>{t('settings.security.cancel')}</button>
                                 <button type="submit" className="primary"
-                                        disabled={busy}>{busy ? 'Changing...' : 'Change'}</button>
+                                        disabled={busy}>{busy ? t('settings.security.changing') : t('settings.security.changeSubmit')}</button>
                             </div>
                         </form>
                     )}
 
                     {mode === 'disable' && (
                         <form onSubmit={handleDisable} className="settings-form">
-                            <label className="settings-form-label">Current master password</label>
-                            <input type="password" placeholder="Current password" value={currentPw}
+                            <label className="settings-form-label">{t('settings.security.currentPassword')}</label>
+                            <input type="password" placeholder={t('settings.security.placeholderCurrent')} value={currentPw}
                                    onChange={(e) => setCurrentPw(e.target.value)} autoFocus/>
-                            <p className="hint-text">Connections will be stored unencrypted on disk after this.</p>
+                            <p className="hint-text">{t('settings.security.hintDisable')}</p>
                             <div className="modal-actions">
                                 <div className="spacer"/>
-                                <button type="button" onClick={resetForm}>Cancel</button>
+                                <button type="button" onClick={resetForm}>{t('settings.security.cancel')}</button>
                                 <button type="submit" className="danger"
-                                        disabled={busy}>{busy ? 'Removing...' : 'Remove'}</button>
+                                        disabled={busy}>{busy ? t('settings.security.removing') : t('settings.security.removeSubmit')}</button>
                             </div>
                         </form>
                     )}
                 </div>
 
                 <div className="settings-section">
-                    <h3><i className="fa-solid fa-box-archive"/> Backup</h3>
-                    <p className="settings-section-desc">Export or import all settings and saved connections as a single
-                        JSON file.</p>
+                    <h3><i className="fa-solid fa-box-archive"/> {t('settings.backup.heading')}</h3>
+                    <p className="settings-section-desc">{t('settings.backup.description')}</p>
                     <div className="toolbar">
-                        <button onClick={handleExport}><i className="fa-solid fa-file-export"/> Export settings & connections</button>
-                        <button onClick={handleImport}><i className="fa-solid fa-file-import"/> Import settings & connections</button>
+                        <button onClick={handleExport}><i className="fa-solid fa-file-export"/> {t('settings.backup.export')}</button>
+                        <button onClick={handleImport}><i className="fa-solid fa-file-import"/> {t('settings.backup.import')}</button>
                     </div>
                 </div>
 
                 <UpdaterSection/>
 
                 <div className="settings-section">
-                    <h3><i className="fa-solid fa-circle-info"/> About</h3>
+                    <h3><i className="fa-solid fa-circle-info"/> {t('settings.about.heading')}</h3>
                     <div className="settings-row">
-                        <span className="settings-row-label">Version</span>
+                        <span className="settings-row-label">{t('settings.about.version')}</span>
                         <span className="settings-row-value">{appInfo.version}</span>
                     </div>
                     <div className="settings-row">
-                        <span className="settings-row-label">Git</span>
+                        <span className="settings-row-label">{t('settings.about.git')}</span>
                         <span className="settings-row-value">
-                            {appInfo.commit ? appInfo.commit : 'unknown'}
-                            <span className="settings-row-value-child">    @ {appInfo.branch || 'unknown'}</span>
+                            {appInfo.commit ? appInfo.commit : t('settings.about.unknown')}
+                            <span className="settings-row-value-child">    @ {appInfo.branch || t('settings.about.unknown')}</span>
                         </span>
                     </div>
                 </div>
