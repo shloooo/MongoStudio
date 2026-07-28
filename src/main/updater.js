@@ -77,7 +77,7 @@ async function checkForUpdates() {
 
     autoUpdater.allowDowngrade = true;
     autoUpdater.allowPrerelease = (channel === 'canary');
-    autoUpdater.channel = channel;
+    autoUpdater.channel = (channel === 'stable' ? 'latest' : channel);
 
     try {
         await autoUpdater.checkForUpdates();
