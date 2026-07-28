@@ -35,7 +35,7 @@ export default function ContextMenu({ x, y, items, onClose }) {
   return (
       <div className="context-menu" style={style} ref={ref}>
         {items.map((item, i) =>
-            item.separator ? (
+            item.hidden ? "" : item.separator ? (
                 <div key={i} className="context-menu-sep"/>
             ) : item.submenu ? (
                 <div key={i}
