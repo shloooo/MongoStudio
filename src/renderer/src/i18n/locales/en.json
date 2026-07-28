@@ -1,0 +1,135 @@
+{
+  "app": {
+    "title": "MongoStudio",
+    "emptyState": {
+      "heading": "MongoStudio",
+      "body": "Select a connection and collection on the left to get started."
+    },
+    "tabs": {
+      "settings": "Settings"
+    },
+    "connection": {
+      "connecting": "Connecting to {{name}}...",
+      "error": "Error: {{error}}",
+      "lost": "Connection lost. Please reconnect."
+    },
+    "menu": {
+      "open": "Open",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "refresh": "Refresh",
+      "edit": "Edit...",
+      "createDatabase": "Create database...",
+      "manageUsersAdmin": "Manage users (admin)...",
+      "manageUsers": "Manage users...",
+      "listUsers": "List users with access...",
+      "exportJson": "Export as JSON...",
+      "exportCsv": "Export as CSV...",
+      "importFile": "Import file into this collection...",
+      "import": "Import...",
+      "createCollection": "Create collection...",
+      "copyToConnection": "Copy to another connection...",
+      "dropCollection": "Drop collection",
+      "dropDatabase": "Drop database",
+      "delete": "Delete"
+    },
+    "prompts": {
+      "newDatabaseName": "New database name:",
+      "newDatabaseTitle": "Create database",
+      "continue": "Continue",
+      "firstCollectionName": "Databases only exist once they hold a collection. Name for the first collection in \"{{dbName}}\":",
+      "create": "Create",
+      "newCollectionName": "New collection name in \"{{dbName}}\":"
+    },
+    "confirm": {
+      "deleteConnection": "Delete connection \"{{name}}\"? This cannot be undone.",
+      "deleteConnectionTitle": "Delete connection",
+      "dropCollection": "Drop collection \"{{path}}\"? This deletes all its documents and cannot be undone.",
+      "dropCollectionTitle": "Drop collection",
+      "dropDatabase": "Drop database \"{{name}}\"? This deletes all its collections and cannot be undone.",
+      "dropDatabaseTitle": "Drop database",
+      "drop": "Drop"
+    },
+    "status": {
+      "createdDatabase": "Created database {{name}}",
+      "createdCollection": "Created collection {{path}}",
+      "droppedCollection": "Dropped {{path}}",
+      "droppedDatabase": "Dropped database {{name}}",
+      "exported": "Exported {{count}} document(s) to {{path}}",
+      "exportedMulti": "Exported {{count}} document(s) across {{collectionCount}} collection(s) to {{path}}",
+      "imported": "Imported {{count}} document(s)",
+      "importedMulti": "Imported {{count}} document(s) into {{collectionCount}} collection(s)"
+    },
+    "tabLabel": {
+      "users": "{{dbName}} users",
+      "collectionUsers": "{{collection}} users"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "general": {
+      "heading": "General",
+      "description": "Here you can configure various general settings",
+      "language": "Interface language",
+      "updateChannel": "Update Channel",
+      "channel": {
+        "stable": "Stable",
+        "canary": "Canary"
+      }
+    },
+    "editor": {
+      "heading": "Document Editor",
+      "description": "Here you can adjust various settings for the document editor",
+      "defaultTab": "Default tab editor",
+      "tab": {
+        "tree": "Tree",
+        "raw": "Raw"
+      }
+    },
+    "security": {
+      "heading": "Security",
+      "description": "Here you can adjust your security settings",
+      "notSet": "Master password is not set. Connections are stored unencrypted.",
+      "enabled": "Master password is enabled.",
+      "setup": "Set up",
+      "change": "Change password",
+      "remove": "Remove",
+      "newPassword": "New master password",
+      "currentPassword": "Current master password",
+      "confirmPassword": "Confirm password",
+      "confirmNewPassword": "Confirm new password",
+      "placeholderMinChars": "At least 6 characters",
+      "placeholderRepeat": "Repeat password",
+      "placeholderCurrent": "Current password",
+      "hintSetup": "This password encrypts your saved connections on disk. It cannot be recovered if lost.",
+      "hintDisable": "Connections will be stored unencrypted on disk after this.",
+      "cancel": "Cancel",
+      "enable": "Enable",
+      "settingUp": "Setting up...",
+      "changeSubmit": "Change",
+      "changing": "Changing...",
+      "removeSubmit": "Remove",
+      "removing": "Removing...",
+      "errorMismatch": "Passwords do not match.",
+      "errorTooShort": "Use at least 6 characters.",
+      "errorWrongCurrent": "Current password is incorrect.",
+      "successSetup": "Master password enabled. Your connections are now encrypted on disk.",
+      "successChange": "Master password changed.",
+      "successDisable": "Master password removed. Connections are now stored unencrypted."
+    },
+    "backup": {
+      "heading": "Backup",
+      "description": "Export or import all settings and saved connections as a single JSON file.",
+      "export": "Export settings & connections",
+      "import": "Import settings & connections",
+      "exportedTo": "Exported to {{path}}",
+      "importedCount": "Imported {{count}} connection(s) and settings."
+    },
+    "about": {
+      "heading": "About MongoStudio",
+      "version": "Version",
+      "git": "Git",
+      "unknown": "unknown"
+    }
+  }
+}

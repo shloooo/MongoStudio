@@ -1,0 +1,135 @@
+{
+  "app": {
+    "title": "MongoStudio",
+    "emptyState": {
+      "heading": "MongoStudio",
+      "body": "Wähl links eine Verbindung und Collection aus, um loszulegen."
+    },
+    "tabs": {
+      "settings": "Einstellungen"
+    },
+    "connection": {
+      "connecting": "Verbinde mit {{name}}...",
+      "error": "Fehler: {{error}}",
+      "lost": "Verbindung verloren. Bitte neu verbinden."
+    },
+    "menu": {
+      "open": "Öffnen",
+      "connect": "Verbinden",
+      "disconnect": "Trennen",
+      "refresh": "Aktualisieren",
+      "edit": "Bearbeiten...",
+      "createDatabase": "Datenbank erstellen...",
+      "manageUsersAdmin": "Benutzer verwalten (admin)...",
+      "manageUsers": "Benutzer verwalten...",
+      "listUsers": "Zugriffsberechtigte anzeigen...",
+      "exportJson": "Als JSON exportieren...",
+      "exportCsv": "Als CSV exportieren...",
+      "importFile": "Datei in diese Collection importieren...",
+      "import": "Importieren...",
+      "createCollection": "Collection erstellen...",
+      "copyToConnection": "In andere Verbindung kopieren...",
+      "dropCollection": "Collection löschen",
+      "dropDatabase": "Datenbank löschen",
+      "delete": "Löschen"
+    },
+    "prompts": {
+      "newDatabaseName": "Name der neuen Datenbank:",
+      "newDatabaseTitle": "Datenbank erstellen",
+      "continue": "Weiter",
+      "firstCollectionName": "Eine Datenbank existiert erst, wenn sie eine Collection hat. Name für die erste Collection in \"{{dbName}}\":",
+      "create": "Erstellen",
+      "newCollectionName": "Name der neuen Collection in \"{{dbName}}\":"
+    },
+    "confirm": {
+      "deleteConnection": "Verbindung \"{{name}}\" löschen? Das lässt sich nicht rückgängig machen.",
+      "deleteConnectionTitle": "Verbindung löschen",
+      "dropCollection": "Collection \"{{path}}\" löschen? Damit gehen alle Dokumente darin verloren – endgültig.",
+      "dropCollectionTitle": "Collection löschen",
+      "dropDatabase": "Datenbank \"{{name}}\" löschen? Damit gehen alle Collections darin verloren – endgültig.",
+      "dropDatabaseTitle": "Datenbank löschen",
+      "drop": "Löschen"
+    },
+    "status": {
+      "createdDatabase": "Datenbank {{name}} erstellt",
+      "createdCollection": "Collection {{path}} erstellt",
+      "droppedCollection": "{{path}} gelöscht",
+      "droppedDatabase": "Datenbank {{name}} gelöscht",
+      "exported": "{{count}} Dokument(e) nach {{path}} exportiert",
+      "exportedMulti": "{{count}} Dokument(e) aus {{collectionCount}} Collection(s) nach {{path}} exportiert",
+      "imported": "{{count}} Dokument(e) importiert",
+      "importedMulti": "{{count}} Dokument(e) in {{collectionCount}} Collection(s) importiert"
+    },
+    "tabLabel": {
+      "users": "{{dbName}} Benutzer",
+      "collectionUsers": "{{collection}} Benutzer"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "general": {
+      "heading": "Allgemein",
+      "description": "Grundlegende Einstellungen für die App",
+      "language": "Sprache",
+      "updateChannel": "Update-Kanal",
+      "channel": {
+        "stable": "Stabil",
+        "canary": "Canary"
+      }
+    },
+    "editor": {
+      "heading": "Dokumenten-Editor",
+      "description": "Einstellungen für den Editor",
+      "defaultTab": "Standardmäßiger Tab",
+      "tab": {
+        "tree": "Baum",
+        "raw": "Roh"
+      }
+    },
+    "security": {
+      "heading": "Sicherheit",
+      "description": "Verschlüsselung und Zugriffsschutz",
+      "notSet": "Kein Master-Passwort gesetzt – Verbindungen liegen unverschlüsselt auf der Platte.",
+      "enabled": "Master-Passwort ist aktiv.",
+      "setup": "Einrichten",
+      "change": "Passwort ändern",
+      "remove": "Entfernen",
+      "newPassword": "Neues Master-Passwort",
+      "currentPassword": "Aktuelles Master-Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "confirmNewPassword": "Neues Passwort bestätigen",
+      "placeholderMinChars": "Mindestens 6 Zeichen",
+      "placeholderRepeat": "Passwort wiederholen",
+      "placeholderCurrent": "Aktuelles Passwort",
+      "hintSetup": "Damit werden deine gespeicherten Verbindungen verschlüsselt. Vergiss es nicht – ohne das Passwort geht nichts mehr.",
+      "hintDisable": "Verbindungen werden danach wieder unverschlüsselt gespeichert.",
+      "cancel": "Abbrechen",
+      "enable": "Aktivieren",
+      "settingUp": "Richte ein...",
+      "changeSubmit": "Ändern",
+      "changing": "Ändere...",
+      "removeSubmit": "Entfernen",
+      "removing": "Entferne...",
+      "errorMismatch": "Die Passwörter stimmen nicht überein.",
+      "errorTooShort": "Mindestens 6 Zeichen bitte.",
+      "errorWrongCurrent": "Falsches Passwort.",
+      "successSetup": "Master-Passwort ist gesetzt. Deine Verbindungen sind jetzt verschlüsselt.",
+      "successChange": "Passwort geändert.",
+      "successDisable": "Master-Passwort entfernt. Verbindungen liegen wieder unverschlüsselt vor."
+    },
+    "backup": {
+      "heading": "Sicherung",
+      "description": "Einstellungen und Verbindungen als eine JSON-Datei sichern oder wiederherstellen.",
+      "export": "Exportieren",
+      "import": "Importieren",
+      "exportedTo": "Exportiert nach {{path}}",
+      "importedCount": "{{count}} Verbindung(en) und Einstellungen importiert."
+    },
+    "about": {
+      "heading": "Über MongoStudio",
+      "version": "Version",
+      "git": "Git",
+      "unknown": "unbekannt"
+    }
+  }
+}
