@@ -1607,13 +1607,6 @@ button.danger:hover {
     font-family: var(--font-mono);
 }
 
-.dev-mode-banner {
-    background: rgba(230, 160, 60, 0.14);
-    color: #e6a03c;
-    border-color: rgba(230, 160, 60, 0.3);
-    font-weight: 600;
-}
-
 .update-progress {
     display: flex;
     flex-direction: column;
