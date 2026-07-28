@@ -71,16 +71,21 @@ async function checkForUpdates() {
         return {ok: false, error: 'Update checks are disabled in development mode.'};
     }
     if (checking) return {ok: true, alreadyChecking: true};
+
     checking = true;
+    const channel = settingsStoreRef ? settingsStoreRef.get('updateChannel', 'stable') : 'stable';
+
     autoUpdater.allowDowngrade = true;
-    autoUpdater.allowPrerelease = (settingsStoreRef && settingsStoreRef.get('updateChannel', 'stable')) == 'canary';
-    console.log(`Allowing pre-releases? ${autoUpdater.allowPrerelease}`)
+    autoUpdater.allowPrerelease = (channel === 'canary');
+    autoUpdater.channel = channel;
+
     try {
         await autoUpdater.checkForUpdates();
         return {ok: true};
     } catch (err) {
-        checking = false;
         return {ok: false, error: err.message};
+    } finally {
+        checking = false;
     }
 }
 
