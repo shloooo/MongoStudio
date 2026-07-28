@@ -33,9 +33,10 @@ function isInlineEditable(value) {
   return !NON_INLINE_EDITABLE_TYPES.includes(bsonTypeOf(value));
 }
 
+const SETTABLE_FIELD_TYPES = FIELD_TYPES.filter((t) => !NON_INLINE_EDITABLE_TYPES.includes(t));
+
 function InlineCellEditor({ value, onCommit, onCancel }) {
-  const initialType = bsonTypeOf(value) === 'Undefined' ? 'String' : bsonTypeOf(value);
-  const [type, setType] = useState(initialType);
+  const type = bsonTypeOf(value) === 'Undefined' ? 'String' : bsonTypeOf(value);
   const [raw, setRaw] = useState(() => toEditableRaw(value));
   const [error, setError] = useState('');
   const containerRef = React.useRef(null);
@@ -65,9 +66,6 @@ function InlineCellEditor({ value, onCommit, onCancel }) {
 
   return (
       <span className="inline-value-editor cell-editor" ref={containerRef}>
-      <select className="type-badge type-badge-select" value={type} onChange={(e) => setType(e.target.value)}>
-        {FIELD_TYPES.filter((t) => t !== 'Object' && t !== 'Array' && t !== 'DBRef' && t !== 'Binary').map((t) => <option key={t} value={t}>{t}</option>)}
-      </select>
         {type === 'Boolean' ? (
             <select className="inline-input" autoFocus value={raw} onChange={(e) => setRaw(e.target.value)}
                     onKeyDown={handleKeyDown}>
@@ -84,7 +82,6 @@ function InlineCellEditor({ value, onCommit, onCancel }) {
                    }} onKeyDown={handleKeyDown}/>
         )}
         <button className="tiny-btn" onMouseDown={(e) => e.preventDefault()} onClick={commit}>✓</button>
-      <button className="tiny-btn" onMouseDown={(e) => e.preventDefault()} onClick={onCancel}>✕</button>
         {error && <span className="inline-error">{error}</span>}
     </span>
   );
@@ -270,15 +267,25 @@ export default function DocumentsTab({ selection, reloadSignal }) {
     });
   }
 
-  function handleCellContextMenu(e, doc, field) {
+  function handleCellContextMenu(e, doc, field, rowIndex) {
     e.preventDefault();
     e.stopPropagation();
     const hasValue = Object.prototype.hasOwnProperty.call(doc, field);
+    const canSetType = hasValue && isInlineEditable(doc[field]);
     setRowContextMenu({
       x: e.clientX,
       y: e.clientY,
       items: [
         {label: 'Edit document', onClick: () => setModalDoc(doc)},
+        {separator: true},
+        {
+          label: 'Set field type',
+          disabled: !canSetType,
+          submenu: SETTABLE_FIELD_TYPES.map((t) => ({
+            label: t,
+            onClick: () => handleSetFieldType(rowIndex, field, t)
+          }))
+        },
         {separator: true},
         {label: 'Copy field value (raw)', disabled: !hasValue, onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field])))},
         {label: 'Copy field value (shell syntax)', disabled: !hasValue, onClick: () => copyToClipboard(toShellText(doc[field]))},
@@ -289,6 +296,18 @@ export default function DocumentsTab({ selection, reloadSignal }) {
         {label: 'Delete field value', danger: true, disabled: !hasValue, onClick: () => handleDeleteFieldValue(doc, field)}
       ]
     });
+  }
+
+  async function handleSetFieldType(rowIndex, field, newType) {
+    const doc = docs[rowIndex];
+    if (!doc || !Object.prototype.hasOwnProperty.call(doc, field)) return;
+    try {
+      const raw = toEditableRaw(doc[field]);
+      const coerced = coerceToType(raw, newType);
+      await handleCellCommit(rowIndex, field, coerced);
+    } catch (err) {
+      reportError(err.message, 'Set field type');
+    }
   }
 
   async function handleDeleteFieldValue(doc, field) {
@@ -428,6 +447,28 @@ export default function DocumentsTab({ selection, reloadSignal }) {
     });
   }
 
+  const allOnPageSelected = docs.length > 0 && docs.every((d) => Array.from(selectedIds).some((s) => s.key === JSON.stringify(d._id)));
+  const someOnPageSelected = !allOnPageSelected && docs.some((d) => Array.from(selectedIds).some((s) => s.key === JSON.stringify(d._id)));
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) {
+        for (const doc of docs) {
+          const key = JSON.stringify(doc._id);
+          const existing = Array.from(next).find((e) => e.key === key);
+          if (existing) next.delete(existing);
+        }
+      } else {
+        for (const doc of docs) {
+          const key = JSON.stringify(doc._id);
+          if (!Array.from(next).some((e) => e.key === key)) next.add({ key, value: doc._id });
+        }
+      }
+      return next;
+    });
+  }
+
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
@@ -461,7 +502,16 @@ export default function DocumentsTab({ selection, reloadSignal }) {
           <table className="doc-table spreadsheet-table">
             <thead>
             <tr>
-              <th className="col-checkbox"></th>
+              <th className="col-checkbox">
+                <input
+                    type="checkbox"
+                    checked={allOnPageSelected}
+                    ref={(el) => { if (el) el.indeterminate = someOnPageSelected; }}
+                    onChange={toggleSelectAll}
+                    title={allOnPageSelected ? 'Deselect all' : 'Select all on this page'}
+                    disabled={docs.length === 0}
+                />
+              </th>
               <th className="col-id">_id</th>
               {fieldColumns.map((f) => <th key={f} onContextMenu={(e) => handleHeaderContextMenu(e, f)}>{f}</th>)}
               <th className="col-fill"></th>
@@ -484,7 +534,7 @@ export default function DocumentsTab({ selection, reloadSignal }) {
                     const hasValue = Object.prototype.hasOwnProperty.call(doc, field);
                     const editable = hasValue && isInlineEditable(doc[field]);
                     return (
-                        <td key={field} className="spreadsheet-cell" onContextMenu={(e) => handleCellContextMenu(e, doc, field)}>
+                        <td key={field} className="spreadsheet-cell" onContextMenu={(e) => handleCellContextMenu(e, doc, field, rowIndex)}>
                           {isEditing ? (
                               <InlineCellEditor
                                   value={doc[field]}
