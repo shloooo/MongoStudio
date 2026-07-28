@@ -1,9 +1,11 @@
 import React, {createContext, useCallback, useContext, useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 
 const ConfirmContext = createContext(null);
 const PromptContext = createContext(null);
 
 export function ConfirmProvider({ children }) {
+    const { t } = useTranslation();
     const [state, setState] = useState(null);
     const resolverRef = useRef(null);
 
@@ -20,13 +22,13 @@ export function ConfirmProvider({ children }) {
             resolverRef.current = resolve;
             setState({
                 message,
-                title: opts.title || 'Please confirm',
-                confirmLabel: opts.confirmLabel || 'Confirm',
-                cancelLabel: opts.cancelLabel || 'Cancel',
+                title: opts.title || t('dialogs.confirm.defaultTitle'),
+                confirmLabel: opts.confirmLabel || t('dialogs.confirm.defaultConfirm'),
+                cancelLabel: opts.cancelLabel || t('dialogs.confirm.defaultCancel'),
                 danger: opts.danger !== undefined ? opts.danger : true
             });
         });
-    }, []);
+    }, [t]);
 
     function settle(result) {
         setState(null);
@@ -46,13 +48,13 @@ export function ConfirmProvider({ children }) {
             setPromptValue(opts.defaultValue || '');
             setPromptState({
                 message,
-                title: opts.title || 'Enter a value',
-                confirmLabel: opts.confirmLabel || 'OK',
-                cancelLabel: opts.cancelLabel || 'Cancel',
+                title: opts.title || t('dialogs.prompt.defaultTitle'),
+                confirmLabel: opts.confirmLabel || t('dialogs.prompt.defaultConfirm'),
+                cancelLabel: opts.cancelLabel || t('dialogs.prompt.defaultCancel'),
                 placeholder: opts.placeholder || ''
             });
         });
-    }, []);
+    }, [t]);
 
     function settlePrompt(result) {
         setPromptState(null);

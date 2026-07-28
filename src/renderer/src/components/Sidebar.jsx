@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {useConfirm} from './ConfirmProvider.jsx';
 import {filterVisibleCollections} from '../lib/systemNamespaces.js';
 
@@ -16,6 +17,7 @@ function DatabaseNode({
                           openSignal,
                           connRefreshSignal
                       }) {
+    const {t} = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const [collections, setCollections] = useState(null);
     const [search, setSearch] = useState('');
@@ -69,17 +71,17 @@ function DatabaseNode({
             </div>
             <div className={`tree-children-wrap ${expanded ? 'is-open' : ''}`}>
                 <div className="tree-children">
-                    {collections === null && <div className="tree-loading">loading...</div>}
+                    {collections === null && <div className="tree-loading">{t('sidebar.loading')}</div>}
                     {collections && collections.length > 5 && (
                         <input className="collection-search-input"
-                               placeholder="Search collections..."
+                               placeholder={t('sidebar.searchCollections')}
                                value={search}
                                onClick={(e) => e.stopPropagation()}
                                onChange={(e) => setSearch(e.target.value)}/>
                     )}
-                    {collections && collections.length === 0 && <div className="tree-empty">no collections</div>}
+                    {collections && collections.length === 0 && <div className="tree-empty">{t('sidebar.noCollections')}</div>}
                     {filtered && filtered.length === 0 && collections.length > 0 && (
-                        <div className="tree-empty">no matches</div>
+                        <div className="tree-empty">{t('sidebar.noMatches')}</div>
                     )}
                     {filtered && filtered.map((c) => (
                         <div key={c.name}
@@ -112,6 +114,7 @@ function ConnectionNode({
                             openDbSignal,
                             refreshDbSignal
                         }) {
+    const {t} = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const [databases, setDatabases] = useState(null);
     const confirmDialog = useConfirm();
@@ -125,9 +128,9 @@ function ConnectionNode({
     }, [refreshDbSignal]);
 
     async function handleDeleteClick() {
-        const ok = await confirmDialog(`Delete connection "${conn.name}"? This cannot be undone.`, {
-            title: 'Delete connection',
-            confirmLabel: 'Delete'
+        const ok = await confirmDialog(t('app.confirm.deleteConnection', {name: conn.name}), {
+            title: t('app.confirm.deleteConnectionTitle'),
+            confirmLabel: t('app.confirm.drop')
         });
         if (ok) onDelete(conn.id);
     }
@@ -162,14 +165,14 @@ function ConnectionNode({
                 <span className={`conn-dot ${isOpen ? 'online' : 'offline'}`}/>
                 <span className="conn-name" onClick={toggleExpand}>{conn.name}</span>
                 <span className="row-actions">
-          <button title={isOpen ? 'Disconnect' : 'Connect'} onClick={() => onToggle(conn)}>
+          <button title={isOpen ? t('sidebar.disconnect') : t('sidebar.connect')} onClick={() => onToggle(conn)}>
                         <i className={`fa-solid ${isOpen ? 'fa-plug-circle-xmark' : 'fa-plug'}`}/>
                     </button>
                     {isOpen && (
-                        <button title="Refresh" onClick={() => onRefresh(conn)}><i className="fa-solid fa-rotate"/></button>
+                        <button title={t('sidebar.refresh')} onClick={() => onRefresh(conn)}><i className="fa-solid fa-rotate"/></button>
                     )}
-                    <button title="Edit" onClick={() => onEdit(conn)}><i className="fa-solid fa-pen"/></button>
-          <button title="Delete"
+                    <button title={t('sidebar.edit')} onClick={() => onEdit(conn)}><i className="fa-solid fa-pen"/></button>
+          <button title={t('sidebar.delete')}
                   className="delete-icon-btn"
                   onClick={handleDeleteClick}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
@@ -182,7 +185,7 @@ function ConnectionNode({
             {isOpen && (
                 <div className={`tree-children-wrap ${expanded ? 'is-open' : ''}`}>
                     <div className="tree-children">
-                        {databases === null && <div className="tree-loading">loading...</div>}
+                        {databases === null && <div className="tree-loading">{t('sidebar.loading')}</div>}
                         {databases && databases.map((db) => (
                             <DatabaseNode
                                 key={db.name}
@@ -218,14 +221,15 @@ export default function Sidebar({
                                     openDbSignal,
                                     refreshDbSignal
                                 }) {
+    const {t} = useTranslation();
     return (
         <aside className="sidebar">
             <div className="sidebar-header">
-                <span>Connections</span>
-                <button onClick={onAddConnection} title="New Connection">+</button>
+                <span>{t('sidebar.connections')}</span>
+                <button onClick={onAddConnection} title={t('sidebar.newConnection')}>+</button>
             </div>
             <div className="sidebar-tree">
-                {connections.length === 0 && <div className="tree-empty">No connections yet. Click + to add one.</div>}
+                {connections.length === 0 && <div className="tree-empty">{t('sidebar.noConnections')}</div>}
                 {connections.map((conn) => (
                     <ConnectionNode key={conn.id}
                                     conn={conn}
@@ -243,7 +247,7 @@ export default function Sidebar({
                 ))}
             </div>
             <div className="sidebar-footer">
-                <button className="sidebar-footer-btn" onClick={onOpenSettings}>⚙ Settings</button>
+                <button className="sidebar-footer-btn" onClick={onOpenSettings}>⚙ {t('sidebar.settings')}</button>
             </div>
         </aside>
     );

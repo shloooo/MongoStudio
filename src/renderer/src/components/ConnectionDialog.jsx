@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const EMPTY = {
   id: null,
@@ -26,6 +27,7 @@ const EMPTY = {
 };
 
 export default function ConnectionDialog({ initial, onSave, onClose }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ ...EMPTY, ...(initial || {}), ssh: { ...EMPTY.ssh, ...(initial?.ssh || {}) } });
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
@@ -59,141 +61,141 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h3>{initial ? 'Edit Connection' : 'New Connection'}</h3>
-        <form onSubmit={handleSubmit}>
-          <label>Name</label>
-          <input value={form.name} onChange={(e) => update('name', e.target.value)} required />
+      <div className="modal-backdrop" onClick={onClose}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <h3>{initial ? t('dialogs.connection.editTitle') : t('dialogs.connection.newTitle')}</h3>
+          <form onSubmit={handleSubmit}>
+            <label>{t('dialogs.connection.name')}</label>
+            <input value={form.name} onChange={(e) => update('name', e.target.value)} required />
 
-          <div className="mode-toggle">
-            <label>
-              <input type="radio" checked={form.mode === 'basic'} onChange={() => update('mode', 'basic')} />
-              Host / Port
-            </label>
-            <label>
-              <input type="radio" checked={form.mode === 'uri'} onChange={() => update('mode', 'uri')} />
-              Connection String
-            </label>
-          </div>
+            <div className="mode-toggle">
+              <label>
+                <input type="radio" checked={form.mode === 'basic'} onChange={() => update('mode', 'basic')} />
+                {t('dialogs.connection.hostPort')}
+              </label>
+              <label>
+                <input type="radio" checked={form.mode === 'uri'} onChange={() => update('mode', 'uri')} />
+                {t('dialogs.connection.connectionString')}
+              </label>
+            </div>
 
-          {form.mode === 'uri' ? (
-            <>
-              <label>Connection String</label>
-              <input
-                value={form.uri}
-                onChange={(e) => update('uri', e.target.value)}
-                placeholder="mongodb+srv://user:pass@cluster.mongodb.net/"
-              />
-            </>
-          ) : (
-            <>
-              <div className="row">
-                <div>
-                  <label>Host</label>
-                  <input value={form.host} onChange={(e) => update('host', e.target.value)} />
-                </div>
-                <div>
-                  <label>Port</label>
-                  <input type="number" value={form.port} onChange={(e) => update('port', Number(e.target.value))} />
-                </div>
-              </div>
-              <div className="row">
-                <div>
-                  <label>Username</label>
-                  <input value={form.username} onChange={(e) => update('username', e.target.value)} />
-                </div>
-                <div>
-                  <label>Password</label>
-                  <input type="password" value={form.password} onChange={(e) => update('password', e.target.value)} />
-                </div>
-              </div>
-              <div className="row">
-                <div>
-                  <label>Auth Source</label>
-                  <input value={form.authSource} onChange={(e) => update('authSource', e.target.value)} />
-                </div>
-                <div>
-                  <label>Replica Set</label>
-                  <input value={form.replicaSet} onChange={(e) => update('replicaSet', e.target.value)} />
-                </div>
-              </div>
-              <div className="row checkboxes">
-                <label><input type="checkbox" checked={form.srv} onChange={(e) => update('srv', e.target.checked)} /> SRV (mongodb+srv)</label>
-                <label><input type="checkbox" checked={form.tls} onChange={(e) => update('tls', e.target.checked)} /> TLS/SSL</label>
-              </div>
-            </>
-          )}
-
-          <div className="section-divider" />
-
-          <label className="section-toggle">
-            <input type="checkbox" checked={form.useSsh} onChange={(e) => update('useSsh', e.target.checked)} />
-            Connect via SSH tunnel
-          </label>
-
-          {form.useSsh && (
-            <div className="ssh-section">
-              <div className="row">
-                <div>
-                  <label>SSH Host</label>
-                  <input value={form.ssh.host} onChange={(e) => updateSsh('host', e.target.value)} placeholder="bastion.example.com" />
-                </div>
-                <div>
-                  <label>SSH Port</label>
-                  <input type="number" value={form.ssh.port} onChange={(e) => updateSsh('port', Number(e.target.value))} />
-                </div>
-              </div>
-              <label>SSH Username</label>
-              <input value={form.ssh.username} onChange={(e) => updateSsh('username', e.target.value)} />
-
-              <div className="mode-toggle">
-                <label>
-                  <input type="radio" checked={form.ssh.authType === 'password'} onChange={() => updateSsh('authType', 'password')} />
-                  Password
-                </label>
-                <label>
-                  <input type="radio" checked={form.ssh.authType === 'key'} onChange={() => updateSsh('authType', 'key')} />
-                  Private Key
-                </label>
-              </div>
-
-              {form.ssh.authType === 'password' ? (
+            {form.mode === 'uri' ? (
                 <>
-                  <label>SSH Password</label>
-                  <input type="password" value={form.ssh.password} onChange={(e) => updateSsh('password', e.target.value)} />
+                  <label>{t('dialogs.connection.connectionString')}</label>
+                  <input
+                      value={form.uri}
+                      onChange={(e) => update('uri', e.target.value)}
+                      placeholder="mongodb+srv://user:pass@cluster.mongodb.net/"
+                  />
                 </>
-              ) : (
+            ) : (
                 <>
-                  <label>Private Key File</label>
-                  <div className="file-picker-row">
-                    <input value={form.ssh.privateKeyPath} onChange={(e) => updateSsh('privateKeyPath', e.target.value)} placeholder="~/.ssh/id_ed25519" />
-                    <button type="button" onClick={handlePickKey}>Browse...</button>
+                  <div className="row">
+                    <div>
+                      <label>{t('dialogs.connection.host')}</label>
+                      <input value={form.host} onChange={(e) => update('host', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>{t('dialogs.connection.port')}</label>
+                      <input type="number" value={form.port} onChange={(e) => update('port', Number(e.target.value))} />
+                    </div>
                   </div>
-                  <label>Passphrase (optional)</label>
-                  <input type="password" value={form.ssh.passphrase} onChange={(e) => updateSsh('passphrase', e.target.value)} />
+                  <div className="row">
+                    <div>
+                      <label>{t('dialogs.connection.username')}</label>
+                      <input value={form.username} onChange={(e) => update('username', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>{t('dialogs.connection.password')}</label>
+                      <input type="password" value={form.password} onChange={(e) => update('password', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div>
+                      <label>{t('dialogs.connection.authSource')}</label>
+                      <input value={form.authSource} onChange={(e) => update('authSource', e.target.value)} />
+                    </div>
+                    <div>
+                      <label>{t('dialogs.connection.replicaSet')}</label>
+                      <input value={form.replicaSet} onChange={(e) => update('replicaSet', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="row checkboxes">
+                    <label><input type="checkbox" checked={form.srv} onChange={(e) => update('srv', e.target.checked)} /> {t('dialogs.connection.srv')}</label>
+                    <label><input type="checkbox" checked={form.tls} onChange={(e) => update('tls', e.target.checked)} /> {t('dialogs.connection.tls')}</label>
+                  </div>
                 </>
-              )}
-              <p className="hint-text">MongoDB host/port above is resolved on the remote side of the tunnel.</p>
-            </div>
-          )}
+            )}
 
-          {testResult && (
-            <div className={`test-result ${testResult.ok ? 'ok' : 'error'}`}>
-              {testResult.ok ? 'Connection successful' : `Error: ${testResult.error}`}
-            </div>
-          )}
+            <div className="section-divider" />
 
-          <div className="modal-actions">
-            <button type="button" onClick={handleTest} disabled={testing}>
-              {testing ? 'Testing...' : 'Test Connection'}
-            </button>
-            <div className="spacer" />
-            <button type="button" onClick={onClose}>Cancel</button>
-            <button type="submit" className="primary">Save</button>
-          </div>
-        </form>
+            <label className="section-toggle">
+              <input type="checkbox" checked={form.useSsh} onChange={(e) => update('useSsh', e.target.checked)} />
+              {t('dialogs.connection.sshToggle')}
+            </label>
+
+            {form.useSsh && (
+                <div className="ssh-section">
+                  <div className="row">
+                    <div>
+                      <label>{t('dialogs.connection.sshHost')}</label>
+                      <input value={form.ssh.host} onChange={(e) => updateSsh('host', e.target.value)} placeholder="bastion.example.com" />
+                    </div>
+                    <div>
+                      <label>{t('dialogs.connection.sshPort')}</label>
+                      <input type="number" value={form.ssh.port} onChange={(e) => updateSsh('port', Number(e.target.value))} />
+                    </div>
+                  </div>
+                  <label>{t('dialogs.connection.sshUsername')}</label>
+                  <input value={form.ssh.username} onChange={(e) => updateSsh('username', e.target.value)} />
+
+                  <div className="mode-toggle">
+                    <label>
+                      <input type="radio" checked={form.ssh.authType === 'password'} onChange={() => updateSsh('authType', 'password')} />
+                      {t('dialogs.connection.sshAuthPassword')}
+                    </label>
+                    <label>
+                      <input type="radio" checked={form.ssh.authType === 'key'} onChange={() => updateSsh('authType', 'key')} />
+                      {t('dialogs.connection.sshAuthKey')}
+                    </label>
+                  </div>
+
+                  {form.ssh.authType === 'password' ? (
+                      <>
+                        <label>{t('dialogs.connection.sshPassword')}</label>
+                        <input type="password" value={form.ssh.password} onChange={(e) => updateSsh('password', e.target.value)} />
+                      </>
+                  ) : (
+                      <>
+                        <label>{t('dialogs.connection.privateKeyFile')}</label>
+                        <div className="file-picker-row">
+                          <input value={form.ssh.privateKeyPath} onChange={(e) => updateSsh('privateKeyPath', e.target.value)} placeholder="~/.ssh/id_ed25519" />
+                          <button type="button" onClick={handlePickKey}>{t('dialogs.connection.browse')}</button>
+                        </div>
+                        <label>{t('dialogs.connection.passphrase')}</label>
+                        <input type="password" value={form.ssh.passphrase} onChange={(e) => updateSsh('passphrase', e.target.value)} />
+                      </>
+                  )}
+                  <p className="hint-text">{t('dialogs.connection.sshHint')}</p>
+                </div>
+            )}
+
+            {testResult && (
+                <div className={`test-result ${testResult.ok ? 'ok' : 'error'}`}>
+                  {testResult.ok ? t('dialogs.connection.testSuccess') : t('dialogs.connection.testError', { error: testResult.error })}
+                </div>
+            )}
+
+            <div className="modal-actions">
+              <button type="button" onClick={handleTest} disabled={testing}>
+                {testing ? t('dialogs.connection.testing') : t('dialogs.connection.testConnection')}
+              </button>
+              <div className="spacer" />
+              <button type="button" onClick={onClose}>{t('dialogs.common.cancel')}</button>
+              <button type="submit" className="primary">{t('dialogs.common.save')}</button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
   );
 }

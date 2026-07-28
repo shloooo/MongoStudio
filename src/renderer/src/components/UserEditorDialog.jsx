@@ -1,7 +1,9 @@
 import React, {useEffect, useMemo, useState} from 'react';
+import {useTranslation, Trans} from 'react-i18next';
 import {groupPrivilegesByResource, sameRole} from '../lib/mongoPrivileges.js';
 
 export default function UserEditorDialog({connId, authDb, username, onClose, onSaved}) {
+    const {t} = useTranslation();
     const isCreate = !username;
 
     const [loading, setLoading] = useState(!isCreate);
@@ -87,23 +89,23 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
     async function handleSave() {
         setError('');
         if (roles.some((r) => !r.role || !r.db)) {
-            setError('Every role needs both a role name and a database.');
+            setError(t('dialogs.userEditor.errorRoleIncomplete'));
             return;
         }
         if (roles.some((r, i) => roles.findIndex((other) => sameRole(other, r)) !== i)) {
-            setError('The same role is assigned twice.');
+            setError(t('dialogs.userEditor.errorDuplicateRole'));
             return;
         }
         if ((password || passwordConfirm) && password !== passwordConfirm) {
-            setError('Passwords do not match.');
+            setError(t('dialogs.userEditor.errorPasswordMismatch'));
             return;
         }
         if (isCreate && !newUsername.trim()) {
-            setError('Username is required.');
+            setError(t('dialogs.userEditor.errorUsernameRequired'));
             return;
         }
         if (isCreate && !password) {
-            setError('Password is required.');
+            setError(t('dialogs.userEditor.errorPasswordRequired'));
             return;
         }
 
@@ -136,42 +138,42 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
     return (
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal wide user-editor" onClick={(e) => e.stopPropagation()}>
-                <h3>{isCreate ? 'Create user' : `Edit user "${username}"`}</h3>
+                <h3>{isCreate ? t('dialogs.userEditor.createTitle') : t('dialogs.userEditor.editTitle', {username})}</h3>
                 <p className="hint-text">
-                    Authentication database: <strong>{authDb}</strong>
-                    {mechanisms.length > 0 && <> &middot; mechanisms: {mechanisms.join(', ')}</>}
+                    {t('dialogs.userEditor.authDb')} <strong>{authDb}</strong>
+                    {mechanisms.length > 0 && <> &middot; {t('dialogs.userEditor.mechanisms', {list: mechanisms.join(', ')})}</>}
                 </p>
 
                 {error && <div className="error-banner">{error}</div>}
 
                 {loading ? (
-                    <div className="tree-loading">loading...</div>
+                    <div className="tree-loading">{t('dialogs.userEditor.loading')}</div>
                 ) : (
                     <>
                         {isCreate && (
                             <div className="user-editor-field">
-                                <label>Username</label>
+                                <label>{t('dialogs.userEditor.username')}</label>
                                 <input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} autoFocus/>
                             </div>
                         )}
 
                         <div className="user-editor-section">
                             <div className="user-editor-section-head">
-                                <h4>Password</h4>
+                                <h4>{t('dialogs.userEditor.passwordHeading')}</h4>
                             </div>
                             <p className="hint-text">
-                                {isCreate ? 'Required.' : 'Leave both fields empty to keep the current password.'}
+                                {isCreate ? t('dialogs.userEditor.passwordRequired') : t('dialogs.userEditor.passwordKeepHint')}
                             </p>
                             <div className="row">
                                 <div>
-                                    <label>{isCreate ? 'Password' : 'New password'}</label>
+                                    <label>{isCreate ? t('dialogs.userEditor.password') : t('dialogs.userEditor.newPassword')}</label>
                                     <input type="password"
                                            value={password}
                                            autoComplete="new-password"
                                            onChange={(e) => setPassword(e.target.value)}/>
                                 </div>
                                 <div>
-                                    <label>Confirm password</label>
+                                    <label>{t('dialogs.userEditor.confirmPassword')}</label>
                                     <input type="password"
                                            value={passwordConfirm}
                                            autoComplete="new-password"
@@ -182,15 +184,14 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
 
                         <div className="user-editor-section">
                             <div className="user-editor-section-head">
-                                <h4>Roles</h4>
-                                <button type="button" onClick={addRole}>+ Add role</button>
+                                <h4>{t('dialogs.userEditor.rolesHeading')}</h4>
+                                <button type="button" onClick={addRole}>{t('dialogs.userEditor.addRole')}</button>
                             </div>
                             <p className="hint-text">
-                                Roles decide what the user may do. Pick the database each role applies to &mdash; a role
-                                on <code>admin</code> applies cluster-wide.
+                                <Trans i18nKey="dialogs.userEditor.rolesHint" values={{admin: 'admin'}} components={{code: <code/>}}/>
                             </p>
                             {roles.length === 0 ? (
-                                <div className="tree-empty">No roles assigned. This user cannot access any data.</div>
+                                <div className="tree-empty">{t('dialogs.userEditor.noRoles')}</div>
                             ) : (
                                 <div className="role-editor-list">
                                     {roles.map((role, index) => {
@@ -201,20 +202,20 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                                             <div className="role-editor-row" key={index}>
                                                 <select value={role.role}
                                                         onChange={(e) => updateRole(index, {role: e.target.value})}>
-                                                    <option value="">Select a role...</option>
+                                                    <option value="">{t('dialogs.userEditor.selectRole')}</option>
                                                     {!hasCurrent && <option value={role.role}>{role.role}</option>}
-                                                    <optgroup label="Built-in">
+                                                    <optgroup label={t('dialogs.userEditor.builtin')}>
                                                         {known.filter((r) => r.isBuiltin).map((r) => (
                                                             <option key={r.role} value={r.role}>{r.role}</option>
                                                         ))}
                                                     </optgroup>
-                                                    <optgroup label="Custom">
+                                                    <optgroup label={t('dialogs.userEditor.custom')}>
                                                         {known.filter((r) => !r.isBuiltin).map((r) => (
                                                             <option key={r.role} value={r.role}>{r.role}</option>
                                                         ))}
                                                     </optgroup>
                                                 </select>
-                                                <span className="role-editor-on">on</span>
+                                                <span className="role-editor-on">{t('dialogs.userEditor.on')}</span>
                                                 <select value={role.db}
                                                         onChange={(e) => updateRole(index, {db: e.target.value})}>
                                                     {!dbOptions.includes(role.db) &&
@@ -223,7 +224,7 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                                                 </select>
                                                 <button type="button"
                                                         className="delete-icon-btn icon-btn"
-                                                        title="Remove role"
+                                                        title={t('dialogs.userEditor.removeRole')}
                                                         onClick={() => removeRole(index)}>
                                                     <TrashIcon/>
                                                 </button>
@@ -237,14 +238,13 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                         {!isCreate && (
                             <div className="user-editor-section">
                                 <div className="user-editor-section-head">
-                                    <h4>Effective permissions</h4>
+                                    <h4>{t('dialogs.userEditor.permissionsHeading')}</h4>
                                 </div>
                                 <p className="hint-text">
-                                    Resolved by the server from the assigned roles, including inherited ones. Updates
-                                    after saving.
+                                    {t('dialogs.userEditor.permissionsHint')}
                                 </p>
                                 {groupedPrivileges.length === 0 ? (
-                                    <div className="tree-empty">No permissions.</div>
+                                    <div className="tree-empty">{t('dialogs.userEditor.noPermissions')}</div>
                                 ) : (
                                     <div className="privilege-list">
                                         {groupedPrivileges.map((entry) => (
@@ -269,9 +269,9 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
 
                 <div className="modal-actions">
                     <div className="spacer"/>
-                    <button type="button" onClick={onClose} disabled={saving}>Cancel</button>
+                    <button type="button" onClick={onClose} disabled={saving}>{t('dialogs.common.cancel')}</button>
                     <button type="button" className="primary" onClick={handleSave} disabled={saving || loading}>
-                        {saving ? 'Saving...' : isCreate ? 'Create user' : 'Save changes'}
+                        {saving ? t('dialogs.userEditor.saving') : isCreate ? t('dialogs.userEditor.createUser') : t('dialogs.userEditor.saveChanges')}
                     </button>
                 </div>
             </div>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 
 export default function CopyCollectionDialog({ source, openConnections, onClose, onCopied }) {
+  const { t } = useTranslation();
   const [targetConnId, setTargetConnId] = useState('');
   const [targetDbs, setTargetDbs] = useState([]);
   const [targetDb, setTargetDb] = useState('');
@@ -32,7 +34,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
 
   async function handleCopy() {
     if (!targetConnId || !targetDb || !targetCollection) {
-      setError('Choose a target connection, database, and collection name.');
+      setError(t('dialogs.copyCollection.chooseTarget'));
       return;
     }
     setBusy(true);
@@ -67,29 +69,31 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
   return (
       <div className="modal-backdrop" onClick={onClose}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
-          <h3>Copy Collection</h3>
+          <h3>{t('dialogs.copyCollection.title')}</h3>
           <p className="hint-text">
-            Copy all documents from <strong>{source.dbName}.{source.collection}</strong> to another connection.
+            <Trans i18nKey="dialogs.copyCollection.description"
+                   values={{path: `${source.dbName}.${source.collection}`}}
+                   components={{bold: <strong/>}}/>
           </p>
 
           {otherConnections.length === 0 ? (
-              <div className="error-banner">No other open connections. Connect to another database first.</div>
+              <div className="error-banner">{t('dialogs.copyCollection.noOtherConnections')}</div>
           ) : (
               <>
-                <label>Target connection</label>
+                <label>{t('dialogs.copyCollection.targetConnection')}</label>
                 <select value={targetConnId} onChange={(e) => setTargetConnId(e.target.value)} disabled={busy}>
-                  <option value="">Select a connection...</option>
+                  <option value="">{t('dialogs.copyCollection.selectConnection')}</option>
                   {otherConnections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
 
                 {targetConnId && (
                     <>
-                      <label>Target database</label>
+                      <label>{t('dialogs.copyCollection.targetDatabase')}</label>
                       <select value={targetDb} onChange={(e) => setTargetDb(e.target.value)} disabled={busy}>
                         {targetDbs.map((d) => <option key={d.name} value={d.name}>{d.name}</option>)}
                       </select>
 
-                      <label>Target collection name</label>
+                      <label>{t('dialogs.copyCollection.targetCollectionName')}</label>
                       <input value={targetCollection} onChange={(e) => setTargetCollection(e.target.value)} disabled={busy} />
                     </>
                 )}
@@ -102,23 +106,23 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
                   <div className="update-progress-bar-fill" style={{ width: `${percent}%` }} />
                 </div>
                 <div className="update-progress-meta">
-                  <span>{busy ? 'Copying...' : 'Done'}</span>
+                  <span>{busy ? t('dialogs.copyCollection.copying') : t('dialogs.copyCollection.done')}</span>
                   <span>
-                {progress.copiedCount}{progress.totalInCollection ? ` / ${progress.totalInCollection}` : ''} document(s)
+                {t('dialogs.copyCollection.documentCount', {count: progress.copiedCount})}{progress.totalInCollection ? ` / ${progress.totalInCollection}` : ''}
               </span>
                 </div>
               </div>
           )}
 
           {error && <div className="error-banner">{error}</div>}
-          {result && result.ok && <div className="info-banner">Copied {result.copiedCount} document(s).</div>}
+          {result && result.ok && <div className="info-banner">{t('dialogs.copyCollection.copySuccess', {count: result.copiedCount})}</div>}
 
           <div className="modal-actions">
             <div className="spacer" />
-            <button onClick={onClose} disabled={busy}>{result ? 'Close' : 'Cancel'}</button>
+            <button onClick={onClose} disabled={busy}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
             {!result && (
                 <button className="primary" onClick={handleCopy} disabled={busy || otherConnections.length === 0}>
-                  {busy ? 'Copying...' : 'Copy'}
+                  {busy ? t('dialogs.copyCollection.copying') : t('dialogs.copyCollection.copy')}
                 </button>
             )}
           </div>

@@ -1,7 +1,9 @@
 import React, {useMemo, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {parseShell} from '../lib/shellSyntax.js';
 import {reportError} from '../lib/errorBus.js';
+import i18n from '../i18n/index.js';
 
 const IDS_PLACEHOLDER = `[
   
@@ -17,7 +19,7 @@ function buildUpdateDoc(parsedUpdate) {
     const plainKeys = keys.filter((k) => !k.startsWith('$'));
 
     if (opKeys.length && plainKeys.length) {
-        throw new Error(`Fields and update operators must not be mixed (found: ${plainKeys.join(', ')} next to ${opKeys.join(', ')}). Use either pure field:value pairs or exclusively operators such as $set/$unset/$inc.`);
+        throw new Error(i18n.t('dialogs.bulkUpdate.errorMixedFields', {plainKeys: plainKeys.join(', '), opKeys: opKeys.join(', ')}));
     }
 
     if (opKeys.length) {
@@ -38,12 +40,13 @@ function buildUpdateDoc(parsedUpdate) {
     if (Object.keys(set).length) update.$set = set;
     if (Object.keys(unset).length) update.$unset = unset;
     if (Object.keys(update).length === 0) {
-        throw new Error('No changes specified. Enter a value or `undefined` (to remove) in at least one field.');
+        throw new Error(i18n.t('dialogs.bulkUpdate.errorNoChanges'));
     }
     return update;
 }
 
 export default function BulkUpdateDialog({selection, onClose, onApplied}) {
+    const {t} = useTranslation();
     const [step, setStep] = useState(1);
 
     const [idsText, setIdsText] = useState(IDS_PLACEHOLDER);
@@ -59,26 +62,26 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
             const value = parseShell(idsText);
             if (!Array.isArray(value)) return {
                 ok: false,
-                error: 'The target IDs must be specified as an array, for example, [ObjectId(“...”)].'
+                error: t('dialogs.bulkUpdate.errorIdsMustBeArray')
             };
-            if (value.length === 0) return {ok: false, error: 'Enter at least one ID.'};
+            if (value.length === 0) return {ok: false, error: t('dialogs.bulkUpdate.errorEnterOneId')};
             return {ok: true, value};
         } catch (err) {
             return {ok: false, error: err.message};
         }
-    }, [idsText]);
+    }, [idsText, t]);
 
     const updateParsed = useMemo(() => {
         try {
             const value = parseShell(updateText);
             if (Array.isArray(value) || value === null || typeof value !== 'object') {
-                return {ok: false, error: 'Updates must be specified as an object, e.g., { field: “value” }.'};
+                return {ok: false, error: t('dialogs.bulkUpdate.errorUpdateMustBeObject')};
             }
             return {ok: true, value};
         } catch (err) {
             return {ok: false, error: err.message};
         }
-    }, [updateText]);
+    }, [updateText, t]);
 
     function goToStep2() {
         if (!idsParsed.ok) return;
@@ -118,19 +121,17 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
     return (
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-                <h3>Bulk Update</h3>
+                <h3>{t('dialogs.bulkUpdate.title')}</h3>
                 <div className="wizard-steps">
-                    <span className={`wizard-step ${step === 1 ? 'active' : 'done'}`}>1. Target IDs</span>
+                    <span className={`wizard-step ${step === 1 ? 'active' : 'done'}`}>{t('dialogs.bulkUpdate.step1')}</span>
                     <span className="wizard-step-sep">→</span>
-                    <span className={`wizard-step ${step === 2 ? 'active' : ''}`}>2. Updates</span>
+                    <span className={`wizard-step ${step === 2 ? 'active' : ''}`}>{t('dialogs.bulkUpdate.step2')}</span>
                 </div>
 
                 {step === 1 && (
                     <>
                         <p className="hint-text">
-                            Specify the IDs of the target documents as an array in shell syntax
-                            (supports <code>ObjectId(...)</code>, {' '}
-                            <code>UUID(...)</code>, strings, numbers, ...).
+                            {t('dialogs.bulkUpdate.step1Hint')}
                         </p>
                         <textarea
                             className={`json-editor ${!idsParsed.ok ? 'has-error' : ''}`}
@@ -143,8 +144,8 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                         {!idsParsed.ok && <div className="error-banner">{idsParsed.error}</div>}
                         <div className="modal-actions">
                             <div className="spacer"/>
-                            <button onClick={onClose}>Cancel</button>
-                            <button className="primary" onClick={goToStep2} disabled={!idsParsed.ok}>Continue</button>
+                            <button onClick={onClose}>{t('dialogs.common.cancel')}</button>
+                            <button className="primary" onClick={goToStep2} disabled={!idsParsed.ok}>{t('dialogs.bulkUpdate.continue')}</button>
                         </div>
                     </>
                 )}
@@ -152,11 +153,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                 {step === 2 && (
                     <>
                         <p className="hint-text">
-                            {ids.length} Target document(s). Specify update fields as an object in shell syntax—only
-                            these fields will be
-                            modified. A value of <code>undefined</code> removes the field. Alternatively, specify a raw
-                            update document with
-                            operators such as <code>$set</code> / <code>$unset</code> / <code>$inc</code>.
+                            {t('dialogs.bulkUpdate.step2Hint', {count: ids.length})}
                         </p>
                         <textarea
                             className={`json-editor ${!updateParsed.ok ? 'has-error' : ''}`}
@@ -170,17 +167,17 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                         {error && <div className="error-banner">{error}</div>}
                         {result && (
                             <div className="info-banner">
-                                {result.matchedCount} document(s) found, {result.modifiedCount} actually modified.
+                                {t('dialogs.bulkUpdate.result', {matched: result.matchedCount, modified: result.modifiedCount})}
                             </div>
                         )}
                         <div className="modal-actions">
-                            <button onClick={() => setStep(1)} disabled={applying}>← Back</button>
+                            <button onClick={() => setStep(1)} disabled={applying}>{t('dialogs.bulkUpdate.back')}</button>
                             <div className="spacer"/>
-                            <button onClick={onClose}>{result ? 'Close' : 'Cancel'}</button>
+                            <button onClick={onClose}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
                             {!result && (
                                 <button className="primary" onClick={handleApply}
                                         disabled={!updateParsed.ok || applying}>
-                                    {applying ? 'Apply changes...' : 'Apply'}
+                                    {applying ? t('dialogs.bulkUpdate.applying') : t('dialogs.bulkUpdate.apply')}
                                 </button>
                             )}
                         </div>
