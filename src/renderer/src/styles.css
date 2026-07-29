@@ -574,6 +574,18 @@ select,
     flex-direction: column;
 }
 
+.tab-slot {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-slot.tab-slot-hidden {
+    display: none;
+}
+
 .documents-tab, .aggregation-tab, .indexes-tab, .users-tab {
     flex: 1;
     min-width: 0;
