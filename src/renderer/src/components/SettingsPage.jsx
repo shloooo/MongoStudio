@@ -43,6 +43,9 @@ export default function SettingsPage({connections, onImported}) {
             setSettings(s);
             setVaultStatus(v);
             setAppInfo(a);
+            if (s?.glassIntensity != null) {
+                document.documentElement.style.setProperty('--glass-intensity', s.glassIntensity);
+            }
         });
     }, []);
 
@@ -59,7 +62,7 @@ export default function SettingsPage({connections, onImported}) {
     }
 
     async function updateGlassIntensity(value) {
-        document.body.style.setProperty('--glass-intensity', value);
+        document.documentElement.style.setProperty('--glass-intensity', value);
         setSettings((prev) => ({...prev, glassIntensity: value}));
     }
 

@@ -10,6 +10,9 @@ async function bootstrap() {
         const settings = await window.api.settings.get();
         if (settings?.language) await i18n.changeLanguage(settings.language);
         if (settings?.theme === 'dark') document.body.classList.add('dark');
+        if (settings?.glassIntensity != null) {
+            document.documentElement.style.setProperty('--glass-intensity', settings.glassIntensity);
+        }
     } catch {
         // fall back to default language/theme
     }
