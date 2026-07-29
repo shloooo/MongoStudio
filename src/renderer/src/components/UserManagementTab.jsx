@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useConfirm} from './ConfirmProvider.jsx';
 import UserEditorDialog from './UserEditorDialog.jsx';
+import ContextMenu from './ContextMenu.jsx';
 import {formatResource, isWildcardResource} from '../lib/mongoPrivileges.js';
 
 const ACTION_PREVIEW_COUNT = 8;
@@ -14,6 +15,7 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [editor, setEditor] = useState(null); // { authDb, username } | { authDb } for create
+    const [rowContextMenu, setRowContextMenu] = useState(null);
     const confirmDialog = useConfirm();
 
     const isCollectionMode = mode === 'collection';
@@ -61,6 +63,22 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
         }
     }
 
+    function handleRowContextMenu(e, user) {
+        e.preventDefault();
+        setRowContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            items: [
+                {
+                    label: t('userManagementTab.editUser'),
+                    onClick: () => setEditor({authDb: user.db || selection.dbName, username: user.user})
+                },
+                {separator: true},
+                {label: t('app.confirm.dropUserTitle'), danger: true, onClick: () => handleDrop(user)}
+            ]
+        });
+    }
+
     const emptyText = isCollectionMode
         ? t('userManagementTab.emptyCollection', {path: `${selection.dbName}.${selection.collection}`})
         : t('userManagementTab.emptyDatabase', {dbName: selection.dbName});
@@ -87,7 +105,7 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
 
             <div className="users-table-wrap">
                 {loading ? (
-                    <div className="tree-loading">{t('userManagementTab.loading')}</div>
+                    <UsersTableSkeleton isCollectionMode={isCollectionMode}/>
                 ) : users.length === 0 ? (
                     <div className="tree-empty">{emptyText}</div>
                 ) : (
@@ -105,12 +123,11 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
                             ) : (
                                 <th className="col-mechanisms">{t('userManagementTab.colMechanisms')}</th>
                             )}
-                            <th className="col-row-actions"/>
                         </tr>
                         </thead>
                         <tbody>
                         {users.map((u) => (
-                            <tr key={`${u.db}.${u.user}`}>
+                            <tr key={`${u.db}.${u.user}`} onContextMenu={(e) => handleRowContextMenu(e, u)}>
                                 <td className="col-user"><span className="user-name">{u.user}</span></td>
                                 <td className="col-authdb"><code>{u.db}</code></td>
                                 <td className="col-roles"><RoleChips roles={u.roles}/></td>
@@ -124,28 +141,6 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
                                         <span className="muted-text">{(u.mechanisms || []).join(', ') || '—'}</span>
                                     </td>
                                 )}
-                                <td className="col-row-actions">
-                                    <div className="row-actions is-static">
-                                        <button title={t('userManagementTab.editUser')}
-                                                onClick={() => setEditor({
-                                                    authDb: u.db || selection.dbName,
-                                                    username: u.user
-                                                })}>✎
-                                        </button>
-                                        <button title={t('app.confirm.dropUserTitle')}
-                                                className="delete-icon-btn"
-                                                onClick={() => handleDrop(u)}>
-                                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                                <path
-                                                    d="M2 4h12M6.5 4V2.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1V4M12.5 4l-.6 9.4a1 1 0 0 1-1 .9H5.1a1 1 0 0 1-1-.9L3.5 4"
-                                                    stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"
-                                                    strokeLinejoin="round"/>
-                                                <path d="M6.5 7v4M9.5 7v4" stroke="currentColor" strokeWidth="1.3"
-                                                      strokeLinecap="round"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
                             </tr>
                         ))}
                         </tbody>
@@ -165,7 +160,40 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
                     }}
                 />
             )}
+
+            {rowContextMenu && (
+                <ContextMenu
+                    x={rowContextMenu.x}
+                    y={rowContextMenu.y}
+                    items={rowContextMenu.items}
+                    onClose={() => setRowContextMenu(null)}
+                />
+            )}
         </div>
+    );
+}
+
+function UsersTableSkeleton({isCollectionMode}) {
+    return (
+        <table className="users-table">
+            <tbody>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+                <tr key={i}>
+                    <td className="col-user"><div className="skeleton-line" style={{width: '90px', height: '12px'}}/></td>
+                    <td className="col-authdb"><div className="skeleton-line" style={{width: '60px', height: '12px'}}/></td>
+                    <td className="col-roles"><div className="skeleton-line" style={{width: '140px', height: '12px'}}/></td>
+                    {isCollectionMode ? (
+                        <>
+                            <td className="col-granted"><div className="skeleton-line" style={{width: '110px', height: '12px'}}/></td>
+                            <td className="col-actions-list"><div className="skeleton-line" style={{width: '160px', height: '12px'}}/></td>
+                        </>
+                    ) : (
+                        <td className="col-mechanisms"><div className="skeleton-line" style={{width: '80px', height: '12px'}}/></td>
+                    )}
+                </tr>
+            ))}
+            </tbody>
+        </table>
     );
 }
 

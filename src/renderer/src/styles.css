@@ -2740,7 +2740,6 @@ input[type="range"]:focus-visible {
 .users-table .col-mechanisms { width: 16%; }
 .users-table .col-granted { width: 18%; }
 .users-table .col-actions-list { width: auto; }
-.users-table .col-row-actions { width: 56px; }
 
 .users-table .user-name {
     font-weight: 600;
@@ -2754,11 +2753,6 @@ input[type="range"]:focus-visible {
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 11px;
-}
-
-.row-actions.is-static {
-    opacity: 1;
-    pointer-events: auto;
 }
 
 .chip-row {
