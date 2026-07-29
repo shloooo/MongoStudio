@@ -57,7 +57,10 @@
       "exported": "Exported {{count}} document(s) to {{path}}",
       "exportedMulti": "Exported {{count}} document(s) across {{collectionCount}} collection(s) to {{path}}",
       "imported": "Imported {{count}} document(s)",
-      "importedMulti": "Imported {{count}} document(s) into {{collectionCount}} collection(s)"
+      "importedMulti": "Imported {{count}} document(s) into {{collectionCount}} collection(s)",
+      "updateAvailable": "Update {{version}} is available",
+      "updateDownloaded": "Update {{version}} downloaded and ready to install",
+      "updateOpenSettings": "View"
     },
     "tabLabel": {
       "users": "{{dbName}} users",

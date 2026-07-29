@@ -60,6 +60,25 @@ export default function App() {
     }, []);
 
     useEffect(() => {
+        const unsubscribe = window.api.updater.onEvent((payload) => {
+            if (payload.type === 'available') {
+                setStatus({
+                    type: 'info',
+                    message: t('app.status.updateAvailable', {version: payload.version}),
+                    action: {label: t('app.status.updateOpenSettings'), onClick: handleOpenSettings}
+                });
+            } else if (payload.type === 'downloaded') {
+                setStatus({
+                    type: 'info',
+                    message: t('app.status.updateDownloaded', {version: payload.version}),
+                    action: {label: t('app.status.updateOpenSettings'), onClick: handleOpenSettings}
+                });
+            }
+        });
+        return unsubscribe;
+    }, [t]);
+
+    useEffect(() => {
         const unsubscribe = window.api.conn.onDisconnected((id) => {
             setOpenConnIds((prev) => {
                 if (!prev.has(id)) return prev;
@@ -452,8 +471,10 @@ export default function App() {
                          refreshDbSignal={refreshDbSignal}
                 />
                 <main className="main-area">
-                    {status && <div
-                        className={`status-bar ${status.type === 'error' ? 'is-error' : 'is-info'}`}>{status.message}</div>}
+                    {status && <div className={`status-bar ${status.type === 'error' ? 'is-error' : 'is-info'}`}>
+                        <span>{status.message}</span>
+                        {status.action && <button className="status-bar-action" onClick={status.action.onClick}>{status.action.label}</button>}
+                    </div>}
                     <div className="collection-tab-bar">
                         {tabs.map((tab) => (
                             <div key={tab.id}
