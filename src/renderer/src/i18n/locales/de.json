@@ -424,7 +424,7 @@
     },
     "security": {
       "heading": "Sicherheit",
-      "notSet": "Master-Passwort festlegen",
+      "notSet": "Master-Passwort festlegen. Verbindungen werden unverschlüsselt gespeichert.",
       "enabled": "Master-Passwort ist aktiv.",
       "setup": "Einrichten",
       "change": "Passwort ändern",
