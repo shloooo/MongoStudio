@@ -52,6 +52,22 @@ export default function SettingsPage({connections, onImported}) {
         i18n.changeLanguage(lang);
     }
 
+    async function updateTheme(value) {
+        const next = await window.api.settings.set('theme', value);
+        setSettings(next);
+        document.body.classList.toggle('dark', value === 'dark');
+    }
+
+    async function updateGlassIntensity(value) {
+        document.body.style.setProperty('--glass-intensity', value);
+        setSettings((prev) => ({...prev, glassIntensity: value}));
+    }
+
+    async function commitGlassIntensity(value) {
+        const next = await window.api.settings.set('glassIntensity', value);
+        setSettings(next);
+    }
+
     async function updateUpdateChannel(value) {
         const next = await window.api.settings.set('updateChannel', value);
         setSettings(next);
@@ -166,11 +182,34 @@ export default function SettingsPage({connections, onImported}) {
                         </select>
                     </div>
                     <div className="settings-row">
-                        <span className="settings-row-label">{t('settings.general.updateChannel')}</span>
-                        <select value={settings.updateChannel || 'stable'} onChange={(e) => updateUpdateChannel(e.target.value)}>
-                            <option value="stable">{t('settings.general.channel.stable')}</option>
-                            <option value="canary">{t('settings.general.channel.canary')}</option>
+                        <span className="settings-row-label">{t('settings.general.theme.heading')}</span>
+                        <select value={settings.theme || 'light'} onChange={(e) => updateTheme(e.target.value)}>
+                            <option value="light">{t('settings.general.theme.light')}</option>
+                            <option value="dark">{t('settings.general.theme.dark')}</option>
                         </select>
+                    </div>
+                    <div className="settings-row">
+                        <span className="settings-row-label">{t('settings.general.update-channel.heading')}</span>
+                        <select value={settings.updateChannel || 'stable'} onChange={(e) => updateUpdateChannel(e.target.value)}>
+                            <option value="stable">{t('settings.general.update-channel.stable')}</option>
+                            <option value="canary">{t('settings.general.update-channel.canary')}</option>
+                        </select>
+                    </div>
+                    <div className="settings-row settings-row-slider">
+                        <span className="settings-row-label">{t('settings.general.glass-intensity')}</span>
+                        <div className="settings-slider-wrap">
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value={settings.glassIntensity ?? 1}
+                                onChange={(e) => updateGlassIntensity(Number(e.target.value))}
+                                onMouseUp={(e) => commitGlassIntensity(Number(e.target.value))}
+                                onKeyUp={(e) => commitGlassIntensity(Number(e.target.value))}
+                            />
+                            <span className="settings-slider-value">{Math.round((settings.glassIntensity ?? 1) * 100)}%</span>
+                        </div>
                     </div>
                 </div>
 

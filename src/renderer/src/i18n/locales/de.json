@@ -398,11 +398,17 @@
     "general": {
       "heading": "Allgemein",
       "language": "Sprache",
-      "updateChannel": "Update-Kanal",
-      "channel": {
+      "update-channel": {
+        "heading": "Update-Kanal",
         "stable": "Stabil",
         "canary": "Canary"
-      }
+      },
+      "theme": {
+        "heading": "Design",
+        "light": "Hell",
+        "dark": "Dunkel"
+      },
+      "glass-intensity": "Glasintensität"
     },
     "editor": {
       "heading": "Dokumenten-Editor",

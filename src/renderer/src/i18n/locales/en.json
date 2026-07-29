@@ -398,11 +398,17 @@
     "general": {
       "heading": "General",
       "language": "Interface language",
-      "updateChannel": "Update Channel",
-      "channel": {
+      "update-channel": {
+        "heading": "Update Channel",
         "stable": "Stable",
         "canary": "Canary"
-      }
+      },
+      "theme": {
+        "heading": "Theme",
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "glass-intensity": "Glass Intensity"
     },
     "editor": {
       "heading": "Document Editor",
