@@ -62,7 +62,22 @@ export default function UpdaterSection() {
         });
 
         window.api.updater.getState().then((state) => {
-            if (state.isDev) setPhase('disabled');
+            if (state.isDev) {
+                setPhase('disabled');
+                return;
+            }
+            if (state.downloading) {
+                setPhase('downloading');
+                return;
+            }
+            if (state.checking) {
+                setPhase('checking');
+                return;
+            }
+            if (state.lastCheckResult) {
+                setPhase(state.lastCheckResult.updateAvailable ? 'available' : 'not-available');
+                setVersion(state.lastCheckResult.version);
+            }
         });
 
         return unsubscribe;
