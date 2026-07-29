@@ -7,6 +7,7 @@ import SecureStore from './secureStore.js';
 import {registerConnectionHandlers} from './connectionManager.js';
 import {registerDataHandlers} from './dataHandlers.js';
 import {registerSettingsHandlers, type SettingsFile} from './settingsStore.js';
+import {markSetupCompleted, shouldShowSetup} from './firstRun.js';
 import {startStaticServer, type StaticServerHandle} from './staticServer.js';
 import {ApplicationUtils} from './utils/arg.utils.js';
 import {getAppInfo} from './appInfo.js';
@@ -100,9 +101,32 @@ try {
             log.info(`Starting MongoStudio v${app.getVersion()}`);
             log.info(`System: ${SystemUtils.getPlatform()} ${SystemUtils.getArchitecture()}`);
 
+            const settingsPath = path.join(getAppFolder(), 'settings.json');
+            const setupNeeded = shouldShowSetup(settingsPath);
+
             store = new SecureStore({name: 'connections', cwd: getAppFolder()});
             settingsStore = registerSettingsHandlers(ipcMain, getAppFolder(), store);
             await createWindow();
+
+            ipcMain.handle('setup:needed', () => setupNeeded);
+
+            ipcMain.handle('setup:complete', (event, {language, theme, encryption, passphrase}: {
+                language: string;
+                theme: 'light' | 'dark';
+                encryption: 'encrypted' | 'unencrypted';
+                passphrase?: string;
+            }) => {
+                settingsStore.set('language', language);
+                settingsStore.set('theme', theme);
+
+                if (encryption === 'encrypted' && passphrase) {
+                    store.enableEncryption(passphrase);
+                }
+
+                ensureDataHandlersRegistered();
+                markSetupCompleted();
+                return {ok: true, settings: settingsStore.data};
+            });
 
             initUpdater({window: mainWindow, devMode: isServeMode, settingsStore});
 

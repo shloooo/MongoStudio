@@ -6,6 +6,7 @@ import CollectionView from './components/CollectionView.jsx';
 import UsersView from './components/UsersView.jsx';
 import TitleBar from './components/TitleBar.jsx';
 import VaultGate from './components/VaultGate.jsx';
+import SetupWizard from './components/SetupWizard.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import ContextMenu from './components/ContextMenu.jsx';
 import CopyCollectionDialog from './components/CopyCollectionDialog.jsx';
@@ -19,6 +20,7 @@ let tabIdCounter = 0;
 
 export default function App() {
     const {t} = useTranslation();
+    const [setupNeeded, setSetupNeeded] = useState(null); // null = unknown yet, true/false once checked
     const [unlocked, setUnlocked] = useState(false);
     const [connections, setConnections] = useState([]);
     const [openConnIds, setOpenConnIds] = useState(new Set());
@@ -35,6 +37,10 @@ export default function App() {
     const [refreshDbSignal, setRefreshDbSignal] = useState(null); // { connId, ts }
     const confirmDialog = useConfirm();
     const promptDialog = usePrompt();
+
+    useEffect(() => {
+        window.api.setup.needed().then(setSetupNeeded);
+    }, []);
 
     useEffect(() => {
         if (!status || status.action) return;
@@ -443,6 +449,19 @@ export default function App() {
     }
 
     const contentTabs = tabs.filter((t) => t.kind !== 'settings');
+
+    if (setupNeeded === null) {
+        return null;
+    }
+
+    if (setupNeeded) {
+        return (
+            <>
+                <SetupWizard onComplete={() => setSetupNeeded(false)}/>
+                <ErrorToastStack/>
+            </>
+        );
+    }
 
     if (!unlocked) {
         return (

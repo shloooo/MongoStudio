@@ -459,5 +459,41 @@
       "git": "Git",
       "unknown": "unbekannt"
     }
+  },
+  "setup": {
+    "steps": {
+      "welcome": "Willkommen",
+      "language": "Sprache",
+      "appearance": "Design",
+      "security": "Sicherheit"
+    },
+    "welcome": {
+      "heading": "Willkommen bei MongoStudio",
+      "hint": "Bevor es losgeht, richten wir noch ein paar Dinge ein."
+    },
+    "language": {
+      "heading": "Sprache auswählen",
+      "hint": "Kann später in den Einstellungen geändert werden."
+    },
+    "appearance": {
+      "heading": "Design auswählen",
+      "hint": "Kann später in den Einstellungen geändert werden.",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "security": {
+      "heading": "Verbindungen absichern",
+      "hint": "Verschlüsselung schützt gespeicherte Verbindungen mit einem Master-Passwort.",
+      "unencrypted": "Unverschlüsselt",
+      "encrypted": "Verschlüsselt",
+      "passphrasePlaceholder": "Master-Passwort",
+      "confirmPlaceholder": "Passwort bestätigen",
+      "tooShort": "Das Passwort muss mindestens 4 Zeichen lang sein.",
+      "mismatch": "Die Passwörter stimmen nicht überein."
+    },
+    "back": "Zurück",
+    "next": "Weiter",
+    "finish": "Los geht's",
+    "finishing": "Wird eingerichtet…"
   }
 }

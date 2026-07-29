@@ -9,8 +9,9 @@ async function bootstrap() {
     try {
         const settings = await window.api.settings.get();
         if (settings?.language) await i18n.changeLanguage(settings.language);
+        if (settings?.theme === 'dark') document.body.classList.add('dark');
     } catch {
-        // fall back to default language
+        // fall back to default language/theme
     }
 
     createRoot(document.getElementById('root')).render(

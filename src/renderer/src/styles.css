@@ -1879,6 +1879,141 @@ button.danger {
     font-weight: 600;
 }
 
+.setup-card {
+    width: 420px;
+}
+
+.setup-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 22px;
+}
+
+.setup-progress-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    justify-content: center;
+}
+
+.setup-progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--glass-border-strong);
+    flex-shrink: 0;
+}
+
+.setup-progress-step.active .setup-progress-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-dim);
+}
+
+.setup-progress-step.done .setup-progress-dot {
+    background: var(--accent);
+}
+
+.setup-progress-label {
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+}
+
+.setup-progress-step.active .setup-progress-label {
+    color: var(--text-primary);
+}
+
+.setup-option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 18px;
+}
+
+.setup-option-list-row {
+    flex-direction: row;
+}
+
+.setup-option {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border-strong);
+    background: var(--glass-panel);
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.setup-option .setup-option-check {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.setup-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+
+.setup-passphrase-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 14px;
+}
+
+.setup-passphrase-fields input {
+    width: 100%;
+    text-align: center;
+}
+
+.setup-passphrase-fields input.has-error {
+    border-color: var(--danger);
+}
+
+.setup-actions {
+    margin-top: 22px;
+}
+
+.setup-step-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: setup-step-in .22s cubic-bezier(.16, 1, .3, 1);
+}
+
+@keyframes setup-step-in {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.setup-welcome-icon {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+    margin-bottom: 18px;
+}
+
 button.danger:hover {
     background: #ff8080;
 }

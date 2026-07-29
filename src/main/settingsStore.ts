@@ -1,14 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {dialog, BrowserWindow, type IpcMain} from 'electron';
+import {BrowserWindow, dialog, type IpcMain} from 'electron';
 import type SecureStore from './secureStore.js';
 
 export class SettingsFile {
   private readonly filePath: string;
+  readonly fileExisted: boolean;
   data: Record<string, any>;
 
   constructor(cwd: string) {
     this.filePath = path.join(cwd, 'settings.json');
+    this.fileExisted = fs.existsSync(this.filePath);
     this.data = this._load();
   }
 
@@ -16,7 +18,7 @@ export class SettingsFile {
     try {
       return JSON.parse(fs.readFileSync(this.filePath, 'utf-8'));
     } catch {
-      return {language: 'en', defaultEditorTab: 'tree', updateChannel: 'stable'};
+      return {language: 'en', theme: 'light', defaultEditorTab: 'tree', updateChannel: 'stable'};
     }
   }
 

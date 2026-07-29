@@ -22,6 +22,10 @@ contextBridge.exposeInMainWorld('api', {
     },
     platform: process.platform
   },
+  setup: {
+    needed: () => ipcRenderer.invoke('setup:needed'),
+    complete: (payload) => ipcRenderer.invoke('setup:complete', payload)
+  },
   vault: {
     status: () => ipcRenderer.invoke('vault:status'),
     unlock: (passphrase) => ipcRenderer.invoke('vault:unlock', passphrase),
