@@ -68,7 +68,6 @@ export default class SecureStore {
         return this.unlocked;
     }
 
-    /** Sets up encryption for the first time (or changes the passphrase, given the old one already unlocked the store). */
     enableEncryption(passphrase: string): void {
         this.meta.encrypted = true;
         this.meta.verifier = makeVerifier(passphrase);
@@ -78,7 +77,6 @@ export default class SecureStore {
         this._persist();
     }
 
-    /** Removes encryption entirely, writing the current in-memory data back out as plaintext. */
     disableEncryption(): void {
         this.meta = {encrypted: false};
         this.passphrase = null;
@@ -86,7 +84,6 @@ export default class SecureStore {
         this._persist();
     }
 
-    /** Attempts to unlock with a passphrase. Returns true/false, never throws. */
     unlock(passphrase: string): boolean {
         if (!this.meta.encrypted) return true;
         if (!checkVerifier(this.meta.verifier!, passphrase)) return false;
@@ -102,7 +99,6 @@ export default class SecureStore {
         }
     }
 
-    /** Full factory reset: wipes both files, forgets any passphrase. Used for "forgot my master password". */
     static resetAll(name: string, cwd: string): void {
         const dataPath = path.join(cwd, `${name}.json`);
         const metaPath = path.join(cwd, `${name}.meta.json`);

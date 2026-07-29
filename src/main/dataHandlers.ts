@@ -125,8 +125,6 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return loadUserDetail(client, dbName, user);
   });
 
-  // Lists every user in the cluster that holds at least one privilege on dbName.collection,
-  // together with the actions that privilege grants there.
   ipcMain.handle('data:collectionUsers', async (event, {connId, dbName, collection}) => {
     const client = getClient(connId);
     const all = await listAllUsers(client);
@@ -437,8 +435,6 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
   });
 }
 
-// `usersInfo: { forAllDBs: true }` needs MongoDB 4.0+ and cluster-wide viewUser rights;
-// where it is unavailable we sweep every database instead.
 async function listAllUsers(client: any) {
   const admin = client.db('admin');
   try {
@@ -484,7 +480,6 @@ async function loadUserDetail(client: any, dbName: string, user: string) {
   };
 }
 
-// A privilege resource covers db.collection when both parts match; an empty string is a wildcard.
 function resourceCoversCollection(resource: any, dbName: string, collection: string): boolean {
   if (!resource) return false;
   if (resource.anyResource) return true;

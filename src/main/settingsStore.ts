@@ -45,7 +45,6 @@ export function registerSettingsHandlers(ipcMain: IpcMain, userDataPath: string,
     return settings.data;
   });
 
-  // Exports settings + (decrypted, in-memory) connections to a single JSON file the user picks.
   ipcMain.handle('settings:export', async (event, {connections}) => {
     const win = BrowserWindow.getFocusedWindow();
     const {canceled, filePath} = await dialog.showSaveDialog(win!, {
@@ -62,8 +61,6 @@ export function registerSettingsHandlers(ipcMain: IpcMain, userDataPath: string,
     return {ok: true, filePath};
   });
 
-  // Imports a previously exported settings+connections JSON file. Connections are merged by id
-  // (imported entries overwrite existing ones with the same id, others are appended).
   ipcMain.handle('settings:import', async () => {
     const win = BrowserWindow.getFocusedWindow();
     const {canceled, filePaths} = await dialog.showOpenDialog(win!, {
