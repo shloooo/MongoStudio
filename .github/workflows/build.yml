@@ -101,6 +101,9 @@ jobs:
       - name: Generate git details
         run: yarn generate:gitinfo
 
+      - name: Build main process
+        run: yarn build:main
+
       - name: Build renderer
         run: yarn build:renderer
 
@@ -162,6 +165,9 @@ jobs:
       - name: Generate git details
         run: yarn generate:gitinfo
 
+      - name: Build main process
+        run: yarn build:main
+
       - name: Build renderer
         run: yarn build:renderer
 
@@ -216,6 +222,9 @@ jobs:
 
       - name: Generate git details
         run: yarn generate:gitinfo
+
+      - name: Build main process
+        run: yarn build:main
 
       - name: Build renderer
         run: yarn build:renderer
