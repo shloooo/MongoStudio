@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell} from '../lib/shellSyntax.js';
-import {shortLabel} from '../lib/bsonTypes.js';
+import {parseShell, toShellText, toShellTextCompact} from '../lib/shellSyntax.js';
+import ContextMenu from './ContextMenu.jsx';
 
 const TEMPLATE = `[
   { $match: {} },
@@ -10,12 +10,13 @@ const TEMPLATE = `[
   { $sort: { count: -1 } }
 ]`;
 
-export default function AggregationTab({ selection, reloadSignal }) {
+export default function AggregationTab({selection, reloadSignal, onShowInDocuments}) {
   const {t} = useTranslation();
   const [pipelineText, setPipelineText] = useState(TEMPLATE);
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rowContextMenu, setRowContextMenu] = useState(null);
 
   async function runPipeline() {
     setLoading(true);
@@ -48,6 +49,31 @@ export default function AggregationTab({ selection, reloadSignal }) {
     });
   }
 
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text);
+  }
+
+  function handleRowContextMenu(e, doc) {
+    e.preventDefault();
+    setRowContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {
+          label: t('documentActions.copyDocumentRaw'),
+          onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))
+        },
+        {label: t('documentActions.copyDocumentShell'), onClick: () => copyToClipboard(toShellText(doc))},
+        {separator: true},
+        {
+          label: t('documentActions.showInList'),
+          disabled: doc._id === undefined,
+          onClick: () => onShowInDocuments(toShellText({_id: doc._id}))
+        }
+      ]
+    });
+  }
+
   return (
       <div className="aggregation-tab">
         <div className="agg-editor-pane">
@@ -71,11 +97,11 @@ export default function AggregationTab({ selection, reloadSignal }) {
         <div className="agg-results-pane">
           <div className="results-header">{t('aggregationTab.resultsHeader', {count: results.length})}</div>
           <div className="results-area">
-            <table className="doc-table">
+            <table className="agg-results-table">
               <tbody>
               {results.map((doc, i) => (
-                  <tr key={i}>
-                    <td className="doc-cell"><code>{shortLabel(doc).slice(0, 300)}</code></td>
+                  <tr key={i} onContextMenu={(e) => handleRowContextMenu(e, doc)}>
+                    <td className="doc-cell"><code>{toShellTextCompact(doc).slice(0, 300)}</code></td>
                   </tr>
               ))}
               {results.length === 0 && <tr>
@@ -85,6 +111,14 @@ export default function AggregationTab({ selection, reloadSignal }) {
             </table>
           </div>
         </div>
+        {rowContextMenu && (
+            <ContextMenu
+                x={rowContextMenu.x}
+                y={rowContextMenu.y}
+                items={rowContextMenu.items}
+                onClose={() => setRowContextMenu(null)}
+            />
+        )}
       </div>
   );
 }

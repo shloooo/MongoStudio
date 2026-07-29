@@ -295,6 +295,7 @@
     "editDocument": "Dokument bearbeiten",
     "copyDocumentRaw": "Dokument kopieren (raw)",
     "copyDocumentShell": "Dokument kopieren (Shell-Syntax)",
+    "showInList": "Dokument in Liste anzeigen",
     "copyFieldRaw": "Feldwert kopieren (raw)",
     "copyFieldShell": "Feldwert kopieren (Shell-Syntax)",
     "setFieldType": "Feldtyp festlegen",

@@ -141,9 +141,9 @@ function SetFieldValueDialog({field, onApply, onClose}) {
   );
 }
 
-export default function DocumentsTab({ selection, reloadSignal }) {
+export default function DocumentsTab({ selection, reloadSignal, initialFilter }) {
   const {t} = useTranslation();
-  const [filter, setFilter] = useState('{}');
+  const [filter, setFilter] = useState(initialFilter || '{}');
   const [sort, setSort] = useState('{_id: -1}');
   const [docs, setDocs] = useState([]);
   const [totalCount, setTotalCount] = useState(0);

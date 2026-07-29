@@ -42,7 +42,7 @@ export default function IndexesTab({ selection, reloadSignal }) {
 
   return (
       <div className="indexes-tab">
-        <table className="doc-table">
+        <table className="indexes-table">
           <thead>
           <tr>
             <th>{t('indexesTab.name')}</th>

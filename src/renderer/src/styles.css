@@ -944,10 +944,69 @@ input[type="checkbox"]:focus-visible {
     background: var(--overlay-03);
 }
 
+.indexes-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.indexes-table th:nth-child(1), .indexes-table td:nth-child(1) {
+    width: 220px;
+}
+
+.indexes-table th:nth-child(3), .indexes-table td:nth-child(3) {
+    width: 130px;
+}
+
+.indexes-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--overlay-03);
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-tertiary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(var(--glass-blur-xs));
+    white-space: nowrap;
+}
+
+.indexes-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--overlay-04);
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.indexes-table tr:hover td {
+    background: var(--overlay-03);
+}
+
 .id-cell {
     color: var(--accent);
     white-space: nowrap;
     font-family: var(--font-mono);
+}
+
+.agg-results-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.agg-results-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--overlay-04);
+    vertical-align: top;
+}
+
+.agg-results-table tr:hover td {
+    background: var(--overlay-03);
 }
 
 .doc-cell {

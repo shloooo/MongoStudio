@@ -295,6 +295,7 @@
     "editDocument": "Edit document",
     "copyDocumentRaw": "Copy document (raw)",
     "copyDocumentShell": "Copy document (shell syntax)",
+    "showInList": "Show document in list",
     "copyFieldRaw": "Copy field value (raw)",
     "copyFieldShell": "Copy field value (shell syntax)",
     "setFieldType": "Set field type",

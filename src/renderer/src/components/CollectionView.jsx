@@ -11,9 +11,27 @@ const TAB_LABEL_KEYS = {
     Indexes: 'collectionView.tabs.indexes'
 };
 
+function tabStorageKey(selection) {
+    return `mongostudio.collectionTab.${selection.connId}.${selection.dbName}.${selection.collection}`;
+}
+
 export default function CollectionView({ selection, reloadSignal }) {
     const {t} = useTranslation();
-    const [tab, setTab] = useState('Documents');
+    const [tab, setTab] = useState(() => {
+        const saved = localStorage.getItem(tabStorageKey(selection));
+        return TABS.includes(saved) ? saved : 'Documents';
+    });
+    const [docsFilter, setDocsFilter] = useState(null);
+
+    function changeTab(next) {
+        setTab(next);
+        localStorage.setItem(tabStorageKey(selection), next);
+    }
+
+    function handleShowInDocuments(filterText) {
+        setDocsFilter(filterText);
+        changeTab('Documents');
+    }
 
     return (
         <div className="collection-view">
@@ -23,12 +41,12 @@ export default function CollectionView({ selection, reloadSignal }) {
             <div className="tab-bar">
                 {TABS.map((t2) => (
                     <button key={t2} className={`tab-btn ${tab === t2 ? 'active' : ''}`}
-                            onClick={() => setTab(t2)}>{t(TAB_LABEL_KEYS[t2])}</button>
+                            onClick={() => changeTab(t2)}>{t(TAB_LABEL_KEYS[t2])}</button>
                 ))}
             </div>
             <div className="tab-content">
-                {tab === 'Documents' && <DocumentsTab selection={selection} reloadSignal={reloadSignal}/>}
-                {tab === 'Aggregation' && <AggregationTab selection={selection} reloadSignal={reloadSignal}/>}
+                {tab === 'Documents' && <DocumentsTab selection={selection} reloadSignal={reloadSignal} initialFilter={docsFilter}/>}
+                {tab === 'Aggregation' && <AggregationTab selection={selection} reloadSignal={reloadSignal} onShowInDocuments={handleShowInDocuments}/>}
                 {tab === 'Indexes' && <IndexesTab selection={selection} reloadSignal={reloadSignal}/>}
             </div>
         </div>
