@@ -37,6 +37,12 @@ export default function App() {
     const promptDialog = usePrompt();
 
     useEffect(() => {
+        if (!status || status.action) return;
+        const timeout = setTimeout(() => setStatus(null), status.type === 'error' ? 6000 : 3500);
+        return () => clearTimeout(timeout);
+    }, [status]);
+
+    useEffect(() => {
         const unsubscribeMain = window.api.app.onError((message) => {
             reportError(message, 'Main process');
         });
