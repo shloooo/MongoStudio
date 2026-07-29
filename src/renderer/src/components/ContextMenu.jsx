@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 
 export default function ContextMenu({ x, y, items, onClose }) {
   const ref = useRef(null);
@@ -58,7 +59,7 @@ export default function ContextMenu({ x, y, items, onClose }) {
     return item.submenu.reduce((sum, sub) => sum + (sub.separator ? sepHeight : rowHeight), 10);
   }
 
-  return (
+  return createPortal(
       <div className="context-menu" style={style} ref={ref}>
         {items.map((item, i) =>
             item.hidden ? "" : item.separator ? (
@@ -109,6 +110,7 @@ export default function ContextMenu({ x, y, items, onClose }) {
                 </button>
             )
         )}
-      </div>
+      </div>,
+      document.body
   );
 }
