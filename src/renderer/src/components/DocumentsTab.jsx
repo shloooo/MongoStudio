@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {parseShell, toShellText} from '../lib/shellSyntax.js';
@@ -106,7 +107,7 @@ function SetFieldValueDialog({field, onApply, onClose}) {
     }
   }
 
-  return (
+  return createPortal(
       <div className="modal-backdrop" onClick={onClose}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
           <h3>{t('documentsTab.setFieldValueTitle', {field})}</h3>
@@ -137,7 +138,8 @@ function SetFieldValueDialog({field, onApply, onClose}) {
             <button className="primary" onClick={handleApply} disabled={busy}>{busy ? t('documentsTab.applying') : t('documentsTab.apply')}</button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
   );
 }
 
