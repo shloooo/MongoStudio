@@ -1,4 +1,5 @@
 import React, {useMemo, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {Trans, useTranslation} from 'react-i18next';
 import {parseShell, toShellText} from '../lib/shellSyntax.js';
 import DocumentTree from './DocumentTree.jsx';
@@ -103,7 +104,7 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
     }
   }
 
-  return (
+  return createPortal(
       <div className="modal-backdrop" onClick={onClose}>
         <div className="modal wide" onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyDown}>
           <div className="editor-header-row">
@@ -173,6 +174,7 @@ export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
               />
           )}
         </div>
-      </div>
+      </div>,
+      document.body
   );
 }

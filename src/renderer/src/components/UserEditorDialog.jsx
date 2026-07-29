@@ -1,4 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {useTranslation, Trans} from 'react-i18next';
 import {groupPrivilegesByResource, sameRole} from '../lib/mongoPrivileges.js';
 import {useClosing} from '../lib/useClosing.js';
@@ -137,7 +138,7 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
     const groupedPrivileges = useMemo(() => groupPrivilegesByResource(privileges), [privileges]);
     const dbOptions = databases.length ? databases : [authDb];
 
-    return (
+    return createPortal(
         <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
             <div className="modal wide user-editor" onClick={(e) => e.stopPropagation()}>
                 <h3>{isCreate ? t('dialogs.userEditor.createTitle') : t('dialogs.userEditor.editTitle', {username})}</h3>
@@ -277,7 +278,8 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

@@ -1,4 +1,5 @@
 import React, {useMemo, useState} from 'react';
+import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {parseShell} from '../lib/shellSyntax.js';
@@ -120,7 +121,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
         }
     }
 
-    return (
+    return createPortal(
         <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
             <div className="modal wide" onClick={(e) => e.stopPropagation()}>
                 <h3>{t('dialogs.bulkUpdate.title')}</h3>
@@ -186,6 +187,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                     </>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
