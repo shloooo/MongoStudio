@@ -1,6 +1,5 @@
-class ApplicationUtils {
-
-    static getArg(key, cd = true) {
+export class ApplicationUtils {
+    static getArg(key: string, cd = true): string | boolean | undefined {
         const arg = process.argv.find(s => s.startsWith(`--${key}${cd ? '=' : ''}`));
         if (arg) {
             const value = arg.replace(`--${key}${cd ? '=' : ''}`, '');
@@ -9,5 +8,3 @@ class ApplicationUtils {
         return cd ? this.getArg(key, false) : undefined;
     }
 }
-
-module.exports = {ApplicationUtils};

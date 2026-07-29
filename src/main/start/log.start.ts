@@ -1,21 +1,21 @@
-const fs = require("node:fs");
-const {getLogFolder, FileUtils} = require("../utils/fs.utils");
-const log = require("electron-log");
-const path = require("node:path");
-const {app} = require("electron");
+import fs from 'node:fs';
+import {getLogFolder, FileUtils} from '../utils/fs.utils.js';
+import log from 'electron-log';
+import path from 'node:path';
+import {app} from 'electron';
 
-class LogStart {
+export class LogStart {
 
-    static setup() {
+    static setup(): void {
         if (!fs.existsSync(getLogFolder())) {
             fs.mkdirSync(getLogFolder());
         }
-        this.clearOldLogFiles()
+        this.clearOldLogFiles();
         log.transports.file.resolvePathFn = () => path.join(getLogFolder(), `launcher_${FileUtils.formatDateForFile()}.log`);
         app.setAppLogsPath(getLogFolder());
     }
 
-    static clearOldLogFiles(logDir = getLogFolder(), maxFiles = 10) {
+    static clearOldLogFiles(logDir: string = getLogFolder(), maxFiles = 10): void {
         fs.readdir(logDir, (err, files) => {
             if (err) return console.error('Could not read log directory:', err);
 
@@ -26,11 +26,9 @@ class LogStart {
             });
 
             while (logFiles.length > maxFiles) {
-                const fileToDelete = path.join(logDir, logFiles.shift());
+                const fileToDelete = path.join(logDir, logFiles.shift()!);
                 fs.unlinkSync(fileToDelete);
             }
         });
     }
 }
-
-module.exports = {LogStart};

@@ -3,17 +3,18 @@
   "version": "0.0.3",
   "description": "A free open-source alternative for Studio3T.",
   "author": "RisingMedia Solutions <shloooo@users.noreply.github.com>",
-  "main": "src/main/main.js",
+  "main": "dist-main/main.js",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "dev:renderer": "vite --config vite.config.js",
-    "dev:electron": "electron . --serve --render-dev",
+    "dev:electron": "yarn build:main && electron . --serve --render-dev",
     "build:renderer": "vite build --config vite.config.js",
+    "build:main": "tsc -p tsconfig.main.json",
     "generate:gitinfo": "node scripts/generateGitInfo.js",
-    "start": "yarn build:renderer && electron . --serve",
+    "start": "yarn build:main && yarn build:renderer && electron . --serve",
     "electron": "electron . --serve",
-    "dist": "yarn generate:gitinfo && yarn build:renderer && electron-builder"
+    "dist": "yarn generate:gitinfo && yarn build:main && yarn build:renderer && electron-builder"
   },
   "dependencies": {
     "bson": "^7.3.1",
@@ -26,11 +27,14 @@
     "systeminformation": "^5.33.1"
   },
   "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/ssh2": "^1.15.5",
     "@vitejs/plugin-react": "^6.0.4",
     "electron": "^43.2.0",
     "electron-builder": "^26.15.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "typescript": "^7.0.2",
     "vite": "^8.1.5"
   },
   "build": {
@@ -41,7 +45,8 @@
     },
     "files": [
       "dist/**",
-      "src/main/**",
+      "dist-main/**",
+      "src/main/gitInfo.generated.json",
       "src/preload/**",
       "package.json"
     ],

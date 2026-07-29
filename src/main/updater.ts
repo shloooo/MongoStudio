@@ -1,24 +1,31 @@
-const {autoUpdater} = require('electron-updater');
+import pkg from 'electron-updater';
+const {autoUpdater} = pkg;
+import type {BrowserWindow} from 'electron';
+import type {SettingsFile} from './settingsStore.js';
 
-let mainWindow = null;
+let mainWindow: BrowserWindow | null = null;
 let isDev = false;
 let checking = false;
 let downloading = false;
-let lastCheckResult = null;
-let settingsStoreRef = null;
+let lastCheckResult: { updateAvailable: boolean; version: string } | null = null;
+let settingsStoreRef: SettingsFile | null = null;
 
-function send(channel, payload) {
+function send(channel: string, payload: any): void {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(channel, payload);
     }
 }
 
-function formatEtaSeconds(bytesPerSecond, bytesRemaining) {
+function formatEtaSeconds(bytesPerSecond: number, bytesRemaining: number): number | null {
     if (!bytesPerSecond || bytesPerSecond <= 0) return null;
     return Math.round(bytesRemaining / bytesPerSecond);
 }
 
-function initUpdater({window, devMode, settingsStore}) {
+export function initUpdater({window, devMode, settingsStore}: {
+    window: BrowserWindow;
+    devMode: boolean;
+    settingsStore: SettingsFile | null;
+}): void {
     mainWindow = window;
     isDev = devMode;
     settingsStoreRef = settingsStore || null;
@@ -66,7 +73,7 @@ function initUpdater({window, devMode, settingsStore}) {
     });
 }
 
-async function checkForUpdates() {
+export async function checkForUpdates(): Promise<{ ok: boolean; error?: string; alreadyChecking?: boolean }> {
     if (isDev) {
         return {ok: false, error: 'Update checks are disabled in development mode.'};
     }
@@ -82,14 +89,14 @@ async function checkForUpdates() {
     try {
         await autoUpdater.checkForUpdates();
         return {ok: true};
-    } catch (err) {
+    } catch (err: any) {
         return {ok: false, error: err.message};
     } finally {
         checking = false;
     }
 }
 
-async function downloadUpdate() {
+export async function downloadUpdate(): Promise<{ ok: boolean; error?: string; alreadyDownloading?: boolean }> {
     if (isDev) {
         return {ok: false, error: 'Updates are disabled in development mode.'};
     }
@@ -98,18 +105,16 @@ async function downloadUpdate() {
     try {
         await autoUpdater.downloadUpdate();
         return {ok: true};
-    } catch (err) {
+    } catch (err: any) {
         downloading = false;
         return {ok: false, error: err.message};
     }
 }
 
-function quitAndInstall() {
+export function quitAndInstall(): void {
     autoUpdater.quitAndInstall();
 }
 
-function getState() {
+export function getState() {
     return {checking, downloading, lastCheckResult, isDev};
 }
-
-module.exports = {initUpdater, checkForUpdates, downloadUpdate, quitAndInstall, getState};

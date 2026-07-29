@@ -1,27 +1,27 @@
-const { app } = require('electron');
-const path = require('path');
-const fs = require('node:fs');
-const { promises: fsPromises } = require('node:fs');
-const crypto = require('crypto');
-const { pipeline } = require('stream');
-const util = require('node:util');
-const log = require('electron-log');
+import {app} from 'electron';
+import path from 'node:path';
+import fs from 'node:fs';
+import {promises as fsPromises} from 'node:fs';
+import crypto from 'node:crypto';
+import {pipeline} from 'node:stream';
+import util from 'node:util';
+import log from 'electron-log';
 
 const pipelineAsync = util.promisify(pipeline);
 
-function getLocalAppDataFolder() {
+export function getLocalAppDataFolder(): string {
     return path.join(app.getPath('home'), 'AppData', 'Local');
 }
 
-function getAppFolder() {
-    return `${getLocalAppDataFolder()}\\MongoStudio`
+export function getAppFolder(): string {
+    return `${getLocalAppDataFolder()}\\MongoStudio`;
 }
 
-function getLogFolder() {
-    return `${getAppFolder()}\\logs`
+export function getLogFolder(): string {
+    return `${getAppFolder()}\\logs`;
 }
 
-function formatBytes(bytes) {
+export function formatBytes(bytes: number): string {
     const units = ['B', 'KB', 'MB', 'GB', 'TB'];
     let unitIndex = 0;
 
@@ -37,33 +37,31 @@ function formatBytes(bytes) {
     }
 }
 
-function escapeStringRegexp(string) {
-    // Escape characters with special meaning either inside or outside character sets.
-    // Use a simple backslash escape when it’s always valid, and a `\xnn` escape when the simpler form would be disallowed by Unicode patterns’ stricter grammar.
+export function escapeStringRegexp(string: string): string {
     return string
         .replace(/[|\\{}()[\]^$+*?.]/g, '\\$&')
         .replace(/-/g, '\\x2d');
 }
 
-async function pathExists(path) {
+export async function pathExists(target: string): Promise<boolean> {
     try {
-        await fsPromises.access(path);
+        await fsPromises.access(target);
         return true;
     } catch {
         return false;
     }
 }
 
-function pathExistsSync(path) {
+export function pathExistsSync(target: string): boolean {
     try {
-        fs.accessSync(path);
+        fs.accessSync(target);
         return true;
     } catch {
         return false;
     }
 }
 
-function fileExistsSync(filePath) {
+export function fileExistsSync(filePath: string): boolean {
     try {
         const fullPath = path.resolve(filePath);
         fs.accessSync(fullPath, fs.constants.F_OK);
@@ -73,7 +71,7 @@ function fileExistsSync(filePath) {
     }
 }
 
-async function hashFile(filePath, algorithm = 'sha1') {
+export async function hashFile(filePath: string, algorithm = 'sha1'): Promise<string | undefined> {
     if (!fileExistsSync(filePath)) {
         return Promise.resolve(undefined);
     }
@@ -85,15 +83,15 @@ async function hashFile(filePath, algorithm = 'sha1') {
     const stats = await fs.promises.stat(filePath);
     const fileSize = stats.size;
 
-    let blockSize = 0;
-    if (fileSize < 1024 * 1024) { // < 1 MB
-        blockSize = 64 * 1024; // 64 KB
-    } else if (fileSize < 100 * 1024 * 1024) { // < 100 MB
-        blockSize = 512 * 1024; // 512 KB
-    } else if (fileSize < 1024 * 1024 * 1024) { // < 1 GB
-        blockSize = 4 * 1024 * 1024; // 4 MB
+    let blockSize: number;
+    if (fileSize < 1024 * 1024) {
+        blockSize = 64 * 1024;
+    } else if (fileSize < 100 * 1024 * 1024) {
+        blockSize = 512 * 1024;
+    } else if (fileSize < 1024 * 1024 * 1024) {
+        blockSize = 4 * 1024 * 1024;
     } else {
-        blockSize = 8 * 1024 * 1024; // 8 MB
+        blockSize = 8 * 1024 * 1024;
     }
 
     const hash = crypto.createHash(algorithm);
@@ -105,18 +103,18 @@ async function hashFile(filePath, algorithm = 'sha1') {
             process.noAsar = false;
         }
         return hash.digest('hex');
-    } catch (error) {
-        log.error(`Could not hash file ${filePath} with ${algorithm}`)
+    } catch (error: any) {
+        log.error(`Could not hash file ${filePath} with ${algorithm}`);
         throw new Error(`Error hashing file: ${error.message}`);
     }
 }
 
-function wait(ms) {
+export function wait(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-class FileUtils {
-    static formatDateForFile(date = new Date()) {
+export class FileUtils {
+    static formatDateForFile(date: Date = new Date()): string {
         const year = String(date.getFullYear()).slice(-2);
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -127,18 +125,4 @@ class FileUtils {
 
         return `${year}-${month}-${day}_${hour}-${minute}-${second}`;
     }
-}
-
-module.exports = {
-    FileUtils,
-    getLogFolder,
-    getAppFolder,
-    getLocalAppDataFolder,
-    formatBytes,
-    escapeStringRegexp,
-    pathExists,
-    pathExistsSync,
-    fileExistsSync,
-    hashFile,
-    wait
 }

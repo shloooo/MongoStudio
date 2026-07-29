@@ -1,15 +1,22 @@
-const crypto = require('crypto');
+import crypto from 'node:crypto';
 
 const SALT_BYTES = 16;
 const IV_BYTES = 12;
 const KEY_BYTES = 32;
-const SCRYPT_OPTS = { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+const SCRYPT_OPTS = {N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024};
 
-function deriveKey(passphrase, salt) {
+export interface CryptoEnvelope {
+  salt: string;
+  iv: string;
+  tag: string;
+  ciphertext: string;
+}
+
+function deriveKey(passphrase: string, salt: Buffer): Buffer {
   return crypto.scryptSync(passphrase, salt, KEY_BYTES, SCRYPT_OPTS);
 }
 
-function encrypt(plaintext, passphrase) {
+export function encrypt(plaintext: string, passphrase: string): CryptoEnvelope {
   const salt = crypto.randomBytes(SALT_BYTES);
   const iv = crypto.randomBytes(IV_BYTES);
   const key = deriveKey(passphrase, salt);
@@ -24,7 +31,7 @@ function encrypt(plaintext, passphrase) {
   };
 }
 
-function decrypt(envelope, passphrase) {
+export function decrypt(envelope: CryptoEnvelope, passphrase: string): string {
   const salt = Buffer.from(envelope.salt, 'hex');
   const iv = Buffer.from(envelope.iv, 'hex');
   const tag = Buffer.from(envelope.tag, 'hex');
@@ -36,16 +43,14 @@ function decrypt(envelope, passphrase) {
   return plaintext.toString('utf-8');
 }
 
-function makeVerifier(passphrase) {
+export function makeVerifier(passphrase: string): CryptoEnvelope {
   return encrypt('mongostudio-verify', passphrase);
 }
 
-function checkVerifier(envelope, passphrase) {
+export function checkVerifier(envelope: CryptoEnvelope, passphrase: string): boolean {
   try {
     return decrypt(envelope, passphrase) === 'mongostudio-verify';
   } catch {
     return false;
   }
 }
-
-module.exports = { encrypt, decrypt, makeVerifier, checkVerifier };

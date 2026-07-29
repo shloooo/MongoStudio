@@ -1,35 +1,38 @@
-const {app, BrowserWindow, ipcMain} = require('electron');
-const path = require('path');
-const SecureStore = require('./secureStore');
-const {registerConnectionHandlers} = require('./connectionManager');
-const {registerDataHandlers} = require('./dataHandlers');
-const {registerSettingsHandlers} = require('./settingsStore');
-const {startStaticServer} = require('./staticServer');
-const {ApplicationUtils} = require("./utils/arg.utils");
-const {getAppInfo} = require('./appInfo');
-const {initUpdater, checkForUpdates, downloadUpdate, quitAndInstall, getState} = require('./updater');
-const {LogStart} = require("./start/log.start");
-const log = require("electron-log");
-const {SystemUtils} = require("./utils/sys.utils");
-const fs = require("node:fs");
-const {getAppFolder} = require("./utils/fs.utils");
+import {app, BrowserWindow, ipcMain, dialog} from 'electron';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import fs from 'node:fs';
+import log from 'electron-log';
+import SecureStore from './secureStore.js';
+import {registerConnectionHandlers} from './connectionManager.js';
+import {registerDataHandlers} from './dataHandlers.js';
+import {registerSettingsHandlers, type SettingsFile} from './settingsStore.js';
+import {startStaticServer, type StaticServerHandle} from './staticServer.js';
+import {ApplicationUtils} from './utils/arg.utils.js';
+import {getAppInfo} from './appInfo.js';
+import {initUpdater, checkForUpdates, downloadUpdate, quitAndInstall, getState} from './updater.js';
+import {LogStart} from './start/log.start.js';
+import {SystemUtils} from './utils/sys.utils.js';
+import {getAppFolder} from './utils/fs.utils.js';
 
-let mainWindow;
-let store;
-let settingsStore;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+let mainWindow: BrowserWindow;
+let store: SecureStore;
+let settingsStore: SettingsFile;
 let dataHandlersRegistered = false;
-let staticServerHandle = null;
+let staticServerHandle: StaticServerHandle | null = null;
 const isServeMode = ApplicationUtils.getArg('serve') != undefined;
 const isRendererDevMode = ApplicationUtils.getArg('render-dev') != undefined;
 
-if (!fs.existsSync(getAppFolder())){
+if (!fs.existsSync(getAppFolder())) {
     fs.mkdirSync(getAppFolder());
 }
 
-LogStart.setup()
-app.setName('MongoStudio')
+LogStart.setup();
+app.setName('MongoStudio');
 
-async function createWindow() {
+async function createWindow(): Promise<void> {
     const serve = isServeMode;
 
     mainWindow = new BrowserWindow({
@@ -46,7 +49,7 @@ async function createWindow() {
         visualEffectState: process.platform === 'darwin' ? 'active' : undefined,
         backgroundMaterial: process.platform === 'win32' ? 'acrylic' : undefined,
         webPreferences: {
-            preload: path.join(__dirname, '..', 'preload', 'preload.js'),
+            preload: path.join(__dirname, '..', 'src', 'preload', 'preload.js'),
             nodeIntegration: false,
             allowRunningInsecureContent: serve,
             contextIsolation: true,
@@ -59,24 +62,28 @@ async function createWindow() {
 
     const isDev = !app.isPackaged;
     if (isDev && isRendererDevMode) {
-        mainWindow.loadURL('http://localhost:5173');
+        await mainWindow.loadURL('http://localhost:5173');
     } else {
         if (!staticServerHandle) {
             staticServerHandle = await startStaticServer(path.join(__dirname, '..', '..', 'dist'));
         }
-        mainWindow.loadURL(staticServerHandle.url);
+        await mainWindow.loadURL(staticServerHandle.url);
     }
 }
 
-function ensureDataHandlersRegistered() {
+function ensureDataHandlersRegistered(): void {
     if (dataHandlersRegistered) return;
     registerConnectionHandlers(ipcMain, store);
     registerDataHandlers(ipcMain);
     dataHandlersRegistered = true;
 }
 
+function getWindow(): BrowserWindow | undefined {
+    return BrowserWindow.getAllWindows()[0];
+}
+
 try {
-    const locked = app.requestSingleInstanceLock()
+    const locked = app.requestSingleInstanceLock();
 
     if (!locked) {
         app.quit();
@@ -87,11 +94,11 @@ try {
                 if (win.isMinimized()) win.restore();
                 win.focus();
             }
-        })
+        });
 
         app.whenReady().then(async () => {
-            log.info(`Starting MongoStudio v${app.getVersion()}`)
-            log.info(`System: ${SystemUtils.getPlatform()} ${SystemUtils.getArchitecture()}`)
+            log.info(`Starting MongoStudio v${app.getVersion()}`);
+            log.info(`System: ${SystemUtils.getPlatform()} ${SystemUtils.getArchitecture()}`);
 
             store = new SecureStore({name: 'connections', cwd: getAppFolder()});
             settingsStore = registerSettingsHandlers(ipcMain, getAppFolder(), store);
@@ -113,25 +120,25 @@ try {
                 unlocked: store.isUnlocked()
             }));
 
-            ipcMain.handle('vault:unlock', (event, passphrase) => {
+            ipcMain.handle('vault:unlock', (event, passphrase: string) => {
                 const ok = store.unlock(passphrase);
                 if (ok) ensureDataHandlersRegistered();
                 return ok;
             });
 
-            ipcMain.handle('vault:setup', (event, passphrase) => {
+            ipcMain.handle('vault:setup', (event, passphrase: string) => {
                 store.enableEncryption(passphrase);
                 ensureDataHandlersRegistered();
                 return true;
             });
 
-            ipcMain.handle('vault:disable', (event, currentPassphrase) => {
+            ipcMain.handle('vault:disable', (event, currentPassphrase: string) => {
                 if (store.isEncryptionEnabled() && !store.unlock(currentPassphrase)) return false;
                 store.disableEncryption();
                 return true;
             });
 
-            ipcMain.handle('vault:changePassphrase', (event, {current, next}) => {
+            ipcMain.handle('vault:changePassphrase', (event, {current, next}: { current: string; next: string }) => {
                 if (!store.unlock(current)) return false;
                 store.enableEncryption(next);
                 return true;
@@ -177,7 +184,7 @@ try {
             if (process.platform !== 'darwin') app.quit();
         });
 
-        function forwardErrorToRenderer(message) {
+        function forwardErrorToRenderer(message: string): void {
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send('app:error', message);
             }
@@ -188,19 +195,18 @@ try {
             forwardErrorToRenderer(err && err.message ? err.message : String(err));
         });
 
-        process.on('unhandledRejection', (reason) => {
+        process.on('unhandledRejection', (reason: any) => {
             console.error(reason);
             forwardErrorToRenderer(reason && reason.message ? reason.message : String(reason));
         });
     }
 } catch (e) {
-    //log.error('An error occurred while starting MongoStudio:', e)
     dialog.showMessageBox({
         type: 'error',
         title: 'Error',
         message: `MongoStudio encountered an error upon startup`,
         detail: `Errorcode:\n\n${e}`
     }).then(() => {
-        app.exit(0xF2)
-    })
+        app.exit(0xF2);
+    });
 }
