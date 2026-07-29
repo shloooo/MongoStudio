@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, dialog} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
@@ -10,7 +10,7 @@ import {registerSettingsHandlers, type SettingsFile} from './settingsStore.js';
 import {startStaticServer, type StaticServerHandle} from './staticServer.js';
 import {ApplicationUtils} from './utils/arg.utils.js';
 import {getAppInfo} from './appInfo.js';
-import {initUpdater, checkForUpdates, downloadUpdate, quitAndInstall, getState} from './updater.js';
+import {checkForUpdates, downloadUpdate, getState, initUpdater, quitAndInstall} from './updater.js';
 import {LogStart} from './start/log.start.js';
 import {SystemUtils} from './utils/sys.utils.js';
 import {getAppFolder} from './utils/fs.utils.js';
@@ -65,7 +65,7 @@ async function createWindow(): Promise<void> {
         await mainWindow.loadURL('http://localhost:5173');
     } else {
         if (!staticServerHandle) {
-            staticServerHandle = await startStaticServer(path.join(__dirname, '..', '..', 'dist'));
+            staticServerHandle = await startStaticServer(path.join(__dirname, '..', 'dist'));
         }
         await mainWindow.loadURL(staticServerHandle.url);
     }
@@ -166,7 +166,7 @@ try {
 
             ipcMain.handle('app:getInfo', () => getAppInfo({
                 appVersion: app.getVersion(),
-                projectRoot: app.isPackaged ? process.resourcesPath : path.join(__dirname, '..', '..'),
+                projectRoot: app.isPackaged ? process.resourcesPath : path.join(__dirname, '..'),
                 isDev: isServeMode
             }));
 
