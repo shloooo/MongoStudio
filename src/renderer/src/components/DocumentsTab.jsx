@@ -141,9 +141,9 @@ function SetFieldValueDialog({field, onApply, onClose}) {
   );
 }
 
-export default function DocumentsTab({ selection, reloadSignal, initialFilter }) {
+export default function DocumentsTab({ selection, reloadSignal, filterRequest }) {
   const {t} = useTranslation();
-  const [filter, setFilter] = useState(initialFilter || '{}');
+  const [filter, setFilter] = useState('{}');
   const [sort, setSort] = useState('{_id: -1}');
   const [docs, setDocs] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -173,7 +173,7 @@ export default function DocumentsTab({ selection, reloadSignal, initialFilter })
     setLoading(true);
     setError('');
     try {
-      const filterValue = parseShell(filter || '{}');
+      const filterValue = parseShell(overrides.filter ?? filter ?? '{}');
       const sortValue = parseShell(overrides.sort ?? sort ?? '{}');
       const result = await window.api.data.find({
         connId: selection.connId,
@@ -200,6 +200,12 @@ export default function DocumentsTab({ selection, reloadSignal, initialFilter })
 
   useEffect(() => { runQuery(); }, [selection, page]);
   useEffect(() => { if (reloadSignal !== undefined) runQuery(); }, [reloadSignal]);
+  useEffect(() => {
+    if (!filterRequest) return;
+    setFilter(filterRequest.text);
+    setPage(0);
+    runQuery({filter: filterRequest.text, page: 0});
+  }, [filterRequest]);
 
   const fieldColumns = useMemo(() => {
     const seen = new Set();

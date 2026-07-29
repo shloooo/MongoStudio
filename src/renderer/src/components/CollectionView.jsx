@@ -21,7 +21,7 @@ export default function CollectionView({ selection, reloadSignal }) {
         const saved = localStorage.getItem(tabStorageKey(selection));
         return TABS.includes(saved) ? saved : 'Documents';
     });
-    const [docsFilter, setDocsFilter] = useState(null);
+    const [filterRequest, setFilterRequest] = useState(null);
 
     function changeTab(next) {
         setTab(next);
@@ -29,7 +29,7 @@ export default function CollectionView({ selection, reloadSignal }) {
     }
 
     function handleShowInDocuments(filterText) {
-        setDocsFilter(filterText);
+        setFilterRequest((prev) => ({text: filterText, seq: (prev?.seq ?? 0) + 1}));
         changeTab('Documents');
     }
 
@@ -45,9 +45,15 @@ export default function CollectionView({ selection, reloadSignal }) {
                 ))}
             </div>
             <div className="tab-content">
-                {tab === 'Documents' && <DocumentsTab selection={selection} reloadSignal={reloadSignal} initialFilter={docsFilter}/>}
-                {tab === 'Aggregation' && <AggregationTab selection={selection} reloadSignal={reloadSignal} onShowInDocuments={handleShowInDocuments}/>}
-                {tab === 'Indexes' && <IndexesTab selection={selection} reloadSignal={reloadSignal}/>}
+                <div className={`tab-slot ${tab === 'Documents' ? '' : 'tab-slot-hidden'}`}>
+                    <DocumentsTab selection={selection} reloadSignal={reloadSignal} filterRequest={filterRequest}/>
+                </div>
+                <div className={`tab-slot ${tab === 'Aggregation' ? '' : 'tab-slot-hidden'}`}>
+                    <AggregationTab selection={selection} reloadSignal={reloadSignal} onShowInDocuments={handleShowInDocuments}/>
+                </div>
+                <div className={`tab-slot ${tab === 'Indexes' ? '' : 'tab-slot-hidden'}`}>
+                    <IndexesTab selection={selection} reloadSignal={reloadSignal}/>
+                </div>
             </div>
         </div>
     );
