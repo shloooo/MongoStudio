@@ -1,9 +1,11 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {useTranslation, Trans} from 'react-i18next';
 import {groupPrivilegesByResource, sameRole} from '../lib/mongoPrivileges.js';
+import {useClosing} from '../lib/useClosing.js';
 
 export default function UserEditorDialog({connId, authDb, username, onClose, onSaved}) {
     const {t} = useTranslation();
+    const {closing, requestClose} = useClosing(onClose);
     const isCreate = !username;
 
     const [loading, setLoading] = useState(!isCreate);
@@ -124,7 +126,7 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                 if (password) payload.pwd = password;
                 await window.api.data.updateUser(payload);
             }
-            onSaved();
+            requestClose(() => onSaved());
         } catch (err) {
             setError(err.message);
         } finally {
@@ -136,7 +138,7 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
     const dbOptions = databases.length ? databases : [authDb];
 
     return (
-        <div className="modal-backdrop" onClick={onClose}>
+        <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
             <div className="modal wide user-editor" onClick={(e) => e.stopPropagation()}>
                 <h3>{isCreate ? t('dialogs.userEditor.createTitle') : t('dialogs.userEditor.editTitle', {username})}</h3>
                 <p className="hint-text">
@@ -269,7 +271,7 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
 
                 <div className="modal-actions">
                     <div className="spacer"/>
-                    <button type="button" onClick={onClose} disabled={saving}>{t('dialogs.common.cancel')}</button>
+                    <button type="button" onClick={() => requestClose()} disabled={saving}>{t('dialogs.common.cancel')}</button>
                     <button type="button" className="primary" onClick={handleSave} disabled={saving || loading}>
                         {saving ? t('dialogs.userEditor.saving') : isCreate ? t('dialogs.userEditor.createUser') : t('dialogs.userEditor.saveChanges')}
                     </button>

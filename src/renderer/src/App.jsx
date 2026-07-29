@@ -14,6 +14,7 @@ import CopyDatabaseDialog from './components/CopyDatabaseDialog.jsx';
 import ErrorToastStack from './components/ErrorToastStack.jsx';
 import {reportError} from './lib/errorBus.js';
 import {useConfirm, usePrompt} from './components/ConfirmProvider.jsx';
+import {usePresence} from './lib/usePresence.js';
 import './styles.css';
 
 let tabIdCounter = 0;
@@ -29,6 +30,8 @@ export default function App() {
     const [tabs, setTabs] = useState([]);
     const [activeTabId, setActiveTabId] = useState(null);
     const [status, setStatus] = useState(null); // { type: 'info' | 'error', message } | null
+    const statusPresence = usePresence(status, 180);
+    const [closingTabIds, setClosingTabIds] = useState(new Set());
     const [reloadSignal, setReloadSignal] = useState(0);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
@@ -207,6 +210,24 @@ export default function App() {
             }
             return next;
         });
+    }
+
+    function requestCloseTab(tabId) {
+        setClosingTabIds((prev) => {
+            if (prev.has(tabId)) return prev;
+            const next = new Set(prev);
+            next.add(tabId);
+            return next;
+        });
+        setTimeout(() => {
+            handleCloseTab(tabId);
+            setClosingTabIds((prev) => {
+                if (!prev.has(tabId)) return prev;
+                const next = new Set(prev);
+                next.delete(tabId);
+                return next;
+            });
+        }, 150);
     }
 
     async function handleCollectionContextMenu(e, target) {
@@ -496,20 +517,20 @@ export default function App() {
                          refreshDbSignal={refreshDbSignal}
                 />
                 <main className="main-area">
-                    {status && <div className={`status-bar ${status.type === 'error' ? 'is-error' : 'is-info'}`}>
-                        <span>{status.message}</span>
-                        {status.action && <button className="status-bar-action" onClick={status.action.onClick}>{status.action.label}</button>}
+                    {statusPresence.value && <div className={`status-bar ${statusPresence.value.type === 'error' ? 'is-error' : 'is-info'} ${statusPresence.leaving ? 'is-leaving' : ''}`}>
+                        <span>{statusPresence.value.message}</span>
+                        {statusPresence.value.action && <button className="status-bar-action" onClick={statusPresence.value.action.onClick}>{statusPresence.value.action.label}</button>}
                     </div>}
                     <div className="collection-tab-bar">
                         {tabs.map((tab) => (
                             <div key={tab.id}
-                                 className={`collection-tab ${tab.id === activeTabId ? 'active' : ''}`}
+                                 className={`collection-tab ${tab.id === activeTabId ? 'active' : ''} ${closingTabIds.has(tab.id) ? 'closing' : ''}`}
                                  onClick={() => setActiveTabId(tab.id)}
                                  title={tabTitle(tab)}>
                                 <span className="collection-tab-label">{tabLabel(tab)}</span>
                                 <button className="collection-tab-close" onClick={(e) => {
                                     e.stopPropagation();
-                                    handleCloseTab(tab.id);
+                                    requestCloseTab(tab.id);
                                 }}>×
                                 </button>
                             </div>
@@ -523,27 +544,25 @@ export default function App() {
                             <p>{t('app.emptyState.body')}</p>
                         </div>
                     ) : (
-                        contentTabs.map((tab) => (
-                            <div key={tab.id} style={{
-                                display: tab.id === activeTabId ? 'flex' : 'none',
-                                flex: 1,
-                                minWidth: 0,
-                                overflow: 'hidden'
-                            }}>
-                                {tab.kind === 'users' || tab.kind === 'collection-users' ? (
-                                    <UsersView
-                                        selection={tab}
-                                        mode={tab.kind === 'collection-users' ? 'collection' : 'database'}
-                                        reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
-                                    />
-                                ) : (
-                                    <CollectionView
-                                        selection={tab}
-                                        reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
-                                    />
-                                )}
-                            </div>
-                        ))
+                        <div className="tab-panel-host">
+                            {contentTabs.map((tab) => (
+                                <div key={tab.id}
+                                     className={`tab-panel ${tab.id === activeTabId ? 'tab-panel-active' : ''}`}>
+                                    {tab.kind === 'users' || tab.kind === 'collection-users' ? (
+                                        <UsersView
+                                            selection={tab}
+                                            mode={tab.kind === 'collection-users' ? 'collection' : 'database'}
+                                            reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
+                                        />
+                                    ) : (
+                                        <CollectionView
+                                            selection={tab}
+                                            reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </main>
                 {dialogState.open && (

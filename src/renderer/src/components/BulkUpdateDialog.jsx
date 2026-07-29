@@ -3,6 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {parseShell} from '../lib/shellSyntax.js';
 import {reportError} from '../lib/errorBus.js';
+import {useClosing} from '../lib/useClosing.js';
 import i18n from '../i18n/index.js';
 
 const IDS_PLACEHOLDER = `[
@@ -56,6 +57,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
     const [applying, setApplying] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
+    const {closing, requestClose} = useClosing(onClose);
 
     const idsParsed = useMemo(() => {
         try {
@@ -119,7 +121,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
     }
 
     return (
-        <div className="modal-backdrop" onClick={onClose}>
+        <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
             <div className="modal wide" onClick={(e) => e.stopPropagation()}>
                 <h3>{t('dialogs.bulkUpdate.title')}</h3>
                 <div className="wizard-steps">
@@ -144,7 +146,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                         {!idsParsed.ok && <div className="error-banner">{idsParsed.error}</div>}
                         <div className="modal-actions">
                             <div className="spacer"/>
-                            <button onClick={onClose}>{t('dialogs.common.cancel')}</button>
+                            <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
                             <button className="primary" onClick={goToStep2} disabled={!idsParsed.ok}>{t('dialogs.bulkUpdate.continue')}</button>
                         </div>
                     </>
@@ -173,7 +175,7 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                         <div className="modal-actions">
                             <button onClick={() => setStep(1)} disabled={applying}>{t('dialogs.bulkUpdate.back')}</button>
                             <div className="spacer"/>
-                            <button onClick={onClose}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
+                            <button onClick={() => requestClose()}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
                             {!result && (
                                 <button className="primary" onClick={handleApply}
                                         disabled={!updateParsed.ok || applying}>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, {useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useClosing} from '../lib/useClosing.js';
 
 const EMPTY = {
   id: null,
@@ -31,6 +32,7 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
   const [form, setForm] = useState({ ...EMPTY, ...(initial || {}), ssh: { ...EMPTY.ssh, ...(initial?.ssh || {}) } });
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
+  const {closing, requestClose} = useClosing(onClose);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -57,11 +59,11 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    onSave(form);
+    requestClose(() => onSave(form));
   }
 
   return (
-      <div className="modal-backdrop" onClick={onClose}>
+      <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
           <h3>{initial ? t('dialogs.connection.editTitle') : t('dialogs.connection.newTitle')}</h3>
           <form onSubmit={handleSubmit}>
@@ -191,7 +193,7 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
                 {testing ? t('dialogs.connection.testing') : t('dialogs.connection.testConnection')}
               </button>
               <div className="spacer" />
-              <button type="button" onClick={onClose}>{t('dialogs.common.cancel')}</button>
+              <button type="button" onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
               <button type="submit" className="primary">{t('dialogs.common.save')}</button>
             </div>
           </form>

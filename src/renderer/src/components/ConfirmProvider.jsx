@@ -8,16 +8,19 @@ export function ConfirmProvider({ children }) {
     const { t } = useTranslation();
     const [state, setState] = useState(null);
     const resolverRef = useRef(null);
+    const stateTokenRef = useRef(0);
 
     const [promptState, setPromptState] = useState(null);
     const [promptValue, setPromptValue] = useState('');
     const promptResolverRef = useRef(null);
+    const promptTokenRef = useRef(0);
 
     const confirm = useCallback((message, opts = {}) => {
         if (resolverRef.current) {
             resolverRef.current(false);
             resolverRef.current = null;
         }
+        stateTokenRef.current += 1;
         return new Promise((resolve) => {
             resolverRef.current = resolve;
             setState({
@@ -31,11 +34,17 @@ export function ConfirmProvider({ children }) {
     }, [t]);
 
     function settle(result) {
-        setState(null);
-        if (resolverRef.current) {
-            resolverRef.current(result);
-            resolverRef.current = null;
-        }
+        if (!state || state.closing) return;
+        const token = stateTokenRef.current;
+        setState((s) => ({ ...s, closing: true }));
+        setTimeout(() => {
+            if (stateTokenRef.current !== token) return;
+            setState(null);
+            if (resolverRef.current) {
+                resolverRef.current(result);
+                resolverRef.current = null;
+            }
+        }, 150);
     }
 
     const prompt = useCallback((message, opts = {}) => {
@@ -43,6 +52,7 @@ export function ConfirmProvider({ children }) {
             promptResolverRef.current(null);
             promptResolverRef.current = null;
         }
+        promptTokenRef.current += 1;
         return new Promise((resolve) => {
             promptResolverRef.current = resolve;
             setPromptValue(opts.defaultValue || '');
@@ -57,11 +67,17 @@ export function ConfirmProvider({ children }) {
     }, [t]);
 
     function settlePrompt(result) {
-        setPromptState(null);
-        if (promptResolverRef.current) {
-            promptResolverRef.current(result);
-            promptResolverRef.current = null;
-        }
+        if (!promptState || promptState.closing) return;
+        const token = promptTokenRef.current;
+        setPromptState((s) => ({ ...s, closing: true }));
+        setTimeout(() => {
+            if (promptTokenRef.current !== token) return;
+            setPromptState(null);
+            if (promptResolverRef.current) {
+                promptResolverRef.current(result);
+                promptResolverRef.current = null;
+            }
+        }, 150);
     }
 
     return (
@@ -69,7 +85,7 @@ export function ConfirmProvider({ children }) {
             <PromptContext.Provider value={prompt}>
                 {children}
                 {state && (
-                    <div className="modal-backdrop confirm-backdrop" onClick={() => settle(false)}>
+                    <div className={`modal-backdrop confirm-backdrop ${state.closing ? 'is-closing' : ''}`} onClick={() => settle(false)}>
                         <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
                             <h3>{state.title}</h3>
                             <p className="confirm-message">{state.message}</p>
@@ -84,7 +100,7 @@ export function ConfirmProvider({ children }) {
                     </div>
                 )}
                 {promptState && (
-                    <div className="modal-backdrop confirm-backdrop" onClick={() => settlePrompt(null)}>
+                    <div className={`modal-backdrop confirm-backdrop ${promptState.closing ? 'is-closing' : ''}`} onClick={() => settlePrompt(null)}>
                         <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
                             <h3>{promptState.title}</h3>
                             <p className="confirm-message">{promptState.message}</p>

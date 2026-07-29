@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
+import { useClosing } from '../lib/useClosing.js';
 
 export default function CopyCollectionDialog({ source, openConnections, onClose, onCopied }) {
   const { t } = useTranslation();
+  const { closing, requestClose } = useClosing(onClose);
   const [targetConnId, setTargetConnId] = useState('');
   const [targetDbs, setTargetDbs] = useState([]);
   const [targetDb, setTargetDb] = useState('');
@@ -67,7 +69,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
       : (busy ? 100 : 0);
 
   return (
-      <div className="modal-backdrop" onClick={onClose}>
+      <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
         <div className="modal" onClick={(e) => e.stopPropagation()}>
           <h3>{t('dialogs.copyCollection.title')}</h3>
           <p className="hint-text">
@@ -119,7 +121,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
 
           <div className="modal-actions">
             <div className="spacer" />
-            <button onClick={onClose} disabled={busy}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
+            <button onClick={() => requestClose()} disabled={busy}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
             {!result && (
                 <button className="primary" onClick={handleCopy} disabled={busy || otherConnections.length === 0}>
                   {busy ? t('dialogs.copyCollection.copying') : t('dialogs.copyCollection.copy')}
