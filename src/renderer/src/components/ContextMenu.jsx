@@ -3,6 +3,7 @@ import React, {useEffect, useRef, useState} from 'react';
 export default function ContextMenu({ x, y, items, onClose }) {
   const ref = useRef(null);
   const [openSubmenu, setOpenSubmenu] = useState(null); // { index, x, y, left }
+  const [position, setPosition] = useState({ left: x, top: y, ready: false });
 
   useEffect(() => {
     function handleClick(e) {
@@ -19,17 +20,42 @@ export default function ContextMenu({ x, y, items, onClose }) {
     };
   }, [onClose]);
 
-  const style = { left: x, top: y };
+  useEffect(() => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const margin = 8;
+    let left = x;
+    let top = y;
+    if (left + rect.width > window.innerWidth - margin) {
+      left = Math.max(margin, window.innerWidth - rect.width - margin);
+    }
+    if (top + rect.height > window.innerHeight - margin) {
+      top = Math.max(margin, window.innerHeight - rect.height - margin);
+    }
+    setPosition({ left, top, ready: true });
+  }, [x, y, items]);
+
+  const style = { left: position.left, top: position.top, visibility: position.ready ? 'visible' : 'hidden' };
 
   function openSubmenuFor(index, e) {
     const rect = e.currentTarget.getBoundingClientRect();
     const submenuWidth = 190;
-    const overflowsRight = rect.right + submenuWidth > window.innerWidth;
+    const submenuHeight = item_submenuHeight(items[index]);
+    const margin = 8;
+    const overflowsRight = rect.right + submenuWidth > window.innerWidth - margin;
+    const overflowsBottom = rect.top + submenuHeight > window.innerHeight - margin;
     setOpenSubmenu({
       index,
-      top: rect.top,
+      top: overflowsBottom ? Math.max(margin, window.innerHeight - submenuHeight - margin) : rect.top,
       left: overflowsRight ? rect.left - submenuWidth : rect.right
     });
+  }
+
+  function item_submenuHeight(item) {
+    if (!item || !item.submenu) return 0;
+    const rowHeight = 30;
+    const sepHeight = 9;
+    return item.submenu.reduce((sum, sub) => sum + (sub.separator ? sepHeight : rowHeight), 10);
   }
 
   return (
