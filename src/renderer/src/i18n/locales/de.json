@@ -29,7 +29,8 @@
       "dropCollection": "Collection löschen",
       "dropDatabase": "Datenbank löschen",
       "delete": "Löschen",
-      "openShell": "Shell öffnen"
+      "openShell": "Shell öffnen",
+      "openGridfs": "GridFS-Browser öffnen"
     },
     "prompts": {
       "newDatabaseName": "Name der neuen Datenbank:",
@@ -66,7 +67,8 @@
     "tabLabel": {
       "users": "{{dbName}} Benutzer",
       "collectionUsers": "{{collection}} Benutzer",
-      "shell": "Shell: {{dbName}}"
+      "shell": "Shell: {{dbName}}",
+      "gridfs": "GridFS: {{dbName}}"
     }
   },
   "sidebar": {
@@ -89,7 +91,9 @@
       "cancel": "Abbrechen",
       "close": "Schließen",
       "save": "Speichern",
-      "back": "Zurück"
+      "back": "Zurück",
+      "create": "Erstellen",
+      "delete": "Löschen"
     },
     "confirm": {
       "defaultTitle": "Bitte bestätigen",
@@ -546,5 +550,20 @@
     "placeholder": "db.users.find({...})",
     "run": "Ausführen",
     "running": "Wird ausgeführt…"
+  },
+  "gridfs": {
+    "noBuckets": "Keine GridFS-Buckets gefunden",
+    "newBucket": "Neuer Bucket",
+    "upload": "Datei hochladen",
+    "uploading": "Wird hochgeladen…",
+    "download": "Herunterladen",
+    "selectBucketHint": "Wähle einen GridFS-Bucket aus oder lege einen neuen an.",
+    "noFiles": "Dieser Bucket enthält noch keine Dateien.",
+    "filename": "Dateiname",
+    "size": "Größe",
+    "uploadDate": "Hochgeladen",
+    "contentType": "Content-Type",
+    "deleteConfirm": "\"{{name}}\" löschen? Dies kann nicht rückgängig gemacht werden.",
+    "deleteConfirmTitle": "Datei löschen"
   }
 }

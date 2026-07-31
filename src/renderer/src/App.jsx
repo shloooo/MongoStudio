@@ -5,6 +5,7 @@ import ConnectionDialog from './components/ConnectionDialog.jsx';
 import CollectionView from './components/CollectionView.jsx';
 import UsersView from './components/UsersView.jsx';
 import ShellConsole from './components/ShellConsole.jsx';
+import GridFSBrowser from './components/GridFSBrowser.jsx';
 import TitleBar from './components/TitleBar.jsx';
 import VaultGate from './components/VaultGate.jsx';
 import SetupWizard from './components/SetupWizard.jsx';
@@ -202,6 +203,10 @@ export default function App() {
         openTab('shell', {connId, dbName, connLabel: getConnName(connId), shellLog: [], shellCmdHistory: []}, `shell:${connId}:${dbName}`);
     }
 
+    function handleOpenGridfs({connId, dbName}) {
+        openTab('gridfs', {connId, dbName, connLabel: getConnName(connId)}, `gridfs:${connId}:${dbName}`);
+    }
+
     function updateTab(tabId, patch) {
         setTabs((prev) => prev.map((t) => (t.id === tabId ? {...t, ...(typeof patch === 'function' ? patch(t) : patch)} : t)));
     }
@@ -332,6 +337,7 @@ export default function App() {
                 },
                 {label: t('app.menu.manageUsers'), onClick: () => handleOpenDatabaseUsers(target)},
                 {label: t('app.menu.openShell'), onClick: () => handleOpenShell(target)},
+                {label: t('app.menu.openGridfs'), onClick: () => handleOpenGridfs(target)},
                 {separator: true},
                 {
                     label: t('app.menu.exportJson'),
@@ -468,6 +474,8 @@ export default function App() {
                 return t('app.tabLabel.collectionUsers', {collection: tab.collection});
             case 'shell':
                 return t('app.tabLabel.shell', {dbName: tab.dbName});
+            case 'gridfs':
+                return t('app.tabLabel.gridfs', {dbName: tab.dbName});
             default:
                 return tab.collection || tab.dbName;
         }
@@ -483,6 +491,8 @@ export default function App() {
                 return `${connName} / ${tab.dbName} / ${tab.collection} / users`;
             case 'shell':
                 return `${connName} / ${tab.dbName} / shell`;
+            case 'gridfs':
+                return `${connName} / ${tab.dbName} / gridfs`;
             default:
                 return `${connName} / ${tab.dbName} / ${tab.collection}`;
         }
@@ -581,6 +591,8 @@ export default function App() {
                                             cmdHistory={tab.shellCmdHistory || []}
                                             onCmdHistoryChange={(updater) => updateTab(tab.id, (t) => ({shellCmdHistory: updater(t.shellCmdHistory || [])}))}
                                         />
+                                    ) : tab.kind === 'gridfs' ? (
+                                        <GridFSBrowser selection={tab}/>
                                     ) : (
                                         <CollectionView
                                             selection={tab}

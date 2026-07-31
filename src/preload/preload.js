@@ -102,6 +102,12 @@ contextBridge.exposeInMainWorld('api', {
         historyClear: (args) => ipcRenderer.invoke('data:history:clear', args),
         historyUndo: (args) => ipcRenderer.invoke('data:history:undo', args),
         shellExec: (args) => ipcRenderer.invoke('data:shell:exec', args),
+        gridfsListBuckets: (args) => ipcRenderer.invoke('data:gridfs:listBuckets', args),
+        gridfsListFiles: (args) => ipcRenderer.invoke('data:gridfs:listFiles', args),
+        gridfsUpload: (args) => ipcRenderer.invoke('data:gridfs:upload', args),
+        gridfsDownload: (args) => ipcRenderer.invoke('data:gridfs:download', args),
+        gridfsDelete: (args) => ipcRenderer.invoke('data:gridfs:delete', args),
+        gridfsCreateBucket: (args) => ipcRenderer.invoke('data:gridfs:createBucket', args),
         onCopyProgress: (cb) => {
             const listener = (event, payload) => cb(payload);
             ipcRenderer.on('data:copyProgress', listener);

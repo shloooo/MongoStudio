@@ -3012,6 +3012,21 @@ input[type="range"]:focus-visible {
     opacity: 0.5;
 }
 
+.tiny-btn-danger-outline {
+    color: var(--danger);
+    border-color: var(--danger-dim);
+    background: transparent;
+}
+
+.tiny-btn-danger-outline:hover:not(:disabled) {
+    background: var(--danger-dim);
+    color: var(--danger);
+}
+
+.tiny-btn-danger-outline:disabled {
+    opacity: 0.5;
+}
+
 .history-diff-header-row {
     display: grid;
     grid-template-columns: 140px 1fr 1fr;
@@ -3360,4 +3375,92 @@ input[type="range"]:focus-visible {
     background: var(--accent-dim);
     color: var(--accent);
     border-color: var(--accent);
+}
+
+.gridfs-browser {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    gap: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.gridfs-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gridfs-bucket-select {
+    background: var(--field-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 5px 8px;
+    font-size: 12.5px;
+    min-width: 140px;
+}
+
+.gridfs-new-bucket-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gridfs-new-bucket-row input {
+    max-width: 220px;
+}
+
+.gridfs-files-wrap {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.gridfs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    background: var(--well-bg);
+    border-radius: var(--radius-sm);
+}
+
+.gridfs-table th {
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-tertiary);
+    padding: 6px 10px;
+    position: sticky;
+    top: 0;
+    background: var(--well-bg);
+}
+
+.gridfs-table td {
+    padding: 6px 10px;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--glass-border);
+}
+
+.gridfs-filename-cell {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gridfs-actions-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
 }

@@ -671,6 +671,88 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     const result = await coll.insertMany(docs, {ordered: false});
     return {ok: true, insertedCount: result.insertedCount};
   });
+
+  ipcMain.handle('data:gridfs:listBuckets', async (event, {connId, dbName}) => {
+    const client = getClient(connId);
+    const collections = await client.db(dbName).listCollections().toArray();
+    const names = new Set(collections.map((c) => c.name));
+    const buckets = new Set<string>();
+    for (const name of names) {
+      if (name.endsWith('.files') && names.has(name.slice(0, -'.files'.length) + '.chunks')) {
+        buckets.add(name.slice(0, -'.files'.length));
+      }
+    }
+    return Array.from(buckets).sort();
+  });
+
+  ipcMain.handle('data:gridfs:listFiles', async (event, {connId, dbName, bucketName}) => {
+    const client = getClient(connId);
+    const filesColl = client.db(dbName).collection(`${bucketName}.files`);
+    const files = await filesColl.find({}).sort({uploadDate: -1}).limit(1000).toArray();
+    return EJSON.serialize(files);
+  });
+
+  ipcMain.handle('data:gridfs:upload', async (event, {connId, dbName, bucketName}) => {
+    const win = BrowserWindow.getFocusedWindow();
+    const {canceled, filePaths} = await dialog.showOpenDialog(win!, {properties: ['openFile']});
+    if (canceled || !filePaths.length) return {ok: false};
+    const filePath = filePaths[0];
+    const client = getClient(connId);
+    const {GridFSBucket} = await import('mongodb');
+    const bucket = new GridFSBucket(client.db(dbName), {bucketName});
+    const filename = path.basename(filePath);
+
+    await new Promise<void>((resolve, reject) => {
+      const readStream = fs.createReadStream(filePath);
+      const uploadStream = bucket.openUploadStream(filename);
+      readStream.pipe(uploadStream);
+      uploadStream.on('finish', () => resolve());
+      uploadStream.on('error', reject);
+      readStream.on('error', reject);
+    });
+
+    return {ok: true, filename};
+  });
+
+  ipcMain.handle('data:gridfs:download', async (event, {connId, dbName, bucketName, fileId, filename}) => {
+    const win = BrowserWindow.getFocusedWindow();
+    const {canceled, filePath} = await dialog.showSaveDialog(win!, {defaultPath: filename});
+    if (canceled || !filePath) return {ok: false};
+    const client = getClient(connId);
+    const {GridFSBucket} = await import('mongodb');
+    const bucket = new GridFSBucket(client.db(dbName), {bucketName});
+    const id = parseEjson(fileId);
+
+    await new Promise<void>((resolve, reject) => {
+      const writeStream = fs.createWriteStream(filePath);
+      const downloadStream = bucket.openDownloadStream(id);
+      downloadStream.pipe(writeStream);
+      writeStream.on('finish', () => resolve());
+      downloadStream.on('error', reject);
+      writeStream.on('error', reject);
+    });
+
+    return {ok: true, filePath};
+  });
+
+  ipcMain.handle('data:gridfs:delete', async (event, {connId, dbName, bucketName, fileId}) => {
+    const client = getClient(connId);
+    const {GridFSBucket} = await import('mongodb');
+    const bucket = new GridFSBucket(client.db(dbName), {bucketName});
+    const id = parseEjson(fileId);
+    await bucket.delete(id);
+    return {ok: true};
+  });
+
+  ipcMain.handle('data:gridfs:createBucket', async (event, {connId, dbName, bucketName}) => {
+    const client = getClient(connId);
+    const db = client.db(dbName);
+    // Creating an index on `.files` materializes the bucket, matching how
+    // mongosh/mongofiles bootstrap an empty GridFS bucket.
+    await db.collection(`${bucketName}.files`).createIndex({filename: 1, uploadDate: 1});
+    await db.collection(`${bucketName}.chunks`).createIndex({files_id: 1, n: 1}, {unique: true});
+    return {ok: true};
+  });
 }
 
 async function listAllUsers(client: any) {

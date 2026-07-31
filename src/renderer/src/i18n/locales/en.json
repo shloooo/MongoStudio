@@ -29,7 +29,8 @@
       "dropCollection": "Drop collection",
       "dropDatabase": "Drop database",
       "delete": "Delete",
-      "openShell": "Open Shell"
+      "openShell": "Open Shell",
+      "openGridfs": "Open GridFS Browser"
     },
     "prompts": {
       "newDatabaseName": "New database name:",
@@ -66,7 +67,8 @@
     "tabLabel": {
       "users": "{{dbName}} users",
       "collectionUsers": "{{collection}} users",
-      "shell": "Shell: {{dbName}}"
+      "shell": "Shell: {{dbName}}",
+      "gridfs": "GridFS: {{dbName}}"
     }
   },
   "sidebar": {
@@ -89,7 +91,9 @@
       "cancel": "Cancel",
       "close": "Close",
       "save": "Save",
-      "back": "Back"
+      "back": "Back",
+      "create": "Create",
+      "delete": "Delete"
     },
     "confirm": {
       "defaultTitle": "Please confirm",
@@ -546,5 +550,20 @@
     "placeholder": "db.users.find({...})",
     "run": "Run",
     "running": "Running…"
+  },
+  "gridfs": {
+    "noBuckets": "No GridFS buckets found",
+    "newBucket": "New Bucket",
+    "upload": "Upload File",
+    "uploading": "Uploading…",
+    "download": "Download",
+    "selectBucketHint": "Select or create a GridFS bucket to browse its files.",
+    "noFiles": "This bucket has no files yet.",
+    "filename": "Filename",
+    "size": "Size",
+    "uploadDate": "Uploaded",
+    "contentType": "Content Type",
+    "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone.",
+    "deleteConfirmTitle": "Delete File"
   }
 }
