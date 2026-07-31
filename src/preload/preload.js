@@ -101,6 +101,7 @@ contextBridge.exposeInMainWorld('api', {
         historyList: (args) => ipcRenderer.invoke('data:history:list', args),
         historyClear: (args) => ipcRenderer.invoke('data:history:clear', args),
         historyUndo: (args) => ipcRenderer.invoke('data:history:undo', args),
+        shellExec: (args) => ipcRenderer.invoke('data:shell:exec', args),
         onCopyProgress: (cb) => {
             const listener = (event, payload) => cb(payload);
             ipcRenderer.on('data:copyProgress', listener);

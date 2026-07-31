@@ -28,7 +28,8 @@
       "copyToConnection": "Copy to another connection",
       "dropCollection": "Drop collection",
       "dropDatabase": "Drop database",
-      "delete": "Delete"
+      "delete": "Delete",
+      "openShell": "Open Shell"
     },
     "prompts": {
       "newDatabaseName": "New database name:",
@@ -64,7 +65,8 @@
     },
     "tabLabel": {
       "users": "{{dbName}} users",
-      "collectionUsers": "{{collection}} users"
+      "collectionUsers": "{{collection}} users",
+      "shell": "Shell: {{dbName}}"
     }
   },
   "sidebar": {
@@ -530,5 +532,11 @@
     "next": "Next",
     "finish": "Get started",
     "finishing": "Setting up…"
+  },
+  "shellConsole": {
+    "hint": "Type a command like db.users.find({}) and press Enter.",
+    "placeholder": "db.users.find({...})",
+    "run": "Run",
+    "running": "Running…"
   }
 }

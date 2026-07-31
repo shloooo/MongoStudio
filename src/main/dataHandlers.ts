@@ -1,7 +1,7 @@
 import {EJSON} from 'bson';
 import fs from 'node:fs';
 import path from 'node:path';
-import {dialog, BrowserWindow, type IpcMain, type IpcMainInvokeEvent} from 'electron';
+import {BrowserWindow, dialog, type IpcMain, type IpcMainInvokeEvent} from 'electron';
 import {getClient} from './connectionManager.js';
 import type {Collection} from 'mongodb';
 import {
@@ -141,6 +141,118 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
       });
     }
     return {deletedCount: result.deletedCount};
+  });
+
+  ipcMain.handle('data:shell:exec', async (event, {connId, dbName, collection, root, chain}) => {
+    const client = getClient(connId);
+    const db = client.db(dbName);
+    const args = (root.args || []).map((a: any) => parseEjson(a));
+    const chainArgs = (chain || []).map((c: any) => ({
+      name: c.name,
+      args: (c.args || []).map((a: any) => parseEjson(a))
+    }));
+
+    function applyChain(cursor: any) {
+      for (const c of chainArgs) {
+        if (c.name === 'sort') cursor = cursor.sort(c.args[0] || {});
+        else if (c.name === 'limit') cursor = cursor.limit(Number(c.args[0]) || 0);
+        else if (c.name === 'skip') cursor = cursor.skip(Number(c.args[0]) || 0);
+        else if (c.name === 'projection') cursor = cursor.project(c.args[0] || {});
+        else throw new Error(`Unsupported chained method .${c.name}()`);
+      }
+      return cursor;
+    }
+
+    if (!collection) {
+      if (root.name === 'getCollectionNames') {
+        const cols = await db.listCollections().toArray();
+        return {type: 'value', value: cols.map((c) => c.name)};
+      }
+      if (root.name === 'stats') {
+        const stats = await db.stats();
+        return {type: 'value', value: EJSON.serialize(stats)};
+      }
+      throw new Error(`Unsupported db-level method "${root.name}"`);
+    }
+
+    const coll = db.collection(collection);
+
+    switch (root.name) {
+      case 'find': {
+        const cursor = applyChain(coll.find(args[0] || {}, {projection: args[1]}));
+        const docs = await cursor.limit(1000).toArray();
+        return {type: 'documents', value: EJSON.serialize(docs)};
+      }
+      case 'findOne': {
+        const doc = await coll.findOne(args[0] || {}, {projection: args[1]});
+        return {type: 'value', value: doc ? EJSON.serialize(doc) : null};
+      }
+      case 'insertOne': {
+        const result = await coll.insertOne(args[0]);
+        return {
+          type: 'value',
+          value: EJSON.serialize({insertedId: result.insertedId, acknowledged: result.acknowledged})
+        };
+      }
+      case 'insertMany': {
+        const result = await coll.insertMany(args[0] || []);
+        return {
+          type: 'value',
+          value: EJSON.serialize({insertedCount: result.insertedCount, insertedIds: result.insertedIds})
+        };
+      }
+      case 'updateOne': {
+        const result = await coll.updateOne(args[0] || {}, args[1] || {}, {upsert: !!args[2]?.upsert});
+        return {
+          type: 'value',
+          value: {
+            matchedCount: result.matchedCount,
+            modifiedCount: result.modifiedCount,
+            upsertedId: result.upsertedId ? EJSON.serialize(result.upsertedId) : null
+          }
+        };
+      }
+      case 'updateMany': {
+        const result = await coll.updateMany(args[0] || {}, args[1] || {}, {upsert: !!args[2]?.upsert});
+        return {type: 'value', value: {matchedCount: result.matchedCount, modifiedCount: result.modifiedCount}};
+      }
+      case 'deleteOne': {
+        const result = await coll.deleteOne(args[0] || {});
+        return {type: 'value', value: {deletedCount: result.deletedCount}};
+      }
+      case 'deleteMany': {
+        const result = await coll.deleteMany(args[0] || {});
+        return {type: 'value', value: {deletedCount: result.deletedCount}};
+      }
+      case 'countDocuments': {
+        const count = await coll.countDocuments(args[0] || {});
+        return {type: 'value', value: count};
+      }
+      case 'aggregate': {
+        if (!Array.isArray(args[0])) throw new Error('aggregate() expects a pipeline array');
+        const cursor = coll.aggregate(args[0], {allowDiskUse: true});
+        const docs = await cursor.limit(1000).toArray();
+        return {type: 'documents', value: EJSON.serialize(docs)};
+      }
+      case 'createIndex': {
+        const name = await coll.createIndex(args[0] || {}, args[1] || {});
+        return {type: 'value', value: name};
+      }
+      case 'getIndexes': {
+        const idx = await coll.indexes();
+        return {type: 'value', value: EJSON.serialize(idx)};
+      }
+      case 'drop': {
+        const result = await coll.drop();
+        return {type: 'value', value: result};
+      }
+      case 'distinct': {
+        const values = await coll.distinct(args[0], args[1] || {});
+        return {type: 'value', value: EJSON.serialize(values)};
+      }
+      default:
+        throw new Error(`Unsupported method "${root.name}"`);
+    }
   });
 
   ipcMain.handle('data:history:list', async (event, {connId, dbName, collection}) => {

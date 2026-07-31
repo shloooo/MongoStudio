@@ -126,7 +126,9 @@ select,
 .tree-key,
 .tree-summary,
 .dbref-ns,
-.json-editor {
+.json-editor,
+.shell-console-log,
+.shell-log-entry pre {
     user-select: text;
     -webkit-user-select: text;
 }
@@ -3127,4 +3129,151 @@ input[type="range"]:focus-visible {
 
 .history-diff-wrap > .history-diff {
     overflow: hidden;
+}
+.shell-console {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.shell-console-log {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--well-bg);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.shell-console-hint {
+    color: var(--text-tertiary);
+    font-size: 12.5px;
+    padding: 4px 0;
+}
+
+.shell-log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.shell-log-entry pre {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.shell-log-input pre {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.shell-log-output {
+    background: var(--field-bg);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+}
+
+.shell-log-output pre {
+    color: var(--text-secondary);
+}
+
+.shell-log-error pre {
+    color: var(--danger);
+}
+
+.shell-log-prompt {
+    font-family: var(--font-mono);
+    color: var(--text-tertiary);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.shell-log-prompt-noselect {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.shell-console-input-row .shell-log-prompt {
+    display: flex;
+    align-items: center;
+    height: 32px;
+}
+
+.shell-console-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.shell-console-input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--field-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    color: var(--text-primary);
+    resize: none;
+    min-height: 32px;
+    box-sizing: border-box;
+}
+
+.shell-run-btn {
+    height: 32px;
+    padding: 0 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shell-console-input-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+}
+
+.shell-autocomplete-dropdown {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0;
+    min-width: 180px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--glass-panel-strong);
+    backdrop-filter: blur(var(--glass-blur-lg)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(180%);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 50;
+    padding: 4px;
+}
+
+.shell-autocomplete-item {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.shell-autocomplete-item.is-active,
+.shell-autocomplete-item:hover {
+    background: var(--field-bg);
+    color: var(--text-primary);
 }

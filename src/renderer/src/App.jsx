@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar.jsx';
 import ConnectionDialog from './components/ConnectionDialog.jsx';
 import CollectionView from './components/CollectionView.jsx';
 import UsersView from './components/UsersView.jsx';
+import ShellConsole from './components/ShellConsole.jsx';
 import TitleBar from './components/TitleBar.jsx';
 import VaultGate from './components/VaultGate.jsx';
 import SetupWizard from './components/SetupWizard.jsx';
@@ -197,6 +198,10 @@ export default function App() {
         openTab('collection-users', {connId, dbName, collection}, `collection-users:${connId}:${dbName}:${collection}`);
     }
 
+    function handleOpenShell({connId, dbName}) {
+        openTab('shell', {connId, dbName, connLabel: getConnName(connId)}, `shell:${connId}:${dbName}`);
+    }
+
     function handleOpenSettings() {
         setTabs((prev) => {
             if (prev.some((t) => t.kind === 'settings')) return prev;
@@ -322,6 +327,7 @@ export default function App() {
                     }
                 },
                 {label: t('app.menu.manageUsers'), onClick: () => handleOpenDatabaseUsers(target)},
+                {label: t('app.menu.openShell'), onClick: () => handleOpenShell(target)},
                 {separator: true},
                 {
                     label: t('app.menu.exportJson'),
@@ -456,6 +462,8 @@ export default function App() {
                 return t('app.tabLabel.users', {dbName: tab.dbName});
             case 'collection-users':
                 return t('app.tabLabel.collectionUsers', {collection: tab.collection});
+            case 'shell':
+                return t('app.tabLabel.shell', {dbName: tab.dbName});
             default:
                 return tab.collection || tab.dbName;
         }
@@ -469,6 +477,8 @@ export default function App() {
                 return `${connName} / ${tab.dbName} / users`;
             case 'collection-users':
                 return `${connName} / ${tab.dbName} / ${tab.collection} / users`;
+            case 'shell':
+                return `${connName} / ${tab.dbName} / shell`;
             default:
                 return `${connName} / ${tab.dbName} / ${tab.collection}`;
         }
@@ -559,6 +569,8 @@ export default function App() {
                                             mode={tab.kind === 'collection-users' ? 'collection' : 'database'}
                                             reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
                                         />
+                                    ) : tab.kind === 'shell' ? (
+                                        <ShellConsole selection={tab}/>
                                     ) : (
                                         <CollectionView
                                             selection={tab}
