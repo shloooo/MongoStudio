@@ -181,7 +181,12 @@ export default function App() {
 
     function handleSelectCollection(selection) {
         const {connId, dbName, collection} = selection;
-        openTab('collection', {connId, dbName, collection}, `collection:${connId}:${dbName}:${collection}`);
+        openTab('collection', {
+            connId,
+            dbName,
+            collection,
+            connLabel: getConnName(connId)
+        }, `collection:${connId}:${dbName}:${collection}`);
     }
 
     function handleOpenDatabaseUsers({connId, dbName}) {

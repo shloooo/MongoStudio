@@ -7,6 +7,7 @@ import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '
 import DocumentEditor from './DocumentEditor.jsx';
 import ContextMenu from './ContextMenu.jsx';
 import BulkUpdateDialog from './BulkUpdateDialog.jsx';
+import CollectionHistoryDialog from './CollectionHistoryDialog.jsx';
 import {useConfirm} from './ConfirmProvider.jsx';
 import {reportError} from '../lib/errorBus.js';
 
@@ -159,6 +160,7 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
   const [rowContextMenu, setRowContextMenu] = useState(null);
   const [setValueField, setSetValueField] = useState(null);
   const [showBulkUpdate, setShowBulkUpdate] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [defaultEditorTab, setDefaultEditorTab] = useState('tree');
   const [multiColumnSort, setMultiColumnSort] = useState(false);
   const [hasExplicitSort, setHasExplicitSort] = useState(false);
@@ -281,7 +283,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
         connId: selection.connId,
         dbName: selection.dbName,
         collection: selection.collection,
-        filter: EJSON.stringify({ _id: id.value })
+        filter: EJSON.stringify({_id: id.value}),
+        connLabel: selection.connLabel
       });
     }
     runQuery();
@@ -295,7 +298,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
         connId: selection.connId,
         dbName: selection.dbName,
         collection: selection.collection,
-        filter: EJSON.stringify({ _id: doc._id })
+        filter: EJSON.stringify({_id: doc._id}),
+        connLabel: selection.connLabel
       });
       runQuery();
     } catch (err) {
@@ -392,7 +396,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
       dbName: selection.dbName,
       collection: selection.collection,
       filter: idFilter,
-      update: EJSON.stringify(update)
+      update: EJSON.stringify(update),
+      connLabel: selection.connLabel
     });
   }
 
@@ -417,7 +422,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
         connId: selection.connId,
         dbName: selection.dbName,
         collection: selection.collection,
-        doc: EJSON.stringify(value)
+        doc: EJSON.stringify(value),
+        connLabel: selection.connLabel
       });
     } else {
       const idFilter = EJSON.stringify({ _id: value._id });
@@ -428,7 +434,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
         dbName: selection.dbName,
         collection: selection.collection,
         filter: idFilter,
-        update: EJSON.stringify({ $set: update })
+        update: EJSON.stringify({$set: update}),
+        connLabel: selection.connLabel
       });
     }
     setModalDoc(null);
@@ -461,7 +468,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
       dbName: selection.dbName,
       collection: selection.collection,
       filter: EJSON.stringify(filterValue),
-      update: EJSON.stringify({$unset: {[field]: ''}})
+      update: EJSON.stringify({$unset: {[field]: ''}}),
+      connLabel: selection.connLabel
     });
     runQuery();
   }
@@ -473,7 +481,8 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
       dbName: selection.dbName,
       collection: selection.collection,
       filter: EJSON.stringify(filterValue),
-      update: EJSON.stringify({$set: {[field]: value}})
+      update: EJSON.stringify({$set: {[field]: value}}),
+      connLabel: selection.connLabel
     });
     setSetValueField(null);
     runQuery();
@@ -548,6 +557,7 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
           <div className="spacer"/>
           <button onClick={handleImport}>{t('documentsTab.import')}</button>
           <button onClick={() => setShowBulkUpdate(true)}>{t('documentsTab.bulkUpdate')}</button>
+          <button onClick={() => setShowHistory(true)}>{t('documentsTab.history')}</button>
           <button onClick={() => handleExport('json')}>{t('documentsTab.exportJson')}</button>
           <button onClick={() => handleExport('csv')}>{t('documentsTab.exportCsv')}</button>
         </div>
@@ -691,6 +701,13 @@ export default function DocumentsTab({ selection, reloadSignal, filterRequest })
                 selection={selection}
                 onClose={() => setShowBulkUpdate(false)}
                 onApplied={() => runQuery()}
+            />
+        )}
+        {showHistory && (
+            <CollectionHistoryDialog
+                selection={selection}
+                onClose={() => setShowHistory(false)}
+                onUndone={() => runQuery()}
             />
         )}
       </div>

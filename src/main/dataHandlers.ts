@@ -4,6 +4,14 @@ import path from 'node:path';
 import {dialog, BrowserWindow, type IpcMain, type IpcMainInvokeEvent} from 'electron';
 import {getClient} from './connectionManager.js';
 import type {Collection} from 'mongodb';
+import {
+  addHistoryEntry,
+  clearHistory,
+  getHistoryEntry,
+  listHistory,
+  markUndone,
+  serializeDocs
+} from './historyStore.js';
 
 function parseEjson(input: any): any {
   if (input === undefined || input === null || input === '') return {};
@@ -36,18 +44,41 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return EJSON.serialize(docs);
   });
 
-  ipcMain.handle('data:insertOne', async (event, {connId, dbName, collection, doc}) => {
+  ipcMain.handle('data:insertOne', async (event, {connId, dbName, collection, doc, connLabel, skipHistory}) => {
     const client = getClient(connId);
     const parsed = parseEjson(doc);
     const result = await client.db(dbName).collection(collection).insertOne(parsed);
+    const inserted = {...parsed, _id: result.insertedId};
+    if (!skipHistory) {
+      addHistoryEntry({
+        connId, connLabel, dbName, collection,
+        opType: 'insertOne',
+        summary: `Insert 1 document`,
+        before: [],
+        after: serializeDocs([inserted])
+      });
+    }
     return {insertedId: EJSON.serialize(result.insertedId)};
   });
 
-  ipcMain.handle('data:updateOne', async (event, {connId, dbName, collection, filter, update, upsert}) => {
+  ipcMain.handle('data:updateOne', async (event, {connId, dbName, collection, filter, update, upsert, connLabel, skipHistory}) => {
     const client = getClient(connId);
+    const coll = client.db(dbName).collection(collection);
     const q = parseEjson(filter);
     const u = parseEjson(update);
-    const result = await client.db(dbName).collection(collection).updateOne(q, u, {upsert: !!upsert});
+    const before = skipHistory ? [] : await coll.find(q).toArray();
+    const result = await coll.updateOne(q, u, {upsert: !!upsert});
+    if (!skipHistory && before.length) {
+      const ids = before.map((d: any) => d._id);
+      const after = await coll.find({_id: {$in: ids}}).toArray();
+      addHistoryEntry({
+        connId, connLabel, dbName, collection,
+        opType: 'updateOne',
+        summary: `Update 1 document`,
+        before: serializeDocs(before),
+        after: serializeDocs(after)
+      });
+    }
     return {
       matchedCount: result.matchedCount,
       modifiedCount: result.modifiedCount,
@@ -55,26 +86,121 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     };
   });
 
-  ipcMain.handle('data:updateMany', async (event, {connId, dbName, collection, filter, update, upsert}) => {
+  ipcMain.handle('data:updateMany', async (event, {connId, dbName, collection, filter, update, upsert, connLabel, skipHistory}) => {
     const client = getClient(connId);
+    const coll = client.db(dbName).collection(collection);
     const q = parseEjson(filter);
     const u = parseEjson(update);
-    const result = await client.db(dbName).collection(collection).updateMany(q, u, {upsert: !!upsert});
+    const before = skipHistory ? [] : await coll.find(q).limit(2000).toArray();
+    const result = await coll.updateMany(q, u, {upsert: !!upsert});
+    if (!skipHistory && before.length) {
+      const ids = before.map((d: any) => d._id);
+      const after = await coll.find({_id: {$in: ids}}).toArray();
+      addHistoryEntry({
+        connId, connLabel, dbName, collection,
+        opType: 'updateMany',
+        summary: `Update ${before.length} document(s)`,
+        before: serializeDocs(before),
+        after: serializeDocs(after)
+      });
+    }
     return {matchedCount: result.matchedCount, modifiedCount: result.modifiedCount};
   });
 
-  ipcMain.handle('data:deleteOne', async (event, {connId, dbName, collection, filter}) => {
+  ipcMain.handle('data:deleteOne', async (event, {connId, dbName, collection, filter, connLabel, skipHistory}) => {
     const client = getClient(connId);
+    const coll = client.db(dbName).collection(collection);
     const q = parseEjson(filter);
-    const result = await client.db(dbName).collection(collection).deleteOne(q);
+    const before = skipHistory ? [] : await coll.find(q).limit(1).toArray();
+    const result = await coll.deleteOne(q);
+    if (!skipHistory && before.length) {
+      addHistoryEntry({
+        connId, connLabel, dbName, collection,
+        opType: 'deleteOne',
+        summary: `Delete 1 document`,
+        before: serializeDocs(before),
+        after: []
+      });
+    }
     return {deletedCount: result.deletedCount};
   });
 
-  ipcMain.handle('data:deleteMany', async (event, {connId, dbName, collection, filter}) => {
+  ipcMain.handle('data:deleteMany', async (event, {connId, dbName, collection, filter, connLabel, skipHistory}) => {
     const client = getClient(connId);
+    const coll = client.db(dbName).collection(collection);
     const q = parseEjson(filter);
-    const result = await client.db(dbName).collection(collection).deleteMany(q);
+    const before = skipHistory ? [] : await coll.find(q).limit(2000).toArray();
+    const result = await coll.deleteMany(q);
+    if (!skipHistory && before.length) {
+      addHistoryEntry({
+        connId, connLabel, dbName, collection,
+        opType: 'deleteMany',
+        summary: `Delete ${before.length} document(s)`,
+        before: serializeDocs(before),
+        after: []
+      });
+    }
     return {deletedCount: result.deletedCount};
+  });
+
+  ipcMain.handle('data:history:list', async (event, {connId, dbName, collection}) => {
+    return listHistory(connId, dbName, collection);
+  });
+
+  ipcMain.handle('data:history:clear', async (event, {connId, dbName, collection}) => {
+    clearHistory(connId, dbName, collection);
+    return true;
+  });
+
+  ipcMain.handle('data:history:undo', async (event, {historyId}) => {
+    const entry = getHistoryEntry(historyId);
+    if (!entry) throw new Error('History entry not found');
+    if (entry.undone) throw new Error('This change was already undone');
+
+    const client = getClient(entry.connId);
+    const coll = client.db(entry.dbName).collection(entry.collection);
+    const before = entry.before.map((d: any) => EJSON.deserialize(d));
+    const after = entry.after.map((d: any) => EJSON.deserialize(d));
+
+    if (entry.opType === 'insertOne') {
+      for (const doc of after) {
+        await coll.deleteOne({_id: doc._id});
+      }
+    } else if (entry.opType === 'deleteOne' || entry.opType === 'deleteMany') {
+      for (const doc of before) {
+        await coll.replaceOne({_id: doc._id}, doc, {upsert: true});
+      }
+    } else if (entry.opType === 'updateOne' || entry.opType === 'updateMany') {
+      // Only revert the fields that actually changed, so any unrelated edits
+      // made by someone else after this history entry are preserved.
+      const afterById = new Map(after.map((d: any) => [String(d._id), d]));
+      for (const beforeDoc of before) {
+        const afterDoc = afterById.get(String(beforeDoc._id));
+        if (!afterDoc) continue;
+        const set: Record<string, any> = {};
+        const unset: Record<string, ''> = {};
+        const fields = new Set([...Object.keys(beforeDoc), ...Object.keys(afterDoc)]);
+        for (const field of fields) {
+          if (field === '_id') continue;
+          const hadBefore = Object.prototype.hasOwnProperty.call(beforeDoc, field);
+          const hasAfter = Object.prototype.hasOwnProperty.call(afterDoc, field);
+          const beforeVal = hadBefore ? beforeDoc[field] : undefined;
+          const afterVal = hasAfter ? afterDoc[field] : undefined;
+          if (JSON.stringify(EJSON.serialize({v: beforeVal})) === JSON.stringify(EJSON.serialize({v: afterVal}))) continue;
+          if (hadBefore) set[field] = beforeVal;
+          else unset[field] = '';
+        }
+        const updateDoc: Record<string, any> = {};
+        if (Object.keys(set).length) updateDoc.$set = set;
+        if (Object.keys(unset).length) updateDoc.$unset = unset;
+        if (Object.keys(updateDoc).length) {
+          await coll.updateOne({_id: beforeDoc._id}, updateDoc);
+        }
+      }
+    }
+
+    markUndone(historyId);
+    return {ok: true};
   });
 
   ipcMain.handle('data:createCollection', async (event, {connId, dbName, collection}) => {

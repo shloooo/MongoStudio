@@ -244,6 +244,29 @@
       "errorWithSource": "Fehler · {{source}}",
       "error": "Fehler",
       "dismiss": "Verwerfen"
+    },
+    "history": {
+      "title": "Collection-Verlauf",
+      "empty": "Noch keine erfassten Änderungen.",
+      "opInsertOne": "Einfügen",
+      "opUpdateOne": "Aktualisierung",
+      "opUpdateMany": "Massen-Update",
+      "opDeleteOne": "Löschen",
+      "opDeleteMany": "Massen-Löschung",
+      "undo": "Rückgängig",
+      "undone": "Rückgängig gemacht",
+      "undoConfirm": "Diese Änderung rückgängig machen? Der vorherige Dokumentzustand wird wiederhergestellt.",
+      "undoConfirmTitle": "Änderung rückgängig machen",
+      "undoing": "Wird rückgängig gemacht…",
+      "clearAll": "Verlauf löschen",
+      "clearAllConfirm": "Den gesamten Verlauf für diese Collection löschen? Dies kann nicht rückgängig gemacht werden und betrifft nicht die eigentlichen Daten.",
+      "clearAllConfirmTitle": "Verlauf löschen",
+      "viewDiff": "Änderungen anzeigen",
+      "before": "Vorher",
+      "after": "Nachher",
+      "close": "Schließen",
+      "field": "Feld",
+      "onlyChanged": "Nur geänderte Felder"
     }
   },
   "aggregationTab": {
@@ -369,7 +392,8 @@
     "selectPlaceholder": "Auswählen..",
     "apply": "Anwenden",
     "applying": "Wende an..",
-    "sortByField": "Nach {{field}} sortieren"
+    "sortByField": "Nach {{field}} sortieren",
+    "history": "Verlauf"
   },
   "usersView": {
     "breadcrumb": "Benutzer"
@@ -465,6 +489,10 @@
       "version": "Version",
       "git": "Git",
       "unknown": "unbekannt"
+    },
+    "history": {
+      "heading": "Verlauf",
+      "onlyChangedByDefault": "Standardmäßig nur geänderte Felder anzeigen"
     }
   },
   "setup": {

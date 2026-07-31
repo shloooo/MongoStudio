@@ -230,7 +230,7 @@
     },
     "errorBoundary": {
       "heading": "Something went wrong",
-      "subtext": "An unexpected error crashed the app. Your data is safe — you can restart the app.",
+      "subtext": "An unexpected error crashed MongoStudio",
       "errorLabel": "Error message",
       "detailsToggle": "Technical details",
       "versionLabel": "Version",
@@ -244,6 +244,29 @@
       "errorWithSource": "Error · {{source}}",
       "error": "Error",
       "dismiss": "Dismiss"
+    },
+    "history": {
+      "title": "Collection History",
+      "empty": "No recorded changes yet.",
+      "opInsertOne": "Insert",
+      "opUpdateOne": "Update",
+      "opUpdateMany": "Bulk Update",
+      "opDeleteOne": "Delete",
+      "opDeleteMany": "Bulk Delete",
+      "undo": "Undo",
+      "undone": "Undone",
+      "undoConfirm": "Undo this change? This will restore the previous document state.",
+      "undoConfirmTitle": "Undo Change",
+      "undoing": "Undoing…",
+      "clearAll": "Clear History",
+      "clearAllConfirm": "Clear the entire history for this collection? This cannot be undone and will not affect the data itself.",
+      "clearAllConfirmTitle": "Clear History",
+      "viewDiff": "View changes",
+      "before": "Before",
+      "after": "After",
+      "close": "Close",
+      "field": "Field",
+      "onlyChanged": "Only changed fields"
     }
   },
   "aggregationTab": {
@@ -369,7 +392,8 @@
     "selectPlaceholder": "Select..",
     "apply": "Apply",
     "applying": "Applying..",
-    "sortByField": "Sort by {{field}}"
+    "sortByField": "Sort by {{field}}",
+    "history": "History"
   },
   "usersView": {
     "breadcrumb": "Users"
@@ -465,6 +489,10 @@
       "version": "Version",
       "git": "Git",
       "unknown": "unknown"
+    },
+    "history": {
+      "heading": "History",
+      "onlyChangedByDefault": "Show only changed fields by default"
     }
   },
   "setup": {

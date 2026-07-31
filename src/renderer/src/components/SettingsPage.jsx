@@ -86,6 +86,11 @@ export default function SettingsPage({connections, onImported}) {
         setSettings(next);
     }
 
+    async function updateShowHistoryChangesOnly(value) {
+        const next = await window.api.settings.set('showHistoryChangesOnly', value);
+        setSettings(next);
+    }
+
     function resetForm() {
         setMode(null);
         setCurrentPw('');
@@ -234,6 +239,15 @@ export default function SettingsPage({connections, onImported}) {
                         <span className="settings-row-label">{t('settings.documentsTable.multiColumnSort')}</span>
                         <input type="checkbox" checked={!!settings.multiColumnSort}
                                onChange={(e) => updateMultiColumnSort(e.target.checked)}/>
+                    </div>
+                </div>
+
+                <div className="settings-section">
+                    <h3><i className="fa-solid fa-clock-rotate-left"/> {t('settings.history.heading')}</h3>
+                    <div className="settings-row">
+                        <span className="settings-row-label">{t('settings.history.onlyChangedByDefault')}</span>
+                        <input type="checkbox" checked={!!settings.showHistoryChangesOnly}
+                               onChange={(e) => updateShowHistoryChangesOnly(e.target.checked)}/>
                     </div>
                 </div>
 

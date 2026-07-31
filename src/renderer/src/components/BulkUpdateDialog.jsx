@@ -109,7 +109,8 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                 dbName: selection.dbName,
                 collection: selection.collection,
                 filter: EJSON.stringify({_id: {$in: ids}}),
-                update: EJSON.stringify(updateDoc)
+                update: EJSON.stringify(updateDoc),
+                connLabel: selection.connLabel
             });
             setResult(res);
             if (onApplied) onApplied();
