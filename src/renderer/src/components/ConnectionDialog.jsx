@@ -2,10 +2,28 @@ import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useClosing} from '../lib/useClosing.js';
 
+export const CONNECTION_COLORS = [
+  {value: '', label: 'none'},
+  {value: 'red', hex: '#e5484d'},
+  {value: 'orange', hex: '#f2994a'},
+  {value: 'yellow', hex: '#e6c229'},
+  {value: 'green', hex: '#2e7d46'},
+  {value: 'teal', hex: '#1aa38f'},
+  {value: 'blue', hex: '#3b82f6'},
+  {value: 'purple', hex: '#8b5cf6'},
+  {value: 'pink', hex: '#ec4899'}
+];
+
+const TAG_SUGGESTIONS = ['Production', 'Staging', 'Development'];
+
 const EMPTY = {
   id: null,
   name: '',
+  tag: '',
+  color: '',
+  showOrganization: false,
   mode: 'basic',
+  useAuth: true,
   uri: '',
   host: 'localhost',
   port: 27017,
@@ -29,7 +47,16 @@ const EMPTY = {
 
 export default function ConnectionDialog({ initial, onSave, onClose }) {
   const { t } = useTranslation();
-  const [form, setForm] = useState({ ...EMPTY, ...(initial || {}), ssh: { ...EMPTY.ssh, ...(initial?.ssh || {}) } });
+  const initialUseAuth = initial && Object.prototype.hasOwnProperty.call(initial, 'useAuth')
+      ? initial.useAuth
+      : !!(initial?.username);
+  const [form, setForm] = useState({
+    ...EMPTY,
+    ...(initial || {}),
+    useAuth: initial ? initialUseAuth : EMPTY.useAuth,
+    showOrganization: !!(initial?.tag || initial?.color),
+    ssh: { ...EMPTY.ssh, ...(initial?.ssh || {}) }
+  });
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
   const {closing, requestClose} = useClosing(onClose);
@@ -59,7 +86,9 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    requestClose(() => onSave(form));
+    const {showOrganization, ...rest} = form;
+    const toSave = rest.useAuth ? rest : {...rest, username: '', password: ''};
+    requestClose(() => onSave(toSave));
   }
 
   return (
@@ -102,26 +131,28 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
                       <input type="number" value={form.port} onChange={(e) => update('port', Number(e.target.value))} />
                     </div>
                   </div>
-                  <div className="row">
-                    <div>
-                      <label>{t('dialogs.connection.username')}</label>
-                      <input value={form.username} onChange={(e) => update('username', e.target.value)} />
-                    </div>
-                    <div>
-                      <label>{t('dialogs.connection.password')}</label>
-                      <input type="password" value={form.password} onChange={(e) => update('password', e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div>
-                      <label>{t('dialogs.connection.authSource')}</label>
-                      <input value={form.authSource} onChange={(e) => update('authSource', e.target.value)} />
-                    </div>
-                    <div>
-                      <label>{t('dialogs.connection.replicaSet')}</label>
-                      <input value={form.replicaSet} onChange={(e) => update('replicaSet', e.target.value)} />
-                    </div>
-                  </div>
+                  <label className="section-toggle">
+                    <input type="checkbox" checked={form.useAuth} onChange={(e) => update('useAuth', e.target.checked)} />
+                    {t('dialogs.connection.useAuthToggle')}
+                  </label>
+                  {form.useAuth && (
+                      <>
+                        <div className="row">
+                          <div>
+                            <label>{t('dialogs.connection.username')}</label>
+                            <input value={form.username} onChange={(e) => update('username', e.target.value)} />
+                          </div>
+                          <div>
+                            <label>{t('dialogs.connection.password')}</label>
+                            <input type="password" value={form.password} onChange={(e) => update('password', e.target.value)} />
+                          </div>
+                        </div>
+                        <label>{t('dialogs.connection.authSource')}</label>
+                        <input value={form.authSource} onChange={(e) => update('authSource', e.target.value)} />
+                      </>
+                  )}
+                  <label>{t('dialogs.connection.replicaSet')}</label>
+                  <input value={form.replicaSet} onChange={(e) => update('replicaSet', e.target.value)} />
                   <div className="row checkboxes">
                     <label><input type="checkbox" checked={form.srv} onChange={(e) => update('srv', e.target.checked)} /> {t('dialogs.connection.srv')}</label>
                     <label><input type="checkbox" checked={form.tls} onChange={(e) => update('tls', e.target.checked)} /> {t('dialogs.connection.tls')}</label>
@@ -179,6 +210,56 @@ export default function ConnectionDialog({ initial, onSave, onClose }) {
                       </>
                   )}
                   <p className="hint-text">{t('dialogs.connection.sshHint')}</p>
+                </div>
+            )}
+
+            <div className="section-divider" />
+
+            <label className="section-toggle">
+              <input
+                  type="checkbox"
+                  checked={form.showOrganization}
+                  onChange={(e) => update('showOrganization', e.target.checked)}
+              />
+              {t('dialogs.connection.organizationToggle')}
+            </label>
+
+            {form.showOrganization && (
+                <div className="organization-section">
+                  <label>{t('dialogs.connection.tag')}</label>
+                  <input
+                      value={form.tag}
+                      onChange={(e) => update('tag', e.target.value)}
+                      placeholder={t('dialogs.connection.tagPlaceholder')}
+                  />
+                  <div className="tag-suggestion-row">
+                    {TAG_SUGGESTIONS.map((s) => (
+                        <button
+                            key={s}
+                            type="button"
+                            className={`tag-suggestion-chip ${form.tag === s ? 'is-selected' : ''}`}
+                            onClick={() => update('tag', s)}
+                        >
+                          {s}
+                        </button>
+                    ))}
+                  </div>
+
+                  <label>{t('dialogs.connection.color')}</label>
+                  <div className="connection-color-picker">
+                    {CONNECTION_COLORS.map((c) => (
+                        <button
+                            key={c.value || 'none'}
+                            type="button"
+                            className={`connection-color-swatch ${form.color === c.value ? 'is-selected' : ''} ${!c.value ? 'is-none' : ''}`}
+                            style={c.hex ? {backgroundColor: c.hex} : undefined}
+                            title={c.value || t('dialogs.connection.colorNone')}
+                            onClick={() => update('color', c.value)}
+                        >
+                          {!c.value && <i className="fa-solid fa-slash"/>}
+                        </button>
+                    ))}
+                  </div>
                 </div>
             )}
 

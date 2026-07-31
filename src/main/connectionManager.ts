@@ -6,6 +6,9 @@ import type SecureStore from './secureStore.js';
 
 export interface ConnectionConfig {
     id: string;
+    name?: string;
+    tag?: string;
+    color?: string;
     uri?: string;
     host?: string;
     port?: number;

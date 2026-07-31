@@ -129,7 +129,13 @@
       "testConnection": "Test Connection",
       "testing": "Testing..",
       "testSuccess": "Connection successful",
-      "testError": "Error: {{error}}"
+      "testError": "Error: {{error}}",
+      "tag": "Tag",
+      "tagPlaceholder": "e.g. Production, Staging",
+      "color": "Color",
+      "colorNone": "No color",
+      "useAuthToggle": "Use authentication",
+      "organizationToggle": "Tag & color"
     },
     "copyCollection": {
       "title": "Copy Collection",

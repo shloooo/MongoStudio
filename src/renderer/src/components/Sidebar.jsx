@@ -2,6 +2,12 @@ import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useConfirm} from './ConfirmProvider.jsx';
 import {filterVisibleCollections} from '../lib/systemNamespaces.js';
+import {CONNECTION_COLORS} from './ConnectionDialog.jsx';
+
+function connectionColorHex(color) {
+    const found = CONNECTION_COLORS.find((c) => c.value === color);
+    return found?.hex;
+}
 
 function sortCollections(collections, dbName) {
     return filterVisibleCollections(dbName, collections).sort((a, b) => a.name.localeCompare(b.name));
@@ -163,7 +169,11 @@ function ConnectionNode({
                  }}>
                 <i className={`fa-solid fa-chevron-right twisty ${isOpen && expanded ? 'is-expanded' : ''}`} onClick={toggleExpand}/>
                 <span className={`conn-dot ${isOpen ? 'online' : 'offline'}`}/>
+                {conn.color && (
+                    <span className="conn-color-dot" style={{backgroundColor: connectionColorHex(conn.color)}}/>
+                )}
                 <span className="conn-name" onClick={toggleExpand}>{conn.name}</span>
+                {conn.tag && <span className="conn-tag-badge">{conn.tag}</span>}
                 <span className="row-actions">
           <button title={isOpen ? t('sidebar.disconnect') : t('sidebar.connect')} onClick={() => onToggle(conn)}>
                         <i className={`fa-solid ${isOpen ? 'fa-plug-circle-xmark' : 'fa-plug'}`}/>
