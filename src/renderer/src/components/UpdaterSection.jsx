@@ -87,8 +87,12 @@ export default function UpdaterSection() {
         setErrorMessage('');
         const result = await window.api.updater.check();
         if (!result.ok) {
-            setPhase('error');
-            setErrorMessage(result.error);
+            if (result.error.startsWith('No published versions on')) {
+                setPhase('not-available');
+            } else {
+                setPhase('error');
+                setErrorMessage(result.error);
+            }
         }
     }
 
