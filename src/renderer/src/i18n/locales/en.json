@@ -496,7 +496,7 @@
     },
     "history": {
       "heading": "History",
-      "onlyChangedByDefault": "Show only changed fields by default"
+      "showOnlyChanges": "Show only changed fields"
     }
   },
   "setup": {

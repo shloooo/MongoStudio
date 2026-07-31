@@ -496,7 +496,7 @@
     },
     "history": {
       "heading": "Verlauf",
-      "onlyChangedByDefault": "Standardmäßig nur geänderte Felder anzeigen"
+      "showOnlyChanges": "Nur geänderte Felder anzeigen"
     }
   },
   "setup": {

@@ -245,7 +245,7 @@ export default function SettingsPage({connections, onImported}) {
                 <div className="settings-section">
                     <h3><i className="fa-solid fa-clock-rotate-left"/> {t('settings.history.heading')}</h3>
                     <div className="settings-row">
-                        <span className="settings-row-label">{t('settings.history.onlyChangedByDefault')}</span>
+                        <span className="settings-row-label">{t('settings.history.showOnlyChanges')}</span>
                         <input type="checkbox" checked={!!settings.showHistoryChangesOnly}
                                onChange={(e) => updateShowHistoryChangesOnly(e.target.checked)}/>
                     </div>
