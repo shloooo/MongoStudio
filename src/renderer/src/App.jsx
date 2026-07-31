@@ -199,7 +199,11 @@ export default function App() {
     }
 
     function handleOpenShell({connId, dbName}) {
-        openTab('shell', {connId, dbName, connLabel: getConnName(connId)}, `shell:${connId}:${dbName}`);
+        openTab('shell', {connId, dbName, connLabel: getConnName(connId), shellLog: [], shellCmdHistory: []}, `shell:${connId}:${dbName}`);
+    }
+
+    function updateTab(tabId, patch) {
+        setTabs((prev) => prev.map((t) => (t.id === tabId ? {...t, ...(typeof patch === 'function' ? patch(t) : patch)} : t)));
     }
 
     function handleOpenSettings() {
@@ -570,7 +574,13 @@ export default function App() {
                                             reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
                                         />
                                     ) : tab.kind === 'shell' ? (
-                                        <ShellConsole selection={tab}/>
+                                        <ShellConsole
+                                            selection={tab}
+                                            log={tab.shellLog || []}
+                                            onLogChange={(updater) => updateTab(tab.id, (t) => ({shellLog: updater(t.shellLog || [])}))}
+                                            cmdHistory={tab.shellCmdHistory || []}
+                                            onCmdHistoryChange={(updater) => updateTab(tab.id, (t) => ({shellCmdHistory: updater(t.shellCmdHistory || [])}))}
+                                        />
                                     ) : (
                                         <CollectionView
                                             selection={tab}

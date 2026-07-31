@@ -27,12 +27,10 @@ function formatResult(result) {
 
 const HISTORY_LIMIT = 200;
 
-export default function ShellConsole({selection}) {
+export default function ShellConsole({selection, log, onLogChange, cmdHistory, onCmdHistoryChange}) {
     const {t} = useTranslation();
-    const [log, setLog] = useState([]);
     const [input, setInput] = useState('');
     const [running, setRunning] = useState(false);
-    const [cmdHistory, setCmdHistory] = useState([]);
     const [historyPos, setHistoryPos] = useState(-1);
     const [collectionNames, setCollectionNames] = useState([]);
     const [suggestion, setSuggestion] = useState(null); // {prefix, replaceFrom, options, activeIndex}
@@ -82,8 +80,8 @@ export default function ShellConsole({selection}) {
         const line = raw.trim();
         if (!line) return;
 
-        setLog((prev) => [...prev, {type: 'input', text: line}]);
-        setCmdHistory((prev) => {
+        onLogChange((prev) => [...prev, {type: 'input', text: line}]);
+        onCmdHistoryChange((prev) => {
             const next = [...prev, line];
             return next.length > HISTORY_LIMIT ? next.slice(next.length - HISTORY_LIMIT) : next;
         });
@@ -102,9 +100,9 @@ export default function ShellConsole({selection}) {
                 chain: parsed.chain.map((c) => ({name: c.name, args: serializeArgsForTransport(c.args)}))
             });
             const text = formatResult(result);
-            setLog((prev) => [...prev, {type: 'output', text}]);
+            onLogChange((prev) => [...prev, {type: 'output', text}]);
         } catch (err) {
-            setLog((prev) => [...prev, {type: 'error', text: err.message}]);
+            onLogChange((prev) => [...prev, {type: 'error', text: err.message}]);
         } finally {
             setRunning(false);
         }
