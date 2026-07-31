@@ -406,19 +406,21 @@
     "refresh": "Refresh",
     "createUser": "+ Create user",
     "loading": "Loading..",
-    "emptyCollection": "No user has explicit privileges on {{path}}.",
-    "emptyDatabase": "No users are defined on \"{{dbName}}\".",
-    "colUser": "User",
-    "colAuthDb": "Auth DB",
-    "colRoles": "Roles",
-    "colGranted": "Granted on",
-    "colActions": "Allowed actions",
-    "colMechanisms": "Mechanisms",
+    "emptyCollection": "No user has explicit privileges on {{path}}",
+    "emptyDatabase": "No users were found in \"{{dbName}}\"",
     "editUser": "Edit user",
-    "noRoles": "no roles",
+    "noRoles": "No roles",
     "wildcardHint": "Wildcard - also covers collections created later",
     "moreCount": "+{{count}} more",
-    "showLess": "show less"
+    "showLess": "Show less",
+    "col": {
+      "user": "User",
+      "auth-db": "Auth DB",
+      "roles": "Roles",
+      "granted": "Granted on",
+      "actions": "Allowed actions",
+      "mechanisms": "Mechanisms"
+    }
   },
   "settings": {
     "title": "Settings",

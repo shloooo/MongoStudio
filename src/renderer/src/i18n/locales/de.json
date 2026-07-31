@@ -406,19 +406,21 @@
     "refresh": "Aktualisieren",
     "createUser": "+ Benutzer erstellen",
     "loading": "Lädt..",
-    "emptyCollection": "Kein Benutzer hat explizite Berechtigungen auf {{path}}.",
-    "emptyDatabase": "Auf \"{{dbName}}\" sind keine Benutzer definiert.",
-    "colUser": "Benutzer",
-    "colAuthDb": "Auth-DB",
-    "colRoles": "Rollen",
-    "colGranted": "Erteilt für",
-    "colActions": "Erlaubte Aktionen",
-    "colMechanisms": "Mechanismen",
+    "emptyCollection": "Kein Benutzer hat explizite Berechtigungen auf {{path}}",
+    "emptyDatabase": "Es konnten keine Benutzer in \"{{dbName}}\" gefunden werden",
     "editUser": "Benutzer bearbeiten",
-    "noRoles": "keine Rollen",
+    "noRoles": "Keine Rollen",
     "wildcardHint": "Platzhalter - gilt auch für später erstellte Collections",
     "moreCount": "+{{count}} weitere",
-    "showLess": "weniger anzeigen"
+    "showLess": "weniger anzeigen",
+    "col": {
+      "user": "Benutzer",
+      "auth-db": "Auth-DB",
+      "roles": "Rollen",
+      "granted": "Erteilt für",
+      "actions": "Erlaubte Aktionen",
+      "mechanisms": "Mechanismen"
+    }
   },
   "settings": {
     "title": "Einstellungen",

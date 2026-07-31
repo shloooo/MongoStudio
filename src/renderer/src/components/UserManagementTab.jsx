@@ -106,43 +106,46 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
             <div className="users-table-wrap">
                 {loading ? (
                     <UsersTableSkeleton isCollectionMode={isCollectionMode}/>
-                ) : users.length === 0 ? (
-                    <div className="tree-empty">{emptyText}</div>
                 ) : (
                     <table className="users-table">
                         <thead>
                         <tr>
-                            <th className="col-user">{t('userManagementTab.colUser')}</th>
-                            <th className="col-authdb">{t('userManagementTab.colAuthDb')}</th>
-                            <th className="col-roles">{t('userManagementTab.colRoles')}</th>
+                            <th className="col-user">{t('userManagementTab.col.user')}</th>
+                            <th className="col-authdb">{t('userManagementTab.col.auth-db')}</th>
+                            <th className="col-roles">{t('userManagementTab.col.roles')}</th>
                             {isCollectionMode ? (
                                 <>
-                                    <th className="col-granted">{t('userManagementTab.colGranted')}</th>
-                                    <th className="col-actions-list">{t('userManagementTab.colActions')}</th>
+                                    <th className="col-granted">{t('userManagementTab.col.granted')}</th>
+                                    <th className="col-actions-list">{t('userManagementTab.col.actions')}</th>
                                 </>
                             ) : (
-                                <th className="col-mechanisms">{t('userManagementTab.colMechanisms')}</th>
+                                <th className="col-mechanisms">{t('userManagementTab.col.mechanisms')}</th>
                             )}
                         </tr>
                         </thead>
                         <tbody>
                         {users.map((u) => (
-                            <tr key={`${u.db}.${u.user}`} onContextMenu={(e) => handleRowContextMenu(e, u)}>
-                                <td className="col-user"><span className="user-name">{u.user}</span></td>
-                                <td className="col-authdb"><code>{u.db}</code></td>
-                                <td className="col-roles"><RoleChips roles={u.roles}/></td>
-                                {isCollectionMode ? (
-                                    <>
-                                        <td className="col-granted"><ResourceChips resources={u.resources}/></td>
-                                        <td className="col-actions-list"><ActionChips actions={u.actions}/></td>
-                                    </>
-                                ) : (
-                                    <td className="col-mechanisms">
-                                        <span className="muted-text">{(u.mechanisms || []).join(', ') || '—'}</span>
-                                    </td>
-                                )}
+                                    <tr key={`${u.db}.${u.user}`} onContextMenu={(e) => handleRowContextMenu(e, u)}>
+                                        <td className="col-user"><span className="user-name">{u.user}</span></td>
+                                        <td className="col-authdb"><code>{u.db}</code></td>
+                                        <td className="col-roles"><RoleChips roles={u.roles}/></td>
+                                        {isCollectionMode ? (
+                                            <>
+                                                <td className="col-granted"><ResourceChips resources={u.resources}/></td>
+                                                <td className="col-actions-list"><ActionChips actions={u.actions}/></td>
+                                            </>
+                                        ) : (
+                                            <td className="col-mechanisms">
+                                                <span className="muted-text">{(u.mechanisms || []).join(', ') || '—'}</span>
+                                            </td>
+                                        )}
+                                    </tr>
+                                ))}
+                        {users.length === 0 && !loading && (
+                            <tr>
+                                <td colSpan="4" className="tree-empty">{emptyText}</td>
                             </tr>
-                        ))}
+                        )}
                         </tbody>
                     </table>
                 )}
