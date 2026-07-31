@@ -2,6 +2,7 @@ import pkg from 'electron-updater';
 const {autoUpdater} = pkg;
 import type {BrowserWindow} from 'electron';
 import type {SettingsFile} from './settingsStore.js';
+import log from "electron-log";
 
 let mainWindow: BrowserWindow | null = null;
 let isDev = false;
@@ -30,6 +31,7 @@ export function initUpdater({window, devMode, settingsStore}: {
     isDev = devMode;
     settingsStoreRef = settingsStore || null;
 
+    autoUpdater.allowDowngrade = true;
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
 
@@ -74,22 +76,27 @@ export function initUpdater({window, devMode, settingsStore}: {
 }
 
 export async function checkForUpdates(): Promise<{ ok: boolean; error?: string; alreadyChecking?: boolean }> {
-    if (isDev) {
-        return {ok: false, error: 'Update checks are disabled in development mode.'};
-    }
+    if (isDev) return {ok: false, error: 'Update checks are disabled in development mode.'};
     if (checking) return {ok: true, alreadyChecking: true};
 
     checking = true;
     const channel = settingsStoreRef ? settingsStoreRef.get('updateChannel', 'stable') : 'stable';
 
-    autoUpdater.allowDowngrade = true;
     autoUpdater.allowPrerelease = (channel === 'canary');
     autoUpdater.channel = (channel === 'stable' ? 'latest' : channel);
 
     try {
-        await autoUpdater.checkForUpdates();
+        const response = await autoUpdater.checkForUpdates();
+
+        if (response != undefined && response.isUpdateAvailable != undefined) {
+            log.info(`[Updater] Update available: ${response.updateInfo.version}`);
+        } else {
+            log.info(`[Updater] No new update available`);
+        }
+
         return {ok: true};
     } catch (err: any) {
+        log.error(`[Updater] Update check failed: ${err.message}`);
         return {ok: false, error: err.message};
     } finally {
         checking = false;
@@ -103,15 +110,19 @@ export async function downloadUpdate(): Promise<{ ok: boolean; error?: string; a
     if (downloading) return {ok: true, alreadyDownloading: true};
     downloading = true;
     try {
+        log.info(`[Updater] Downloading update..`);
         await autoUpdater.downloadUpdate();
+        log.info(`[Updater] Update downloaded`);
         return {ok: true};
     } catch (err: any) {
         downloading = false;
+        log.error(`[Updater] Update download failed: ${err.message}`);
         return {ok: false, error: err.message};
     }
 }
 
 export function quitAndInstall(): void {
+    log.info(`[Updater] Installing update..`);
     autoUpdater.quitAndInstall();
 }
 
