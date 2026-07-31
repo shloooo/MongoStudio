@@ -79,6 +79,23 @@ export default function GridFSBrowser({selection}) {
         }
     }
 
+    async function handleDropBucket() {
+        if (!activeBucket) return;
+        const ok = await confirmDialog(t('gridfs.dropBucketConfirm', {name: activeBucket}), {
+            title: t('gridfs.dropBucketConfirmTitle'),
+            confirmLabel: t('dialogs.common.delete')
+        });
+        if (!ok) return;
+        try {
+            await window.api.data.gridfsDropBucket({connId: selection.connId, dbName: selection.dbName, bucketName: activeBucket});
+            setActiveBucket(null);
+            setFiles(null);
+            await loadBuckets();
+        } catch (err) {
+            reportError(err.message, 'Delete GridFS bucket');
+        }
+    }
+
     async function handleUpload() {
         if (!activeBucket) return;
         setUploading(true);
@@ -146,6 +163,9 @@ export default function GridFSBrowser({selection}) {
                     {buckets && buckets.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
                 <button onClick={() => setShowNewBucket((v) => !v)}>{t('gridfs.newBucket')}</button>
+                <button onClick={handleDropBucket} disabled={!activeBucket} className="tiny-btn-danger-outline">
+                    {t('gridfs.deleteBucket')}
+                </button>
                 <button onClick={handleUpload} disabled={!activeBucket || uploading} className="primary">
                     {uploading ? t('gridfs.uploading') : t('gridfs.upload')}
                 </button>

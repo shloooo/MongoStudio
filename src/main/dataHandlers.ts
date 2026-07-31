@@ -327,6 +327,12 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return true;
   });
 
+  ipcMain.handle('data:renameCollection', async (event, {connId, dbName, collection, newName}) => {
+    const client = getClient(connId);
+    await client.db(dbName).collection(collection).rename(newName, {dropTarget: false});
+    return true;
+  });
+
   ipcMain.handle('data:indexes', async (event, {connId, dbName, collection}) => {
     const client = getClient(connId);
     return await client.db(dbName).collection(collection).indexes();
@@ -751,6 +757,16 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     // mongosh/mongofiles bootstrap an empty GridFS bucket.
     await db.collection(`${bucketName}.files`).createIndex({filename: 1, uploadDate: 1});
     await db.collection(`${bucketName}.chunks`).createIndex({files_id: 1, n: 1}, {unique: true});
+    return {ok: true};
+  });
+
+  ipcMain.handle('data:gridfs:dropBucket', async (event, {connId, dbName, bucketName}) => {
+    const client = getClient(connId);
+    const db = client.db(dbName);
+    const collections = await db.listCollections().toArray();
+    const names = new Set(collections.map((c) => c.name));
+    if (names.has(`${bucketName}.files`)) await db.collection(`${bucketName}.files`).drop();
+    if (names.has(`${bucketName}.chunks`)) await db.collection(`${bucketName}.chunks`).drop();
     return {ok: true};
   });
 }

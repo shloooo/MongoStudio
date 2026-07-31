@@ -30,7 +30,8 @@
       "dropDatabase": "Datenbank löschen",
       "delete": "Löschen",
       "openShell": "Shell öffnen",
-      "openGridfs": "GridFS-Browser öffnen"
+      "openGridfs": "GridFS-Browser öffnen",
+      "renameCollection": "Collection umbenennen"
     },
     "prompts": {
       "newDatabaseName": "Name der neuen Datenbank:",
@@ -38,7 +39,9 @@
       "continue": "Weiter",
       "firstCollectionName": "Um die Datenbank anzulegen, musst du eine Collection erstellen.",
       "create": "Erstellen",
-      "newCollectionName": "Name der neuen Collection in \"{{dbName}}\":"
+      "newCollectionName": "Name der neuen Collection in \"{{dbName}}\":",
+      "renameCollection": "Neuer Name für \"{{collection}}\":",
+      "rename": "Umbenennen"
     },
     "confirm": {
       "deleteConnection": "Verbindung \"{{name}}\" löschen? Das lässt sich nicht rückgängig machen.",
@@ -62,7 +65,8 @@
       "importedMulti": "{{count}} Dokument(e) in {{collectionCount}} Collection(s) importiert",
       "updateAvailable": "Update {{version}} ist verfügbar",
       "updateDownloaded": "Update {{version}} heruntergeladen, bereit zur Installation",
-      "updateOpenSettings": "Anzeigen"
+      "updateOpenSettings": "Anzeigen",
+      "renamedCollection": "{{oldPath}} umbenannt zu {{newPath}}"
     },
     "tabLabel": {
       "users": "{{dbName}} Benutzer",
@@ -564,6 +568,9 @@
     "uploadDate": "Hochgeladen",
     "contentType": "Content-Type",
     "deleteConfirm": "\"{{name}}\" löschen? Dies kann nicht rückgängig gemacht werden.",
-    "deleteConfirmTitle": "Datei löschen"
+    "deleteConfirmTitle": "Datei löschen",
+    "deleteBucket": "Bucket löschen",
+    "dropBucketConfirm": "Bucket \"{{name}}\" und alle enthaltenen Dateien löschen? Dies kann nicht rückgängig gemacht werden.",
+    "dropBucketConfirmTitle": "Bucket löschen"
   }
 }

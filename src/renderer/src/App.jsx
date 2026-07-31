@@ -259,6 +259,29 @@ export default function App() {
                 {label: t('app.menu.listUsers'), onClick: () => handleOpenCollectionUsers(target)},
                 {separator: true},
                 {
+                    label: t('app.menu.renameCollection'),
+                    onClick: async () => {
+                        const newName = await promptDialog(t('app.prompts.renameCollection', {collection}), {
+                            title: t('app.menu.renameCollection'),
+                            confirmLabel: t('app.prompts.rename'),
+                            defaultValue: collection
+                        });
+                        if (!newName || newName === collection) return;
+                        try {
+                            await window.api.data.renameCollection({connId, dbName, collection, newName});
+                            setTabs((prev) => prev.map((t) => (
+                                t.connId === connId && t.dbName === dbName && t.collection === collection
+                                    ? {...t, collection: newName}
+                                    : t
+                            )));
+                            setStatus({type: 'info', message: t('app.status.renamedCollection', {oldPath: `${dbName}.${collection}`, newPath: `${dbName}.${newName}`})});
+                            setOpenDbSignal({connId, dbName, force: true, ts: Date.now()});
+                        } catch (err) {
+                            setStatus({type: 'error', message: err.message});
+                        }
+                    }
+                },
+                {
                     label: t('app.menu.exportJson'),
                     onClick: async () => {
                         const res = await window.api.data.exportCollection({

@@ -79,6 +79,7 @@ contextBridge.exposeInMainWorld('api', {
         deleteMany: (args) => ipcRenderer.invoke('data:deleteMany', args),
         createCollection: (args) => ipcRenderer.invoke('data:createCollection', args),
         dropCollection: (args) => ipcRenderer.invoke('data:dropCollection', args),
+        renameCollection: (args) => ipcRenderer.invoke('data:renameCollection', args),
         indexes: (args) => ipcRenderer.invoke('data:indexes', args),
         createIndex: (args) => ipcRenderer.invoke('data:createIndex', args),
         listUsers: (args) => ipcRenderer.invoke('data:listUsers', args),
@@ -108,6 +109,7 @@ contextBridge.exposeInMainWorld('api', {
         gridfsDownload: (args) => ipcRenderer.invoke('data:gridfs:download', args),
         gridfsDelete: (args) => ipcRenderer.invoke('data:gridfs:delete', args),
         gridfsCreateBucket: (args) => ipcRenderer.invoke('data:gridfs:createBucket', args),
+        gridfsDropBucket: (args) => ipcRenderer.invoke('data:gridfs:dropBucket', args),
         onCopyProgress: (cb) => {
             const listener = (event, payload) => cb(payload);
             ipcRenderer.on('data:copyProgress', listener);

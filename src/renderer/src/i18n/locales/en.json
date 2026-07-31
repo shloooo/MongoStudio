@@ -30,7 +30,8 @@
       "dropDatabase": "Drop database",
       "delete": "Delete",
       "openShell": "Open Shell",
-      "openGridfs": "Open GridFS Browser"
+      "openGridfs": "Open GridFS Browser",
+      "renameCollection": "Rename Collection"
     },
     "prompts": {
       "newDatabaseName": "New database name:",
@@ -38,7 +39,9 @@
       "continue": "Continue",
       "firstCollectionName": "To create the database, you must create a collection.",
       "create": "Create",
-      "newCollectionName": "New collection name in \"{{dbName}}\":"
+      "newCollectionName": "New collection name in \"{{dbName}}\":",
+      "renameCollection": "New name for \"{{collection}}\":",
+      "rename": "Rename"
     },
     "confirm": {
       "deleteConnection": "Delete connection \"{{name}}\"? This cannot be undone.",
@@ -62,7 +65,8 @@
       "importedMulti": "Imported {{count}} document(s) into {{collectionCount}} collection(s)",
       "updateAvailable": "Update {{version}} is available",
       "updateDownloaded": "Update {{version}} downloaded and ready to install",
-      "updateOpenSettings": "View"
+      "updateOpenSettings": "View",
+      "renamedCollection": "Renamed {{oldPath}} to {{newPath}}"
     },
     "tabLabel": {
       "users": "{{dbName}} users",
@@ -564,6 +568,9 @@
     "uploadDate": "Uploaded",
     "contentType": "Content Type",
     "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone.",
-    "deleteConfirmTitle": "Delete File"
+    "deleteConfirmTitle": "Delete File",
+    "deleteBucket": "Delete Bucket",
+    "dropBucketConfirm": "Delete bucket \"{{name}}\" and all its files? This cannot be undone.",
+    "dropBucketConfirmTitle": "Delete Bucket"
   }
 }
