@@ -3,12 +3,29 @@ import {createPortal} from 'react-dom';
 
 export default function ContextMenu({ x, y, items, onClose }) {
   const ref = useRef(null);
+  const submenuRef = useRef(null);
+  const closeTimerRef = useRef(null);
   const [openSubmenu, setOpenSubmenu] = useState(null); // { index, x, y, left }
   const [position, setPosition] = useState({ left: x, top: y, ready: false });
 
+  useEffect(() => () => clearTimeout(closeTimerRef.current), []);
+
+  function cancelSubmenuClose() {
+    clearTimeout(closeTimerRef.current);
+  }
+
+  function scheduleSubmenuClose(index) {
+    clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setOpenSubmenu((s) => (s && s.index === index ? null : s));
+    }, 150);
+  }
+
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) onClose();
+      const insideMain = ref.current && ref.current.contains(e.target);
+      const insideSubmenu = submenuRef.current && submenuRef.current.contains(e.target);
+      if (!insideMain && !insideSubmenu) onClose();
     }
     function handleKey(e) {
       if (e.key === 'Escape') onClose();
@@ -68,18 +85,22 @@ export default function ContextMenu({ x, y, items, onClose }) {
                 <div key={i}
                      className="context-menu-item-wrapper"
                      onMouseEnter={(e) => {
+                       cancelSubmenuClose();
                        if (!item.disabled) openSubmenuFor(i, e);
                      }}
-                     onMouseLeave={() => setOpenSubmenu((s) => (s && s.index === i ? null : s))}>
+                     onMouseLeave={() => scheduleSubmenuClose(i)}>
                   <button type="button"
                           className={`context-menu-item context-menu-item-parent ${item.danger ? 'danger' : ''}`}
                           disabled={item.disabled}>
                     <span>{item.label}</span>
                     <span className="context-menu-arrow">›</span>
                   </button>
-                  {openSubmenu && openSubmenu.index === i && (
+                  {openSubmenu && openSubmenu.index === i && createPortal(
                       <div className="context-menu context-submenu"
-                           style={{left: openSubmenu.left, top: openSubmenu.top}}>
+                           ref={submenuRef}
+                           style={{left: openSubmenu.left, top: openSubmenu.top}}
+                           onMouseEnter={cancelSubmenuClose}
+                           onMouseLeave={() => scheduleSubmenuClose(i)}>
                         {item.submenu.map((sub, j) =>
                             sub.separator ? (
                                 <div key={j} className="context-menu-sep"/>
@@ -95,7 +116,8 @@ export default function ContextMenu({ x, y, items, onClose }) {
                                 </button>
                             )
                         )}
-                      </div>
+                      </div>,
+                      document.body
                   )}
                 </div>
             ) : (
