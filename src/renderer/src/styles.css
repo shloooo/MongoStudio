@@ -3508,3 +3508,117 @@ input[type="range"]:focus-visible {
     color: var(--text-tertiary);
     margin-bottom: 6px;
 }
+.task-queue-panel {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 300px;
+    max-height: 320px;
+    background: var(--glass-panel-strong);
+    backdrop-filter: blur(var(--glass-blur-lg)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(180%);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 250;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.task-queue-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: var(--text-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.task-queue-panel.is-collapsed .task-queue-header {
+    border-bottom: none;
+}
+
+.task-queue-panel:not(.is-collapsed) .task-queue-header {
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.task-queue-list {
+    overflow-y: auto;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.task-queue-item {
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+}
+
+.task-queue-item:hover {
+    background: var(--overlay-05);
+}
+
+.task-queue-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.task-queue-item.status-running .task-queue-item-row {
+    color: var(--text-secondary);
+}
+
+.task-queue-item.status-done .task-queue-item-row {
+    color: var(--diff-added);
+}
+
+.task-queue-item.status-error .task-queue-item-row {
+    color: var(--danger);
+}
+
+.task-queue-item-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-queue-dismiss {
+    flex-shrink: 0;
+    padding: 0 6px;
+}
+
+.task-queue-progress-bar-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--overlay-08);
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.task-queue-progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.2s ease;
+}
+
+.task-queue-item-error {
+    font-size: 11px;
+    color: var(--danger);
+    margin-top: 3px;
+    padding-left: 22px;
+}
+
+.sql-export-field-list-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 6px;
+}
