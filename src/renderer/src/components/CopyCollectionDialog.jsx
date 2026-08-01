@@ -31,11 +31,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
     const unsubscribe = window.api.data.onCopyProgress((payload) => {
       if (!requestIdRef.current || payload.requestId !== requestIdRef.current) return;
       if (payload.phase === 'start' || payload.phase === 'progress' || payload.phase === 'done') {
-        const next = {copiedCount: payload.copiedCount || 0, totalInCollection: payload.totalInCollection || 0};
-        setProgress(next);
-        if (taskIdRef.current && next.totalInCollection) {
-          updateTaskProgress(taskIdRef.current, {percent: Math.min(100, (next.copiedCount / next.totalInCollection) * 100)});
-        }
+        setProgress({copiedCount: payload.copiedCount || 0, totalInCollection: payload.totalInCollection || 0});
       }
     });
     return unsubscribe;
@@ -79,15 +75,29 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
   function handleCopyInBackground() {
     const task = startCopy();
     if (!task) return;
+    const requestId = requestIdRef.current;
     const label = t('dialogs.copyCollection.taskLabel', {
       collection: source.collection,
       target: targetCollection
     });
-    taskIdRef.current = enqueue(task, label, {
+    const id = enqueue(task, label, {
       onDone: () => {
         if (onCopied) onCopied();
       }
     });
+    taskIdRef.current = id;
+    const unsubscribeQueueProgress = window.api.data.onCopyProgress((payload) => {
+      if (payload.requestId !== requestId) return;
+      if (payload.phase !== 'start' && payload.phase !== 'progress' && payload.phase !== 'done') return;
+      const copiedCount = payload.copiedCount || 0;
+      const totalInCollection = payload.totalInCollection || 0;
+      if (!totalInCollection) return;
+      updateTaskProgress(id, {
+        percent: Math.min(100, (copiedCount / totalInCollection) * 100),
+        detail: t('taskQueue.progressDocs', {copied: copiedCount, total: totalInCollection})
+      });
+    });
+    task.finally(unsubscribeQueueProgress);
     requestClose();
   }
 

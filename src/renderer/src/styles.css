@@ -2498,7 +2498,7 @@ input[type="range"]:focus-visible {
 
 .skeleton-line, .skeleton-row {
     border-radius: var(--radius-sm);
-    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 37%, rgba(255,255,255,0.04) 63%);
+    background: linear-gradient(90deg, var(--overlay-04) 25%, var(--overlay-08) 37%, var(--overlay-04) 63%);
     background-size: 400% 100%;
     animation: skeleton-pulse 1.4s ease infinite;
 }
@@ -3483,16 +3483,20 @@ input[type="range"]:focus-visible {
     padding: 4px 6px;
     font-family: var(--font-mono);
     font-size: 12.5px;
-    color: var(--text-primary);
     border-radius: var(--radius-sm);
     cursor: pointer;
+}
+
+.modal .sql-export-field-list .sql-export-field-row {
+    color: var(--text-primary);
+    font-size: 12.5px;
 }
 
 .sql-export-field-row:hover {
     background: var(--field-bg);
 }
 
-.sql-export-field-row.is-disabled {
+.modal .sql-export-field-list .sql-export-field-row.is-disabled {
     color: var(--text-tertiary);
     cursor: not-allowed;
 }
@@ -3613,6 +3617,13 @@ input[type="range"]:focus-visible {
 .task-queue-item-error {
     font-size: 11px;
     color: var(--danger);
+    margin-top: 3px;
+    padding-left: 22px;
+}
+
+.task-queue-item-detail {
+    font-size: 11px;
+    color: var(--text-tertiary);
     margin-top: 3px;
     padding-left: 22px;
 }

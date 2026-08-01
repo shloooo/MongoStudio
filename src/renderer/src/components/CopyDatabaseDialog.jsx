@@ -6,7 +6,7 @@ import {useTaskQueue} from './TaskQueueProvider.jsx';
 export default function CopyDatabaseDialog({ source, openConnections, onClose, onCopied }) {
     const { t } = useTranslation();
     const {closing, requestClose} = useClosing(onClose);
-    const {enqueue} = useTaskQueue();
+    const {enqueue, updateTaskProgress} = useTaskQueue();
     const [targetConnId, setTargetConnId] = useState('');
     const [targetDb, setTargetDb] = useState(source.dbName);
     const [busy, setBusy] = useState(false);
@@ -91,10 +91,50 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
     function handleCopyInBackground() {
         const task = startCopy();
         if (!task) return;
+        const requestId = requestIdRef.current;
         const label = t('dialogs.copyDatabase.taskLabel', {dbName: source.dbName, targetDb});
-        taskIdRef.current = enqueue(task, label, {
+        const id = enqueue(task, label, {
             onDone: () => { if (onCopied) onCopied(); }
         });
+        taskIdRef.current = id;
+
+        let bgQueue = [];
+        let bgOverallCopied = 0;
+        function reportProgress() {
+            if (bgQueue.length === 0) return;
+            const doneCount = bgQueue.filter((item) => item.status === 'done').length;
+            updateTaskProgress(id, {
+                percent: Math.min(100, (doneCount / bgQueue.length) * 100),
+                detail: t('taskQueue.progressCollections', {done: doneCount, total: bgQueue.length})
+                    + ' \u00b7 ' + t('dialogs.copyDatabase.copiedSoFar', {count: bgOverallCopied})
+            });
+        }
+        const unsubscribeQueueProgress = window.api.data.onCopyProgress((payload) => {
+            if (payload.requestId !== requestId) return;
+            switch (payload.phase) {
+                case 'start':
+                    bgQueue = (payload.collections || []).map((name) => ({ name, status: 'pending' }));
+                    bgOverallCopied = 0;
+                    break;
+                case 'collection-start':
+                    bgQueue = bgQueue.map((item) => item.name === payload.collection ? { ...item, status: 'active' } : item);
+                    break;
+                case 'progress':
+                    if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
+                    break;
+                case 'collection-done':
+                    bgQueue = bgQueue.map((item) => item.name === payload.collection ? { ...item, status: 'done' } : item);
+                    if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
+                    break;
+                case 'done':
+                    if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
+                    break;
+                default:
+                    break;
+            }
+            reportProgress();
+        });
+        task.finally(unsubscribeQueueProgress);
         requestClose();
     }
 

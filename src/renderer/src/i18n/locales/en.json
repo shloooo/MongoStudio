@@ -597,6 +597,8 @@
     "runningCount": "{{count}} task running",
     "runningCount_plural": "{{count}} tasks running",
     "allDone": "All tasks finished",
-    "clearFinished": "Clear finished"
+    "clearFinished": "Clear finished",
+    "progressDocs": "{{copied}} / {{total}} documents",
+    "progressCollections": "{{done}} / {{total}} collections"
   }
 }

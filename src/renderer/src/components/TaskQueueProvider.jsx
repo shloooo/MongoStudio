@@ -106,6 +106,9 @@ export function TaskQueueProvider({children}) {
                                                  style={{width: `${task.progress.percent || 0}%`}}/>
                                         </div>
                                     )}
+                                    {task.progress && task.progress.detail && (
+                                        <div className="task-queue-item-detail">{task.progress.detail}</div>
+                                    )}
                                     {task.status === 'error' &&
                                         <div className="task-queue-item-error">{task.error}</div>}
                                 </div>
