@@ -3464,3 +3464,47 @@ input[type="range"]:focus-visible {
     gap: 6px;
     justify-content: flex-end;
 }
+.sql-export-field-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--well-bg);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    margin-bottom: 8px;
+}
+
+.sql-export-field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.sql-export-field-row:hover {
+    background: var(--field-bg);
+}
+
+.sql-export-field-row.is-disabled {
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.sql-export-unsafe-section {
+    margin-top: 10px;
+}
+
+.sql-export-section-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+}

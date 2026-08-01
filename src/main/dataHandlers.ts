@@ -572,12 +572,83 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return {ok: true, filePath, count: docs.length};
   });
 
+  ipcMain.handle('data:analyzeSqlExport', async (event, {connId, dbName, collection}) => {
+    const client = getClient(connId);
+    const sample = EJSON.serialize(await client.db(dbName).collection(collection).find({}).limit(200).toArray()) as any as any[];
+    return analyzeFieldsForSql(sample);
+  });
+
+  ipcMain.handle('data:exportCollectionSql', async (event, {connId, dbName, collection, fields}) => {
+    const client = getClient(connId);
+    const docs = EJSON.serialize(await client.db(dbName).collection(collection).find({}).toArray()) as any as any[];
+    const win = BrowserWindow.getFocusedWindow();
+    const {canceled, filePath} = await dialog.showSaveDialog(win!, {
+      defaultPath: `${collection}.sql`,
+      filters: [{name: 'SQL', extensions: ['sql']}]
+    });
+    if (canceled || !filePath) return {ok: false};
+    const sql = buildSqlDump(collection, docs, fields);
+    fs.writeFileSync(filePath, sql, 'utf-8');
+    return {ok: true, filePath, count: docs.length};
+  });
+
+// Parses `INSERT INTO "table" (col1, col2) VALUES (v1, v2);` statements
+// produced by buildSqlDump (or similarly-shaped dumps) back into plain
+// documents. CREATE TABLE and any other statements are ignored.
+  function parseSqlInserts(raw: string): Record<string, any>[] {
+    const docs: Record<string, any>[] = [];
+    const insertRe = /INSERT INTO\s+"?[\w.]+"?\s*\(([^)]*)\)\s*VALUES\s*\(([^;]*)\);/gi;
+    let match: RegExpExecArray | null;
+    while ((match = insertRe.exec(raw))) {
+      const columns = splitSqlList(match[1]).map((c) => c.trim().replace(/^"|"$/g, ''));
+      const values = splitSqlList(match[2]).map((v) => parseSqlLiteral(v.trim()));
+      const doc: Record<string, any> = {};
+      columns.forEach((col, i) => { doc[col] = values[i]; });
+      docs.push(doc);
+    }
+    return docs;
+  }
+
+  function splitSqlList(src: string): string[] {
+    const parts: string[] = [];
+    let depth = 0;
+    let current = '';
+    let inString = false;
+    for (let i = 0; i < src.length; i++) {
+      const ch = src[i];
+      if (inString) {
+        current += ch;
+        if (ch === "'" && src[i + 1] === "'") { current += src[++i]; continue; }
+        if (ch === "'") inString = false;
+        continue;
+      }
+      if (ch === "'") { inString = true; current += ch; continue; }
+      if (ch === '(') depth++;
+      if (ch === ')') depth--;
+      if (ch === ',' && depth === 0) { parts.push(current); current = ''; continue; }
+      current += ch;
+    }
+    if (current.trim() !== '') parts.push(current);
+    return parts;
+  }
+
+  function parseSqlLiteral(token: string): any {
+    if (/^NULL$/i.test(token)) return null;
+    if (/^TRUE$/i.test(token)) return true;
+    if (/^FALSE$/i.test(token)) return false;
+    if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
+    if (token.startsWith("'") && token.endsWith("'")) {
+      return token.slice(1, -1).replace(/''/g, "'");
+    }
+    return token;
+  }
+
   ipcMain.handle('data:importIntoCollection', async (event, {connId, dbName, collection}) => {
     const win = BrowserWindow.getFocusedWindow();
     const {canceled, filePaths} = await dialog.showOpenDialog(win!, {
       properties: ['openFile'],
       filters: [
-        {name: 'JSON/CSV', extensions: ['json', 'csv']},
+        {name: 'JSON/CSV/SQL', extensions: ['json', 'csv', 'sql']},
         {name: 'All files', extensions: ['*']}
       ]
     });
@@ -587,6 +658,8 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     let docs: any[];
     if (filePath.endsWith('.csv')) {
       docs = parseCsv(raw);
+    } else if (filePath.endsWith('.sql')) {
+      docs = parseSqlInserts(raw);
     } else {
       const parsed = JSON.parse(raw);
       docs = Array.isArray(parsed) ? parsed : [parsed];
@@ -915,4 +988,109 @@ function splitCsvLine(line: string): string[] {
   }
   result.push(cur);
   return result;
+}
+
+// A value counts as "SQL-safe" if it's a scalar or one of the small set of
+// EJSON wrapper shapes that map to a single SQL column (ObjectId, Date,
+// Long, Decimal128). Plain objects and arrays do not - they have no
+// faithful flat-column representation, so fields containing them are
+// excluded from SQL export rather than silently flattened or stringified.
+const EJSON_SCALAR_WRAPPERS = new Set(['$oid', '$date', '$numberLong', '$numberInt', '$numberDecimal', '$numberDouble']);
+
+function isSqlSafeValue(value: any): boolean {
+  if (value === null || value === undefined) return true;
+  const t = typeof value;
+  if (t === 'string' || t === 'number' || t === 'boolean') return true;
+  if (t === 'object') {
+    if (Array.isArray(value)) return false;
+    const keys = Object.keys(value);
+    if (keys.length === 1 && EJSON_SCALAR_WRAPPERS.has(keys[0])) return true;
+    return false;
+  }
+  return false;
+}
+
+export interface SqlFieldInfo {
+  field: string;
+  sqlSafe: boolean;
+  sampleCount: number;
+}
+
+// Inspects a sample of EJSON-serialized documents and classifies every
+// top-level field as SQL-safe or not. A field is SQL-safe only if every
+// sampled document where it appears has a scalar-shaped value for it.
+export function analyzeFieldsForSql(docs: any[]): SqlFieldInfo[] {
+  const fieldSafe = new Map<string, boolean>();
+  const fieldSeen = new Map<string, number>();
+  for (const doc of docs) {
+    for (const [key, value] of Object.entries(doc || {})) {
+      const safe = isSqlSafeValue(value);
+      fieldSeen.set(key, (fieldSeen.get(key) || 0) + 1);
+      fieldSafe.set(key, (fieldSafe.get(key) ?? true) && safe);
+    }
+  }
+  return Array.from(fieldSeen.keys()).sort().map((field) => ({
+    field,
+    sqlSafe: fieldSafe.get(field) !== false,
+    sampleCount: fieldSeen.get(field) || 0
+  }));
+}
+
+function sqlScalarFromEjson(value: any): { raw: any; kind: 'null' | 'number' | 'string' | 'boolean' } {
+  if (value === null || value === undefined) return {raw: null, kind: 'null'};
+  if (typeof value === 'boolean') return {raw: value, kind: 'boolean'};
+  if (typeof value === 'number') return {raw: value, kind: 'number'};
+  if (typeof value === 'string') return {raw: value, kind: 'string'};
+  if (typeof value === 'object') {
+    if ('$oid' in value) return {raw: value.$oid, kind: 'string'};
+    if ('$date' in value) {
+      const d = value.$date;
+      const iso = typeof d === 'object' && '$numberLong' in d ? new Date(Number(d.$numberLong)).toISOString() : new Date(d).toISOString();
+      return {raw: iso, kind: 'string'};
+    }
+    if ('$numberLong' in value) return {raw: Number(value.$numberLong), kind: 'number'};
+    if ('$numberInt' in value) return {raw: Number(value.$numberInt), kind: 'number'};
+    if ('$numberDouble' in value) return {raw: Number(value.$numberDouble), kind: 'number'};
+    if ('$numberDecimal' in value) return {raw: String(value.$numberDecimal), kind: 'string'};
+  }
+  return {raw: String(value), kind: 'string'};
+}
+
+function sqlIdentifier(name: string): string {
+  return `"${name.replace(/"/g, '""')}"`;
+}
+
+function sqlLiteral(value: any): string {
+  const {raw, kind} = sqlScalarFromEjson(value);
+  if (raw === null) return 'NULL';
+  if (kind === 'number') return String(raw);
+  if (kind === 'boolean') return raw ? 'TRUE' : 'FALSE';
+  return `'${String(raw).replace(/'/g, "''")}'`;
+}
+
+function sqlColumnType(field: string, docs: any[]): string {
+  for (const doc of docs) {
+    const value = doc[field];
+    if (value === null || value === undefined) continue;
+    const {kind} = sqlScalarFromEjson(value);
+    if (kind === 'number') return 'DOUBLE PRECISION';
+    if (kind === 'boolean') return 'BOOLEAN';
+    return 'TEXT';
+  }
+  return 'TEXT';
+}
+
+export function buildSqlDump(tableName: string, docs: any[], fields: string[]): string {
+  const cols = fields.length ? fields : Array.from(docs.reduce((set: Set<string>, d: any) => {
+    Object.keys(d).forEach((k) => set.add(k));
+    return set;
+  }, new Set<string>()));
+  const table = sqlIdentifier(tableName);
+  const columnDefs = cols.map((f) => `  ${sqlIdentifier(f)} ${sqlColumnType(f, docs)}`).join(',\n');
+  const lines = [`CREATE TABLE ${table} (\n${columnDefs}\n);`, ''];
+  for (const doc of docs) {
+    const values = cols.map((f) => sqlLiteral(doc[f]));
+    lines.push(`INSERT INTO ${table} (${cols.map(sqlIdentifier).join(', ')}) VALUES (${values.join(', ')});`);
+  }
+  return lines.join('\n');
 }

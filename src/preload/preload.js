@@ -93,6 +93,8 @@ contextBridge.exposeInMainWorld('api', {
         exportResults: (args) => ipcRenderer.invoke('data:exportResults', args),
         importFile: (args) => ipcRenderer.invoke('data:importFile', args),
         exportCollection: (args) => ipcRenderer.invoke('data:exportCollection', args),
+        analyzeSqlExport: (args) => ipcRenderer.invoke('data:analyzeSqlExport', args),
+        exportCollectionSql: (args) => ipcRenderer.invoke('data:exportCollectionSql', args),
         importIntoCollection: (args) => ipcRenderer.invoke('data:importIntoCollection', args),
         copyCollection: (args) => ipcRenderer.invoke('data:copyCollection', args),
         dropDatabase: (args) => ipcRenderer.invoke('data:dropDatabase', args),

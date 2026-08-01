@@ -31,7 +31,8 @@
       "delete": "Löschen",
       "openShell": "Shell öffnen",
       "openGridfs": "GridFS-Browser öffnen",
-      "renameCollection": "Collection umbenennen"
+      "renameCollection": "Collection umbenennen",
+      "exportSql": "Als SQL exportieren..."
     },
     "prompts": {
       "newDatabaseName": "Name der neuen Datenbank:",
@@ -283,6 +284,15 @@
       "close": "Schließen",
       "field": "Feld",
       "onlyChanged": "Nur geänderte Felder"
+    },
+    "sqlExport": {
+      "title": "Als SQL exportieren",
+      "hint": "Wähle aus, welche Felder in den SQL-Export übernommen werden sollen. Nur flache (nicht verschachtelte) Felder sind exportierbar.",
+      "excludedLabel": "Ausgeschlossene Felder (verschachtelte Objekte oder Arrays)",
+      "excludedReason": "Diese Felder enthalten verschachtelte Objekte oder Arrays und lassen sich nicht direkt als SQL-Spalte abbilden.",
+      "noFields": "Keine Felder in dieser Collection gefunden.",
+      "export": "Exportieren",
+      "exporting": "Wird exportiert…"
     }
   },
   "aggregationTab": {

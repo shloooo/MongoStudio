@@ -14,6 +14,7 @@ import ContextMenu from './components/ContextMenu.jsx';
 import CopyCollectionDialog from './components/CopyCollectionDialog.jsx';
 import CopyDatabaseDialog from './components/CopyDatabaseDialog.jsx';
 import ErrorToastStack from './components/ErrorToastStack.jsx';
+import SqlExportDialog from './components/SqlExportDialog.jsx';
 import {reportError} from './lib/errorBus.js';
 import {useConfirm, usePrompt} from './components/ConfirmProvider.jsx';
 import {usePresence} from './lib/usePresence.js';
@@ -37,6 +38,7 @@ export default function App() {
     const [reloadSignal, setReloadSignal] = useState(0);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
+    const [sqlExportSource, setSqlExportSource] = useState(null);
     const [copyDbDialogSource, setCopyDbDialogSource] = useState(null);
     const [openDbSignal, setOpenDbSignal] = useState(null); // { connId, dbName, force, ts }
     const [refreshDbSignal, setRefreshDbSignal] = useState(null); // { connId, ts }
@@ -305,6 +307,10 @@ export default function App() {
                             message: t('app.status.exported', {count: res.count, path: res.filePath})
                         });
                     }
+                },
+                {
+                    label: t('app.menu.exportSql'),
+                    onClick: () => setSqlExportSource(target)
                 },
                 {
                     label: t('app.menu.importFile'),
@@ -648,6 +654,13 @@ export default function App() {
                         openConnections={connections.filter((c) => openConnIds.has(c.id))}
                         onClose={() => setCopyDialogSource(null)}
                         onCopied={() => setReloadSignal((s) => s + 1)}
+                    />
+                )}
+                {sqlExportSource && (
+                    <SqlExportDialog
+                        selection={sqlExportSource}
+                        onClose={() => setSqlExportSource(null)}
+                        onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
                     />
                 )}
                 {copyDbDialogSource && (

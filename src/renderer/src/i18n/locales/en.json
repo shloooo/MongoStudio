@@ -31,7 +31,8 @@
       "delete": "Delete",
       "openShell": "Open Shell",
       "openGridfs": "Open GridFS Browser",
-      "renameCollection": "Rename Collection"
+      "renameCollection": "Rename Collection",
+      "exportSql": "Export as SQL"
     },
     "prompts": {
       "newDatabaseName": "New database name:",
@@ -283,6 +284,15 @@
       "close": "Close",
       "field": "Field",
       "onlyChanged": "Only changed fields"
+    },
+    "sqlExport": {
+      "title": "Export as SQL",
+      "hint": "Select which fields to include in the SQL export. Only flat (non-nested) fields can be exported.",
+      "excludedLabel": "Excluded fields (nested objects or arrays)",
+      "excludedReason": "These fields contain nested objects or arrays and have no direct SQL column representation.",
+      "noFields": "No fields found in this collection.",
+      "export": "Export",
+      "exporting": "Exporting…"
     }
   },
   "aggregationTab": {
