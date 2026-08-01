@@ -546,9 +546,25 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return {ok: true, copiedCount, collectionCount: collections.length, perCollection};
   });
 
-  ipcMain.handle('data:exportCollection', async (event, {connId, dbName, collection, format}) => {
+  ipcMain.handle('data:listCollectionFields', async (event, {connId, dbName, collection}) => {
     const client = getClient(connId);
-    const docs = EJSON.serialize(await client.db(dbName).collection(collection).find({}).toArray());
+    const sample = EJSON.serialize(await client.db(dbName).collection(collection).find({}).limit(200).toArray()) as any as any[];
+    const fields = new Set<string>();
+    for (const doc of sample) Object.keys(doc || {}).forEach((k) => fields.add(k));
+    return Array.from(fields).sort();
+  });
+
+  ipcMain.handle('data:exportCollection', async (event, {connId, dbName, collection, format, fields}) => {
+    const client = getClient(connId);
+    const allDocs = EJSON.serialize(await client.db(dbName).collection(collection).find({}).toArray()) as any as any[];
+    const fieldSet: string[] | null = Array.isArray(fields) && fields.length ? fields : null;
+    const docs = fieldSet
+        ? allDocs.map((d) => {
+          const out: Record<string, any> = {};
+          for (const f of fieldSet) if (Object.prototype.hasOwnProperty.call(d, f)) out[f] = d[f];
+          return out;
+        })
+        : allDocs;
     const win = BrowserWindow.getFocusedWindow();
     const {canceled, filePath} = await dialog.showSaveDialog(win!, {
       defaultPath: `${collection}.${format === 'csv' ? 'csv' : 'json'}`,
@@ -591,57 +607,6 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     fs.writeFileSync(filePath, sql, 'utf-8');
     return {ok: true, filePath, count: docs.length};
   });
-
-// Parses `INSERT INTO "table" (col1, col2) VALUES (v1, v2);` statements
-// produced by buildSqlDump (or similarly-shaped dumps) back into plain
-// documents. CREATE TABLE and any other statements are ignored.
-  function parseSqlInserts(raw: string): Record<string, any>[] {
-    const docs: Record<string, any>[] = [];
-    const insertRe = /INSERT INTO\s+"?[\w.]+"?\s*\(([^)]*)\)\s*VALUES\s*\(([^;]*)\);/gi;
-    let match: RegExpExecArray | null;
-    while ((match = insertRe.exec(raw))) {
-      const columns = splitSqlList(match[1]).map((c) => c.trim().replace(/^"|"$/g, ''));
-      const values = splitSqlList(match[2]).map((v) => parseSqlLiteral(v.trim()));
-      const doc: Record<string, any> = {};
-      columns.forEach((col, i) => { doc[col] = values[i]; });
-      docs.push(doc);
-    }
-    return docs;
-  }
-
-  function splitSqlList(src: string): string[] {
-    const parts: string[] = [];
-    let depth = 0;
-    let current = '';
-    let inString = false;
-    for (let i = 0; i < src.length; i++) {
-      const ch = src[i];
-      if (inString) {
-        current += ch;
-        if (ch === "'" && src[i + 1] === "'") { current += src[++i]; continue; }
-        if (ch === "'") inString = false;
-        continue;
-      }
-      if (ch === "'") { inString = true; current += ch; continue; }
-      if (ch === '(') depth++;
-      if (ch === ')') depth--;
-      if (ch === ',' && depth === 0) { parts.push(current); current = ''; continue; }
-      current += ch;
-    }
-    if (current.trim() !== '') parts.push(current);
-    return parts;
-  }
-
-  function parseSqlLiteral(token: string): any {
-    if (/^NULL$/i.test(token)) return null;
-    if (/^TRUE$/i.test(token)) return true;
-    if (/^FALSE$/i.test(token)) return false;
-    if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
-    if (token.startsWith("'") && token.endsWith("'")) {
-      return token.slice(1, -1).replace(/''/g, "'");
-    }
-    return token;
-  }
 
   ipcMain.handle('data:importIntoCollection', async (event, {connId, dbName, collection}) => {
     const win = BrowserWindow.getFocusedWindow();
@@ -1093,4 +1058,55 @@ export function buildSqlDump(tableName: string, docs: any[], fields: string[]): 
     lines.push(`INSERT INTO ${table} (${cols.map(sqlIdentifier).join(', ')}) VALUES (${values.join(', ')});`);
   }
   return lines.join('\n');
+}
+
+// Parses `INSERT INTO "table" (col1, col2) VALUES (v1, v2);` statements
+// produced by buildSqlDump (or similarly-shaped dumps) back into plain
+// documents. CREATE TABLE and any other statements are ignored.
+function parseSqlInserts(raw: string): Record<string, any>[] {
+  const docs: Record<string, any>[] = [];
+  const insertRe = /INSERT INTO\s+"?[\w.]+"?\s*\(([^)]*)\)\s*VALUES\s*\(([^;]*)\);/gi;
+  let match: RegExpExecArray | null;
+  while ((match = insertRe.exec(raw))) {
+    const columns = splitSqlList(match[1]).map((c) => c.trim().replace(/^"|"$/g, ''));
+    const values = splitSqlList(match[2]).map((v) => parseSqlLiteral(v.trim()));
+    const doc: Record<string, any> = {};
+    columns.forEach((col, i) => { doc[col] = values[i]; });
+    docs.push(doc);
+  }
+  return docs;
+}
+
+function splitSqlList(src: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  let inString = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (inString) {
+      current += ch;
+      if (ch === "'" && src[i + 1] === "'") { current += src[++i]; continue; }
+      if (ch === "'") inString = false;
+      continue;
+    }
+    if (ch === "'") { inString = true; current += ch; continue; }
+    if (ch === '(') depth++;
+    if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) { parts.push(current); current = ''; continue; }
+    current += ch;
+  }
+  if (current.trim() !== '') parts.push(current);
+  return parts;
+}
+
+function parseSqlLiteral(token: string): any {
+  if (/^NULL$/i.test(token)) return null;
+  if (/^TRUE$/i.test(token)) return true;
+  if (/^FALSE$/i.test(token)) return false;
+  if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
+  if (token.startsWith("'") && token.endsWith("'")) {
+    return token.slice(1, -1).replace(/''/g, "'");
+  }
+  return token;
 }

@@ -15,8 +15,10 @@ import CopyCollectionDialog from './components/CopyCollectionDialog.jsx';
 import CopyDatabaseDialog from './components/CopyDatabaseDialog.jsx';
 import ErrorToastStack from './components/ErrorToastStack.jsx';
 import SqlExportDialog from './components/SqlExportDialog.jsx';
+import JsonCsvExportDialog from './components/JsonCsvExportDialog.jsx';
 import {reportError} from './lib/errorBus.js';
 import {useConfirm, usePrompt} from './components/ConfirmProvider.jsx';
+import {useTaskQueue} from './components/TaskQueueProvider.jsx';
 import {usePresence} from './lib/usePresence.js';
 import './styles.css';
 
@@ -39,11 +41,13 @@ export default function App() {
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
     const [sqlExportSource, setSqlExportSource] = useState(null);
+    const [jsonCsvExportSource, setJsonCsvExportSource] = useState(null);
     const [copyDbDialogSource, setCopyDbDialogSource] = useState(null);
     const [openDbSignal, setOpenDbSignal] = useState(null); // { connId, dbName, force, ts }
     const [refreshDbSignal, setRefreshDbSignal] = useState(null); // { connId, ts }
     const confirmDialog = useConfirm();
     const promptDialog = usePrompt();
+    const {enqueue} = useTaskQueue();
 
     useEffect(() => {
         window.api.setup.needed().then(setSetupNeeded);
@@ -284,33 +288,21 @@ export default function App() {
                     }
                 },
                 {
-                    label: t('app.menu.exportJson'),
-                    onClick: async () => {
-                        const res = await window.api.data.exportCollection({
-                            connId,
-                            dbName,
-                            collection,
-                            format: 'json'
-                        });
-                        if (res.ok) setStatus({
-                            type: 'info',
-                            message: t('app.status.exported', {count: res.count, path: res.filePath})
-                        });
-                    }
-                },
-                {
-                    label: t('app.menu.exportCsv'),
-                    onClick: async () => {
-                        const res = await window.api.data.exportCollection({connId, dbName, collection, format: 'csv'});
-                        if (res.ok) setStatus({
-                            type: 'info',
-                            message: t('app.status.exported', {count: res.count, path: res.filePath})
-                        });
-                    }
-                },
-                {
-                    label: t('app.menu.exportSql'),
-                    onClick: () => setSqlExportSource(target)
+                    label: t('app.menu.exportSubmenu'),
+                    submenu: [
+                        {
+                            label: t('app.menu.exportJson'),
+                            onClick: () => setJsonCsvExportSource({...target, format: 'json'})
+                        },
+                        {
+                            label: t('app.menu.exportCsv'),
+                            onClick: () => setJsonCsvExportSource({...target, format: 'csv'})
+                        },
+                        {
+                            label: t('app.menu.exportSql'),
+                            onClick: () => setSqlExportSource(target)
+                        }
+                    ]
                 },
                 {
                     label: t('app.menu.importFile'),
@@ -661,6 +653,19 @@ export default function App() {
                         selection={sqlExportSource}
                         onClose={() => setSqlExportSource(null)}
                         onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
+                        onQueued={(task, label) => enqueue(task, label, {
+                            onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
+                        })}
+                    />
+                )}
+                {jsonCsvExportSource && (
+                    <JsonCsvExportDialog
+                        selection={jsonCsvExportSource}
+                        onClose={() => setJsonCsvExportSource(null)}
+                        onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
+                        onQueued={(task, label) => enqueue(task, label, {
+                            onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
+                        })}
                     />
                 )}
                 {copyDbDialogSource && (

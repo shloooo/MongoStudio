@@ -22,7 +22,7 @@
       "listUsers": "List users with access",
       "exportJson": "Export as JSON",
       "exportCsv": "Export as CSV",
-      "importFile": "Import file into this collection",
+      "importFile": "Import File",
       "import": "Import",
       "createCollection": "Create collection",
       "copyToConnection": "Copy to another connection",
@@ -32,7 +32,8 @@
       "openShell": "Open Shell",
       "openGridfs": "Open GridFS Browser",
       "renameCollection": "Rename Collection",
-      "exportSql": "Export as SQL"
+      "exportSql": "Export as SQL",
+      "exportSubmenu": "Export"
     },
     "prompts": {
       "newDatabaseName": "New database name:",
@@ -159,7 +160,9 @@
       "documentCount": "{{count}} document(s)",
       "chooseTarget": "Choose a target connection, database, and collection name.",
       "copySuccess": "Copied {{count}} document(s).",
-      "copy": "Copy"
+      "copy": "Copy",
+      "copyInBackground": "Copy in Background",
+      "taskLabel": "Copy {{collection}} → {{target}}"
     },
     "copyDatabase": {
       "title": "Copy Database",
@@ -176,7 +179,9 @@
       "chooseTarget": "Choose a target connection and database name.",
       "copySuccess": "Copied {{count}} document(s) across {{collectionCount}} collection(s).",
       "copying": "Copying..",
-      "copy": "Copy"
+      "copy": "Copy",
+      "copyInBackground": "Copy in Background",
+      "taskLabel": "Copy database {{dbName}} → {{targetDb}}"
     },
     "userEditor": {
       "createTitle": "Create user",
@@ -293,6 +298,11 @@
       "noFields": "No fields found in this collection.",
       "export": "Export",
       "exporting": "Exporting…"
+    },
+    "fieldExport": {
+      "title": "Export as {{format}}",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all"
     }
   },
   "aggregationTab": {
@@ -582,5 +592,11 @@
     "deleteBucket": "Delete Bucket",
     "dropBucketConfirm": "Delete bucket \"{{name}}\" and all its files? This cannot be undone.",
     "dropBucketConfirmTitle": "Delete Bucket"
+  },
+  "taskQueue": {
+    "runningCount": "{{count}} task running",
+    "runningCount_plural": "{{count}} tasks running",
+    "allDone": "All tasks finished",
+    "clearFinished": "Clear finished"
   }
 }

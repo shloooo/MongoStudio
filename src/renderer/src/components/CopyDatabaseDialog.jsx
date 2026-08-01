@@ -1,10 +1,12 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {useClosing} from '../lib/useClosing.js';
 import {Trans, useTranslation} from 'react-i18next';
+import {useTaskQueue} from './TaskQueueProvider.jsx';
 
 export default function CopyDatabaseDialog({ source, openConnections, onClose, onCopied }) {
     const { t } = useTranslation();
     const {closing, requestClose} = useClosing(onClose);
+    const {enqueue} = useTaskQueue();
     const [targetConnId, setTargetConnId] = useState('');
     const [targetDb, setTargetDb] = useState(source.dbName);
     const [busy, setBusy] = useState(false);
@@ -13,6 +15,7 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
     const [queue, setQueue] = useState([]); // [{ name, status: 'pending'|'active'|'done', copied, total }]
     const [overallCopied, setOverallCopied] = useState(0);
     const requestIdRef = useRef(null);
+    const taskIdRef = useRef(null);
 
     useEffect(() => {
         const unsubscribe = window.api.data.onCopyProgress((payload) => {
@@ -31,7 +34,9 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                     setQueue((prev) => prev.map((item) => item.name === payload.collection
                         ? { ...item, copied: payload.copiedInCollection || 0, total: payload.totalInCollection ?? item.total }
                         : item));
-                    if (payload.copiedCount !== undefined) setOverallCopied(payload.copiedCount);
+                    if (payload.copiedCount !== undefined) {
+                        setOverallCopied(payload.copiedCount);
+                    }
                     break;
                 case 'collection-done':
                     setQueue((prev) => prev.map((item) => item.name === payload.collection
@@ -49,25 +54,31 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
         return unsubscribe;
     }, []);
 
-    async function handleCopy() {
+    function startCopy() {
         if (!targetConnId || !targetDb) {
             setError(t('dialogs.copyDatabase.chooseTarget'));
-            return;
+            return null;
         }
-        setBusy(true);
         setError('');
         setQueue([]);
         setOverallCopied(0);
         const requestId = crypto.randomUUID();
         requestIdRef.current = requestId;
+        return window.api.data.copyDatabase({
+            sourceConnId: source.connId,
+            sourceDb: source.dbName,
+            targetConnId,
+            targetDb,
+            requestId
+        });
+    }
+
+    async function handleCopy() {
+        const task = startCopy();
+        if (!task) return;
+        setBusy(true);
         try {
-            const res = await window.api.data.copyDatabase({
-                sourceConnId: source.connId,
-                sourceDb: source.dbName,
-                targetConnId,
-                targetDb,
-                requestId
-            });
+            const res = await task;
             setResult(res);
             if (onCopied) onCopied();
         } catch (err) {
@@ -75,6 +86,16 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
         } finally {
             setBusy(false);
         }
+    }
+
+    function handleCopyInBackground() {
+        const task = startCopy();
+        if (!task) return;
+        const label = t('dialogs.copyDatabase.taskLabel', {dbName: source.dbName, targetDb});
+        taskIdRef.current = enqueue(task, label, {
+            onDone: () => { if (onCopied) onCopied(); }
+        });
+        requestClose();
     }
 
     const otherConnections = openConnections.filter((c) => c.id !== source.connId);
@@ -148,9 +169,14 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                     <button onClick={() => requestClose()}
                             disabled={busy}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
                     {!result && (
-                        <button className="primary" onClick={handleCopy} disabled={busy || otherConnections.length === 0}>
-                            {busy ? t('dialogs.copyDatabase.copying') : t('dialogs.copyDatabase.copy')}
-                        </button>
+                        <>
+                            <button onClick={handleCopyInBackground} disabled={busy || otherConnections.length === 0}>
+                                {t('dialogs.copyDatabase.copyInBackground')}
+                            </button>
+                            <button className="primary" onClick={handleCopy} disabled={busy || otherConnections.length === 0}>
+                                {busy ? t('dialogs.copyDatabase.copying') : t('dialogs.copyDatabase.copy')}
+                            </button>
+                        </>
                     )}
                 </div>
             </div>

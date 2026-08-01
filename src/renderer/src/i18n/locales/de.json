@@ -22,7 +22,7 @@
       "listUsers": "Zugriffsberechtigte anzeigen",
       "exportJson": "Als JSON exportieren",
       "exportCsv": "Als CSV exportieren",
-      "importFile": "Datei in diese Collection importieren",
+      "importFile": "Datei importieren",
       "import": "Importieren",
       "createCollection": "Collection erstellen",
       "copyToConnection": "In andere Verbindung kopieren",
@@ -32,7 +32,8 @@
       "openShell": "Shell öffnen",
       "openGridfs": "GridFS-Browser öffnen",
       "renameCollection": "Collection umbenennen",
-      "exportSql": "Als SQL exportieren..."
+      "exportSql": "Als SQL exportieren...",
+      "exportSubmenu": "Exportieren"
     },
     "prompts": {
       "newDatabaseName": "Name der neuen Datenbank:",
@@ -159,7 +160,9 @@
       "documentCount": "{{count}} Dokument(e)",
       "chooseTarget": "Wähl eine Zielverbindung, Datenbank und einen Collection-Namen.",
       "copySuccess": "{{count}} Dokument(e) kopiert.",
-      "copy": "Kopieren"
+      "copy": "Kopieren",
+      "copyInBackground": "Im Hintergrund kopieren",
+      "taskLabel": "Kopiere {{collection}} → {{target}}"
     },
     "copyDatabase": {
       "title": "Datenbank kopieren",
@@ -176,7 +179,9 @@
       "chooseTarget": "Wähl eine Zielverbindung und einen Datenbank-Namen.",
       "copySuccess": "{{count}} Dokument(e) aus {{collectionCount}} Collection(s) kopiert.",
       "copying": "Kopiere..",
-      "copy": "Kopieren"
+      "copy": "Kopieren",
+      "copyInBackground": "Im Hintergrund kopieren",
+      "taskLabel": "Kopiere Datenbank {{dbName}} → {{targetDb}}"
     },
     "userEditor": {
       "createTitle": "Benutzer erstellen",
@@ -293,6 +298,11 @@
       "noFields": "Keine Felder in dieser Collection gefunden.",
       "export": "Exportieren",
       "exporting": "Wird exportiert…"
+    },
+    "fieldExport": {
+      "title": "Als {{format}} exportieren",
+      "selectAll": "Alle auswählen",
+      "deselectAll": "Alle abwählen"
     }
   },
   "aggregationTab": {
@@ -582,5 +592,11 @@
     "deleteBucket": "Bucket löschen",
     "dropBucketConfirm": "Bucket \"{{name}}\" und alle enthaltenen Dateien löschen? Dies kann nicht rückgängig gemacht werden.",
     "dropBucketConfirmTitle": "Bucket löschen"
+  },
+  "taskQueue": {
+    "runningCount": "{{count}} Aufgabe läuft",
+    "runningCount_plural": "{{count}} Aufgaben laufen",
+    "allDone": "Alle Aufgaben abgeschlossen",
+    "clearFinished": "Erledigte entfernen"
   }
 }
