@@ -162,7 +162,10 @@
       "copySuccess": "Copied {{count}} document(s).",
       "copy": "Copy",
       "copyInBackground": "Copy in Background",
-      "taskLabel": "Copy {{collection}} → {{target}}"
+      "taskLabel": "Copy {{collection}} → {{target}}",
+      "fields": "Fields",
+      "loadingFields": "Loading fields…",
+      "noFieldsSelected": "Select at least one field."
     },
     "copyDatabase": {
       "title": "Copy Database",
@@ -181,7 +184,10 @@
       "copying": "Copying..",
       "copy": "Copy",
       "copyInBackground": "Copy in Background",
-      "taskLabel": "Copy database {{dbName}} → {{targetDb}}"
+      "taskLabel": "Copy database {{dbName}} → {{targetDb}}",
+      "collections": "Collections",
+      "loadingCollections": "Loading collections…",
+      "noCollectionsSelected": "Select at least one collection."
     },
     "userEditor": {
       "createTitle": "Create user",
@@ -599,6 +605,8 @@
     "allDone": "All tasks finished",
     "clearFinished": "Clear finished",
     "progressDocs": "{{copied}} / {{total}} documents",
-    "progressCollections": "{{done}} / {{total}} collections"
+    "progressCollections": "{{done}} / {{total}} collections",
+    "cancel": "Cancel",
+    "cancelling": "Cancelling…"
   }
 }

@@ -664,6 +664,10 @@ select {
     background-position: right 14px top 50%, right 10px top 50%;
     background-size: 5px 5px, 5px 5px;
     background-repeat: no-repeat;
+    color-scheme: light;
+}
+
+body.dark select {
     color-scheme: dark;
 }
 
@@ -684,6 +688,91 @@ select:focus, select:hover {
 select option {
     background: var(--bg-void);
     color: var(--text-primary);
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    background: var(--field-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-family: var(--font-ui);
+    font-size: 12.5px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.custom-select-trigger:hover, .custom-select-trigger.is-open {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.custom-select-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.custom-select-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-select-value.is-placeholder {
+    color: var(--text-tertiary);
+}
+
+.custom-select-chevron {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    transition: transform 120ms ease;
+}
+
+.custom-select-trigger.is-open .custom-select-chevron {
+    transform: rotate(180deg);
+}
+
+.custom-select-menu {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.custom-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.custom-select-option-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-select-option.is-selected {
+    color: var(--accent);
+}
+
+.custom-select-option.is-highlighted {
+    background: var(--overlay-08);
+}
+
+.custom-select-empty {
+    padding: 8px 10px;
+    font-size: 12px;
+    color: var(--text-tertiary);
 }
 
 button {
@@ -3496,6 +3585,20 @@ input[type="range"]:focus-visible {
     background: var(--field-bg);
 }
 
+.sql-export-field-row-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sql-export-field-row-count {
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+    font-size: 11px;
+}
+
 .modal .sql-export-field-list .sql-export-field-row.is-disabled {
     color: var(--text-tertiary);
     cursor: not-allowed;
@@ -3585,6 +3688,16 @@ input[type="range"]:focus-visible {
     color: var(--danger);
 }
 
+.task-queue-item.status-cancelled .task-queue-item-row {
+    color: var(--text-tertiary);
+}
+
+.task-queue-cancel {
+    flex-shrink: 0;
+    padding: 0 8px;
+    font-size: 10.5px;
+}
+
 .task-queue-item-label {
     flex: 1;
     min-width: 0;
@@ -3628,8 +3741,76 @@ input[type="range"]:focus-visible {
     padding-left: 22px;
 }
 
+.task-queue-subitems {
+    margin-top: 5px;
+    margin-left: 22px;
+    padding: 4px 6px;
+    background: var(--overlay-04);
+    border-radius: var(--radius-sm);
+    max-height: 110px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.task-queue-subitem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-family: var(--font-mono);
+    color: var(--text-tertiary);
+}
+
+.task-queue-subitem.status-active {
+    color: var(--text-secondary);
+}
+
+.task-queue-subitem.status-done {
+    color: var(--diff-added);
+}
+
+.task-queue-subitem-icon {
+    flex-shrink: 0;
+    width: 10px;
+}
+
+.task-queue-subitem-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-queue-subitem-count {
+    flex-shrink: 0;
+}
+
 .sql-export-field-list-header {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 6px;
+}
+
+.sql-export-field-list-header--titled {
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sql-export-field-list-title {
+    margin: 0;
+}
+
+.modal.copy-modal {
+    width: 560px;
+}
+
+.modal.copy-modal > * + * {
+    margin-top: 12px;
+}
+
+.modal.copy-modal .sql-export-field-list {
+    max-height: 240px;
 }
