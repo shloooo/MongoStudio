@@ -3,6 +3,7 @@ import {createPortal} from 'react-dom';
 import {useTranslation, Trans} from 'react-i18next';
 import {groupPrivilegesByResource, sameRole} from '../lib/mongoPrivileges.js';
 import {useClosing} from '../lib/useClosing.js';
+import Select from './Select.jsx';
 
 export default function UserEditorDialog({connId, authDb, username, onClose, onSaved}) {
     const {t} = useTranslation();
@@ -203,28 +204,33 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                                         const hasCurrent = !role.role || known.some((r) => r.role === role.role);
                                         return (
                                             <div className="role-editor-row" key={index}>
-                                                <select value={role.role}
-                                                        onChange={(e) => updateRole(index, {role: e.target.value})}>
-                                                    <option value="">{t('dialogs.userEditor.selectRole')}</option>
-                                                    {!hasCurrent && <option value={role.role}>{role.role}</option>}
-                                                    <optgroup label={t('dialogs.userEditor.builtin')}>
-                                                        {known.filter((r) => r.isBuiltin).map((r) => (
-                                                            <option key={r.role} value={r.role}>{r.role}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                    <optgroup label={t('dialogs.userEditor.custom')}>
-                                                        {known.filter((r) => !r.isBuiltin).map((r) => (
-                                                            <option key={r.role} value={r.role}>{r.role}</option>
-                                                        ))}
-                                                    </optgroup>
-                                                </select>
+                                                <Select
+                                                    value={role.role}
+                                                    onChange={(v) => updateRole(index, {role: v})}
+                                                    placeholder={t('dialogs.userEditor.selectRole')}
+                                                    options={[
+                                                        ...(!hasCurrent ? [{value: role.role, label: role.role}] : []),
+                                                        ...known.filter((r) => r.isBuiltin).map((r) => ({
+                                                            value: r.role,
+                                                            label: r.role,
+                                                            group: t('dialogs.userEditor.builtin')
+                                                        })),
+                                                        ...known.filter((r) => !r.isBuiltin).map((r) => ({
+                                                            value: r.role,
+                                                            label: r.role,
+                                                            group: t('dialogs.userEditor.custom')
+                                                        }))
+                                                    ]}
+                                                />
                                                 <span className="role-editor-on">{t('dialogs.userEditor.on')}</span>
-                                                <select value={role.db}
-                                                        onChange={(e) => updateRole(index, {db: e.target.value})}>
-                                                    {!dbOptions.includes(role.db) &&
-                                                        <option value={role.db}>{role.db}</option>}
-                                                    {dbOptions.map((db) => <option key={db} value={db}>{db}</option>)}
-                                                </select>
+                                                <Select
+                                                    value={role.db}
+                                                    onChange={(v) => updateRole(index, {db: v})}
+                                                    options={[
+                                                        ...(!dbOptions.includes(role.db) ? [{value: role.db, label: role.db}] : []),
+                                                        ...dbOptions.map((db) => ({value: db, label: db}))
+                                                    ]}
+                                                />
                                                 <button type="button"
                                                         className="delete-icon-btn icon-btn"
                                                         title={t('dialogs.userEditor.removeRole')}

@@ -10,6 +10,7 @@ import BulkUpdateDialog from './BulkUpdateDialog.jsx';
 import CollectionHistoryDialog from './CollectionHistoryDialog.jsx';
 import {useConfirm} from './ConfirmProvider.jsx';
 import {reportError} from '../lib/errorBus.js';
+import Select from './Select.jsx';
 
 const PAGE_SIZE = 50;
 
@@ -70,11 +71,12 @@ function InlineCellEditor({ value, onCommit, onCancel }) {
   return (
       <span className="inline-value-editor cell-editor" ref={containerRef}>
         {type === 'Boolean' ? (
-            <select className="inline-input" autoFocus value={raw} onChange={(e) => setRaw(e.target.value)}
-                    onKeyDown={handleKeyDown}>
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
+            <Select
+                className="inline-input"
+                value={raw}
+                onChange={setRaw}
+                options={[{value: 'true', label: 'true'}, {value: 'false', label: 'false'}]}
+            />
         ) : type === 'Null' ? (
             <span className="inline-input inline-input-static">null</span>
         ) : (
@@ -114,19 +116,21 @@ function SetFieldValueDialog({field, onApply, onClose}) {
           <h3>{t('documentsTab.setFieldValueTitle', {field})}</h3>
           <p className="hint-text">{t('documentsTab.setFieldValueHint')}</p>
           <label>{t('documentsTab.type')}</label>
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            {FIELD_TYPES.filter((ft) => ft !== 'Object' && ft !== 'Array' && ft !== 'DBRef' && ft !== 'Binary').map((ft) =>
-                <option key={ft} value={ft}>{ft}</option>)}
-          </select>
+          <Select
+              value={type}
+              onChange={setType}
+              options={FIELD_TYPES.filter((ft) => ft !== 'Object' && ft !== 'Array' && ft !== 'DBRef' && ft !== 'Binary').map((ft) => ({value: ft, label: ft}))}
+          />
           {type !== 'Null' && (
               <>
                 <label>{t('documentsTab.value')}</label>
                 {type === 'Boolean' ? (
-                    <select value={raw} onChange={(e) => setRaw(e.target.value)}>
-                      <option value="">{t('documentsTab.selectPlaceholder')}</option>
-                      <option value="true">true</option>
-                      <option value="false">false</option>
-                    </select>
+                    <Select
+                        value={raw}
+                        onChange={setRaw}
+                        placeholder={t('documentsTab.selectPlaceholder')}
+                        options={[{value: 'true', label: 'true'}, {value: 'false', label: 'false'}]}
+                    />
                 ) : (
                     <input value={raw} onChange={(e) => setRaw(e.target.value)}/>
                 )}

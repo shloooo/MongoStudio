@@ -3,6 +3,7 @@ import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {useConfirm} from './ConfirmProvider.jsx';
 import {reportError} from '../lib/errorBus.js';
+import Select from './Select.jsx';
 
 function formatBytes(bytes) {
     if (bytes === undefined || bytes === null) return '';
@@ -153,15 +154,14 @@ export default function GridFSBrowser({selection}) {
     return (
         <div className="gridfs-browser">
             <div className="gridfs-toolbar">
-                <select
+                <Select
                     className="gridfs-bucket-select"
                     value={activeBucket || ''}
-                    onChange={(e) => setActiveBucket(e.target.value)}
+                    onChange={setActiveBucket}
                     disabled={!buckets || buckets.length === 0}
-                >
-                    {(!buckets || buckets.length === 0) && <option value="">{t('gridfs.noBuckets')}</option>}
-                    {buckets && buckets.map((b) => <option key={b} value={b}>{b}</option>)}
-                </select>
+                    placeholder={t('gridfs.noBuckets')}
+                    options={(buckets || []).map((b) => ({value: b, label: b}))}
+                />
                 <button onClick={() => setShowNewBucket((v) => !v)}>{t('gridfs.newBucket')}</button>
                 <button onClick={handleDropBucket} disabled={!activeBucket} className="tiny-btn-danger-outline">
                     {t('gridfs.deleteBucket')}

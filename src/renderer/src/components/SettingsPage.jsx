@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import UpdaterSection from './UpdaterSection.jsx';
+import Select from './Select.jsx';
 
 function SettingsSkeleton() {
     const {t} = useTranslation();
@@ -184,24 +185,36 @@ export default function SettingsPage({connections, onImported}) {
                     <h3><i className="fa-solid fa-sliders"/> {t('settings.general.heading')}</h3>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.general.language')}</span>
-                        <select value={settings.language || 'en'} onChange={(e) => updateLanguage(e.target.value)}>
-                            <option value="en">English</option>
-                            <option value="de">Deutsch</option>
-                        </select>
+                        <Select
+                            value={settings.language || 'en'}
+                            onChange={updateLanguage}
+                            options={[
+                                {value: 'en', label: 'English'},
+                                {value: 'de', label: 'Deutsch'}
+                            ]}
+                        />
                     </div>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.general.theme.heading')}</span>
-                        <select value={settings.theme || 'light'} onChange={(e) => updateTheme(e.target.value)}>
-                            <option value="light">{t('settings.general.theme.light')}</option>
-                            <option value="dark">{t('settings.general.theme.dark')}</option>
-                        </select>
+                        <Select
+                            value={settings.theme || 'light'}
+                            onChange={updateTheme}
+                            options={[
+                                {value: 'light', label: t('settings.general.theme.light')},
+                                {value: 'dark', label: t('settings.general.theme.dark')}
+                            ]}
+                        />
                     </div>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.general.update-channel.heading')}</span>
-                        <select value={settings.updateChannel || 'stable'} onChange={(e) => updateUpdateChannel(e.target.value)}>
-                            <option value="stable">{t('settings.general.update-channel.stable')}</option>
-                            <option value="canary">{t('settings.general.update-channel.canary')}</option>
-                        </select>
+                        <Select
+                            value={settings.updateChannel || 'stable'}
+                            onChange={updateUpdateChannel}
+                            options={[
+                                {value: 'stable', label: t('settings.general.update-channel.stable')},
+                                {value: 'canary', label: t('settings.general.update-channel.canary')}
+                            ]}
+                        />
                     </div>
                     <div className="settings-row settings-row-slider">
                         <span className="settings-row-label">{t('settings.general.glass-intensity')}</span>
@@ -225,11 +238,14 @@ export default function SettingsPage({connections, onImported}) {
                     <h3><i className="fa-solid fa-file-code"/> {t('settings.editor.heading')}</h3>
                     <div className="settings-row">
                         <span className="settings-row-label">{t('settings.editor.defaultTab')}</span>
-                        <select value={settings.defaultEditorTab || 'tree'}
-                                onChange={(e) => updateDefaultEditorTab(e.target.value)}>
-                            <option value="tree">{t('settings.editor.tab.tree')}</option>
-                            <option value="raw">{t('settings.editor.tab.raw')}</option>
-                        </select>
+                        <Select
+                            value={settings.defaultEditorTab || 'tree'}
+                            onChange={updateDefaultEditorTab}
+                            options={[
+                                {value: 'tree', label: t('settings.editor.tab.tree')},
+                                {value: 'raw', label: t('settings.editor.tab.raw')}
+                            ]}
+                        />
                     </div>
                 </div>
 

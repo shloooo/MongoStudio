@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
 import {toShellText} from '../lib/shellSyntax.js';
+import Select from './Select.jsx';
 
 function isExpandable(value) {
   const t = bsonTypeOf(value);
@@ -11,10 +12,12 @@ function isExpandable(value) {
 function TypeBadge({type, onChange, disabled}) {
   if (disabled) return <span className="type-badge">{type}</span>;
   return (
-      <select className="type-badge type-badge-select" value={type} onChange={(e) => onChange(e.target.value)}>
-        {FIELD_TYPES.filter((t) => t !== 'DBRef' && t !== 'Binary').map((t) => <option key={t}
-                                                                                       value={t}>{t}</option>)}
-      </select>
+      <Select
+          className="type-badge type-badge-select"
+          value={type}
+          onChange={onChange}
+          options={FIELD_TYPES.filter((t) => t !== 'DBRef' && t !== 'Binary').map((t) => ({value: t, label: t}))}
+      />
   );
 }
 
@@ -72,16 +75,19 @@ function ValueEditor({value, onCommit, onCancel}) {
 
   return (
       <span className="inline-value-editor" ref={containerRef}>
-      <select className="type-badge type-badge-select" value={type} onChange={(e) => setType(e.target.value)}>
-        {FIELD_TYPES.filter((t) => t !== 'Object' && t !== 'Array' && t !== 'DBRef' && t !== 'Binary').map((t) =>
-            <option key={t} value={t}>{t}</option>)}
-      </select>
+      <Select
+          className="type-badge type-badge-select"
+          value={type}
+          onChange={setType}
+          options={FIELD_TYPES.filter((t) => t !== 'Object' && t !== 'Array' && t !== 'DBRef' && t !== 'Binary').map((t) => ({value: t, label: t}))}
+      />
         {type === 'Boolean' ? (
-            <select className="inline-input" autoFocus value={raw} onChange={(e) => setRaw(e.target.value)}
-                    onKeyDown={handleKeyDown}>
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
+            <Select
+                className="inline-input"
+                value={raw}
+                onChange={setRaw}
+                options={[{value: 'true', label: 'true'}, {value: 'false', label: 'false'}]}
+            />
         ) : type === 'Null' ? (
             <span className="inline-input inline-input-static">null</span>
         ) : (
