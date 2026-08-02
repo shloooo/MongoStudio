@@ -512,6 +512,7 @@ select,
     align-items: center;
     justify-content: center;
     height: 100%;
+    width: 100%;
     color: var(--text-tertiary);
     gap: 4px;
     animation: tab-panel-in 160ms ease-out;
@@ -695,7 +696,6 @@ select option {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    width: 100%;
     background: var(--field-bg);
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
@@ -2518,11 +2518,6 @@ button.danger:hover {
     margin: 0 -4px;
 }
 
-.settings-row:hover,
-.settings-subsection:hover {
-    background: var(--overlay-03);
-}
-
 .settings-row:not(:last-child),
 .settings-subsection:not(:last-child) {
     border-bottom: 1px solid var(--overlay-04);
@@ -2845,7 +2840,8 @@ input[type="range"]:focus-visible {
 .context-menu {
     position: fixed;
     z-index: 300;
-    min-width: 190px;
+    min-width: fit-content!important;
+    max-width: fit-content!important;
     background: var(--glass-panel-strong);
     backdrop-filter: blur(var(--glass-blur-md)) saturate(180%);
     -webkit-backdrop-filter: blur(var(--glass-blur-md)) saturate(180%);
