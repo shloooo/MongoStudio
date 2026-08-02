@@ -512,38 +512,60 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return {ok: true, insertedCount, collectionCount: results.length, perCollection: results};
   });
 
-  ipcMain.handle('data:copyDatabase', async (event, {sourceConnId, sourceDb, targetConnId, targetDb, requestId}) => {
+  ipcMain.handle('data:copyDatabase', async (event, {sourceConnId, sourceDb, targetConnId, targetDb, collections, requestId}) => {
     const sourceClient = getClient(sourceConnId);
     const targetClient = getClient(targetConnId);
     const send = makeProgressSender(event, requestId);
+    const isCancelled = () => cancelledCopyRequests.has(requestId);
 
-    const collections = await sourceClient.db(sourceDb).listCollections().toArray();
-    send({phase: 'start', collections: collections.map((c) => c.name)});
+    const allCollections = await sourceClient.db(sourceDb).listCollections().toArray();
+    const selectedNames: string[] | null = Array.isArray(collections) && collections.length ? collections : null;
+    const targetCollections = selectedNames
+        ? allCollections.filter((c) => selectedNames.includes(c.name))
+        : allCollections;
+    send({phase: 'start', collections: targetCollections.map((c) => c.name)});
 
     let copiedCount = 0;
     const perCollection = [];
-    for (const c of collections) {
-      const sourceColl = sourceClient.db(sourceDb).collection(c.name);
-      const targetColl = targetClient.db(targetDb).collection(c.name);
-      const totalInCollection = await sourceColl.countDocuments();
-      send({phase: 'collection-start', collection: c.name, totalInCollection, copiedCount});
+    try {
+      for (const c of targetCollections) {
+        if (isCancelled()) throw new CopyCancelledError();
+        const sourceColl = sourceClient.db(sourceDb).collection(c.name);
+        const targetColl = targetClient.db(targetDb).collection(c.name);
+        const totalInCollection = await sourceColl.countDocuments();
+        send({phase: 'collection-start', collection: c.name, totalInCollection, copiedCount});
 
-      const copiedInCollection = await copyCollectionDocs(sourceColl, targetColl, (copiedInCollection) => {
-        send({
-          phase: 'progress',
-          collection: c.name,
-          copiedInCollection,
-          totalInCollection,
-          copiedCount: copiedCount + copiedInCollection
-        });
-      });
+        const copiedInCollection = await copyCollectionDocs(sourceColl, targetColl, (copiedInCollection) => {
+          send({
+            phase: 'progress',
+            collection: c.name,
+            copiedInCollection,
+            totalInCollection,
+            copiedCount: copiedCount + copiedInCollection
+          });
+        }, {isCancelled});
 
-      copiedCount += copiedInCollection;
-      perCollection.push({collection: c.name, count: copiedInCollection});
-      send({phase: 'collection-done', collection: c.name, copiedInCollection, totalInCollection, copiedCount});
+        copiedCount += copiedInCollection;
+        perCollection.push({collection: c.name, count: copiedInCollection});
+        send({phase: 'collection-done', collection: c.name, copiedInCollection, totalInCollection, copiedCount});
+      }
+    } catch (err) {
+      if (err instanceof CopyCancelledError) {
+        send({phase: 'cancelled', copiedCount});
+        cancelledCopyRequests.delete(requestId);
+        return {ok: false, cancelled: true, copiedCount};
+      }
+      cancelledCopyRequests.delete(requestId);
+      throw err;
     }
-    send({phase: 'done', copiedCount, collectionCount: collections.length});
-    return {ok: true, copiedCount, collectionCount: collections.length, perCollection};
+    cancelledCopyRequests.delete(requestId);
+    send({phase: 'done', copiedCount, collectionCount: targetCollections.length});
+    return {ok: true, copiedCount, collectionCount: targetCollections.length, perCollection};
+  });
+
+  ipcMain.handle('data:cancelCopy', async (event, {requestId}) => {
+    cancelledCopyRequests.add(requestId);
+    return {ok: true};
   });
 
   ipcMain.handle('data:listCollectionFields', async (event, {connId, dbName, collection}) => {
@@ -645,23 +667,36 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     targetConnId,
     targetDb,
     targetCollection,
+    fields,
     requestId
   }) => {
     const sourceClient = getClient(sourceConnId);
     const targetClient = getClient(targetConnId);
     const send = makeProgressSender(event, requestId);
+    const isCancelled = () => cancelledCopyRequests.has(requestId);
 
     const sourceColl = sourceClient.db(sourceDb).collection(sourceCollection);
     const targetColl = targetClient.db(targetDb).collection(targetCollection);
     const totalInCollection = await sourceColl.countDocuments();
     send({phase: 'start', collection: sourceCollection, totalInCollection});
 
-    const copiedCount = await copyCollectionDocs(sourceColl, targetColl, (copiedCount) => {
-      send({phase: 'progress', collection: sourceCollection, copiedCount, totalInCollection});
-    });
+    try {
+      const copiedCount = await copyCollectionDocs(sourceColl, targetColl, (copiedCount) => {
+        send({phase: 'progress', collection: sourceCollection, copiedCount, totalInCollection});
+      }, {fields, isCancelled});
 
-    send({phase: 'done', collection: sourceCollection, copiedCount, totalInCollection});
-    return {ok: true, copiedCount};
+      cancelledCopyRequests.delete(requestId);
+      send({phase: 'done', collection: sourceCollection, copiedCount, totalInCollection});
+      return {ok: true, copiedCount};
+    } catch (err) {
+      if (err instanceof CopyCancelledError) {
+        send({phase: 'cancelled', collection: sourceCollection});
+        cancelledCopyRequests.delete(requestId);
+        return {ok: false, cancelled: true};
+      }
+      cancelledCopyRequests.delete(requestId);
+      throw err;
+    }
   });
 
   ipcMain.handle('data:exportResults', async (event, {docs, format, suggestedName}) => {
@@ -864,6 +899,14 @@ function resourceCoversCollection(resource: any, dbName: string, collection: str
 }
 
 const COPY_BATCH_SIZE = 500;
+const cancelledCopyRequests = new Set<string>();
+
+class CopyCancelledError extends Error {
+  constructor() {
+    super('CANCELLED');
+    this.name = 'CopyCancelledError';
+  }
+}
 
 function makeProgressSender(event: IpcMainInvokeEvent, requestId: string) {
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -874,19 +917,34 @@ function makeProgressSender(event: IpcMainInvokeEvent, requestId: string) {
   };
 }
 
-async function copyCollectionDocs(sourceColl: Collection, targetColl: Collection, onBatch?: (copiedCount: number) => void): Promise<number> {
+async function copyCollectionDocs(
+    sourceColl: Collection,
+    targetColl: Collection,
+    onBatch?: (copiedCount: number) => void,
+    options: {fields?: string[] | null; isCancelled?: () => boolean} = {}
+): Promise<number> {
+  const {fields, isCancelled} = options;
+  const fieldSet = Array.isArray(fields) && fields.length ? fields : null;
+  function project(doc: any) {
+    if (!fieldSet) return doc;
+    const out: Record<string, any> = {};
+    for (const f of fieldSet) if (Object.prototype.hasOwnProperty.call(doc, f)) out[f] = doc[f];
+    return out;
+  }
   const cursor = sourceColl.find({});
   let batch: any[] = [];
   let copiedCount = 0;
   while (await cursor.hasNext()) {
-    batch.push(await cursor.next());
+    batch.push(project(await cursor.next()));
     if (batch.length >= COPY_BATCH_SIZE) {
+      if (isCancelled && isCancelled()) throw new CopyCancelledError();
       const result = await targetColl.insertMany(batch, {ordered: false});
       copiedCount += result.insertedCount;
       batch = [];
       if (onBatch) onBatch(copiedCount);
     }
   }
+  if (isCancelled && isCancelled()) throw new CopyCancelledError();
   if (batch.length) {
     const result = await targetColl.insertMany(batch, {ordered: false});
     copiedCount += result.insertedCount;

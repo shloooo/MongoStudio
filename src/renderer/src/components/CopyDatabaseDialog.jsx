@@ -1,102 +1,82 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useClosing} from '../lib/useClosing.js';
 import {Trans, useTranslation} from 'react-i18next';
 import {useTaskQueue} from './TaskQueueProvider.jsx';
+import {reportError} from '../lib/errorBus.js';
+import Select from './Select.jsx';
 
 export default function CopyDatabaseDialog({ source, openConnections, onClose, onCopied }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const {closing, requestClose} = useClosing(onClose);
     const {enqueue, updateTaskProgress} = useTaskQueue();
     const [targetConnId, setTargetConnId] = useState('');
     const [targetDb, setTargetDb] = useState(source.dbName);
-    const [busy, setBusy] = useState(false);
+    const [loadingCollections, setLoadingCollections] = useState(true);
+    const [collections, setCollections] = useState([]); // [{ name, count }] sorted alphabetically
+    const [selected, setSelected] = useState(new Set());
     const [error, setError] = useState('');
-    const [result, setResult] = useState(null);
-    const [queue, setQueue] = useState([]); // [{ name, status: 'pending'|'active'|'done', copied, total }]
-    const [overallCopied, setOverallCopied] = useState(0);
-    const requestIdRef = useRef(null);
-    const taskIdRef = useRef(null);
 
     useEffect(() => {
-        const unsubscribe = window.api.data.onCopyProgress((payload) => {
-            if (!requestIdRef.current || payload.requestId !== requestIdRef.current) return;
-            switch (payload.phase) {
-                case 'start':
-                    setQueue((payload.collections || []).map((name) => ({ name, status: 'pending', copied: 0, total: 0 })));
-                    setOverallCopied(0);
-                    break;
-                case 'collection-start':
-                    setQueue((prev) => prev.map((item) => item.name === payload.collection
-                        ? { ...item, status: 'active', total: payload.totalInCollection || 0 }
-                        : item));
-                    break;
-                case 'progress':
-                    setQueue((prev) => prev.map((item) => item.name === payload.collection
-                        ? { ...item, copied: payload.copiedInCollection || 0, total: payload.totalInCollection ?? item.total }
-                        : item));
-                    if (payload.copiedCount !== undefined) {
-                        setOverallCopied(payload.copiedCount);
-                    }
-                    break;
-                case 'collection-done':
-                    setQueue((prev) => prev.map((item) => item.name === payload.collection
-                        ? { ...item, status: 'done', copied: payload.copiedInCollection ?? item.copied, total: payload.totalInCollection ?? item.total }
-                        : item));
-                    if (payload.copiedCount !== undefined) setOverallCopied(payload.copiedCount);
-                    break;
-                case 'done':
-                    if (payload.copiedCount !== undefined) setOverallCopied(payload.copiedCount);
-                    break;
-                default:
-                    break;
-            }
+        let cancelled = false;
+        setLoadingCollections(true);
+        window.api.conn.listCollectionsWithCounts(source.connId, source.dbName).then((cols) => {
+            if (cancelled) return;
+            const sorted = [...(cols || [])].sort((a, b) => a.name.localeCompare(b.name));
+            setCollections(sorted);
+            setSelected(new Set(sorted.map((c) => c.name)));
+        }).catch((err) => {
+            reportError(err.message, 'List collections');
+        }).finally(() => {
+            if (!cancelled) setLoadingCollections(false);
         });
-        return unsubscribe;
-    }, []);
+        return () => { cancelled = true; };
+    }, [source.connId, source.dbName]);
 
-    function startCopy() {
+    function toggleCollection(name) {
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(name)) next.delete(name);
+            else next.add(name);
+            return next;
+        });
+    }
+
+    function toggleAll() {
+        setSelected((prev) => (prev.size === collections.length ? new Set() : new Set(collections.map((c) => c.name))));
+    }
+
+    function formatCount(count) {
+        return count.toLocaleString(i18n.language);
+    }
+
+    const otherConnections = openConnections.filter((c) => c.id !== source.connId);
+
+    function handleCopy() {
         if (!targetConnId || !targetDb) {
             setError(t('dialogs.copyDatabase.chooseTarget'));
-            return null;
+            return;
+        }
+        if (selected.size === 0) {
+            setError(t('dialogs.copyDatabase.noCollectionsSelected'));
+            return;
         }
         setError('');
-        setQueue([]);
-        setOverallCopied(0);
         const requestId = crypto.randomUUID();
-        requestIdRef.current = requestId;
-        return window.api.data.copyDatabase({
+        const allSelected = selected.size === collections.length;
+        const task = window.api.data.copyDatabase({
             sourceConnId: source.connId,
             sourceDb: source.dbName,
             targetConnId,
             targetDb,
+            collections: allSelected ? [] : Array.from(selected),
             requestId
         });
-    }
 
-    async function handleCopy() {
-        const task = startCopy();
-        if (!task) return;
-        setBusy(true);
-        try {
-            const res = await task;
-            setResult(res);
-            if (onCopied) onCopied();
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setBusy(false);
-        }
-    }
-
-    function handleCopyInBackground() {
-        const task = startCopy();
-        if (!task) return;
-        const requestId = requestIdRef.current;
         const label = t('dialogs.copyDatabase.taskLabel', {dbName: source.dbName, targetDb});
         const id = enqueue(task, label, {
-            onDone: () => { if (onCopied) onCopied(); }
+            onDone: () => { if (onCopied) onCopied(); },
+            onCancel: () => window.api.data.cancelCopy(requestId)
         });
-        taskIdRef.current = id;
 
         let bgQueue = [];
         let bgOverallCopied = 0;
@@ -106,27 +86,36 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
             updateTaskProgress(id, {
                 percent: Math.min(100, (doneCount / bgQueue.length) * 100),
                 detail: t('taskQueue.progressCollections', {done: doneCount, total: bgQueue.length})
-                    + ' \u00b7 ' + t('dialogs.copyDatabase.copiedSoFar', {count: bgOverallCopied})
+                    + ' \u00b7 ' + t('dialogs.copyDatabase.copiedSoFar', {count: bgOverallCopied}),
+                subitems: bgQueue
             });
         }
         const unsubscribeQueueProgress = window.api.data.onCopyProgress((payload) => {
             if (payload.requestId !== requestId) return;
             switch (payload.phase) {
                 case 'start':
-                    bgQueue = (payload.collections || []).map((name) => ({ name, status: 'pending' }));
+                    bgQueue = (payload.collections || []).map((name) => ({ name, status: 'pending', copied: 0, total: 0 }));
                     bgOverallCopied = 0;
                     break;
                 case 'collection-start':
-                    bgQueue = bgQueue.map((item) => item.name === payload.collection ? { ...item, status: 'active' } : item);
+                    bgQueue = bgQueue.map((item) => item.name === payload.collection
+                        ? { ...item, status: 'active', total: payload.totalInCollection || 0 }
+                        : item);
                     break;
                 case 'progress':
+                    bgQueue = bgQueue.map((item) => item.name === payload.collection
+                        ? { ...item, copied: payload.copiedInCollection || 0, total: payload.totalInCollection ?? item.total }
+                        : item);
                     if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
                     break;
                 case 'collection-done':
-                    bgQueue = bgQueue.map((item) => item.name === payload.collection ? { ...item, status: 'done' } : item);
+                    bgQueue = bgQueue.map((item) => item.name === payload.collection
+                        ? { ...item, status: 'done', copied: payload.copiedInCollection ?? item.copied, total: payload.totalInCollection ?? item.total }
+                        : item);
                     if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
                     break;
                 case 'done':
+                case 'cancelled':
                     if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
                     break;
                 default:
@@ -138,18 +127,9 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
         requestClose();
     }
 
-    const otherConnections = openConnections.filter((c) => c.id !== source.connId);
-    const doneCount = queue.filter((item) => item.status === 'done').length;
-
-    function statusLabel(item) {
-        if (item.status === 'done') return t('dialogs.copyDatabase.statusDone', {count: item.copied});
-        if (item.status === 'active') return item.total ? `${item.copied} / ${item.total}` : t('dialogs.copyDatabase.statusCopying');
-        return t('dialogs.copyDatabase.statusPending');
-    }
-
     return (
         <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal copy-modal" onClick={(e) => e.stopPropagation()}>
                 <h3>{t('dialogs.copyDatabase.title')}</h3>
                 <p className="hint-text">
                     <Trans i18nKey="dialogs.copyDatabase.description"
@@ -160,64 +140,57 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                 {otherConnections.length === 0 ? (
                     <div className="error-banner">{t('dialogs.copyDatabase.noOtherConnections')}</div>
                 ) : (
-                    <>
-                        <label>{t('dialogs.copyDatabase.targetConnection')}</label>
-                        <select value={targetConnId} onChange={(e) => setTargetConnId(e.target.value)} disabled={busy}>
-                            <option value="">{t('dialogs.copyDatabase.selectConnection')}</option>
-                            {otherConnections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-
-                        <label>{t('dialogs.copyDatabase.targetDatabaseName')}</label>
-                        <input value={targetDb} onChange={(e) => setTargetDb(e.target.value)} disabled={busy} />
-                    </>
+                    <div className="row">
+                        <div>
+                            <label>{t('dialogs.copyDatabase.targetConnection')}</label>
+                            <Select
+                                value={targetConnId}
+                                onChange={setTargetConnId}
+                                placeholder={t('dialogs.copyDatabase.selectConnection')}
+                                options={otherConnections.map((c) => ({value: c.id, label: c.name}))}
+                            />
+                        </div>
+                        <div>
+                            <label>{t('dialogs.copyDatabase.targetDatabaseName')}</label>
+                            <input value={targetDb} onChange={(e) => setTargetDb(e.target.value)} />
+                        </div>
+                    </div>
                 )}
 
-                {queue.length > 0 && (
+                {otherConnections.length > 0 && (
                     <>
-                        <label>{t('dialogs.copyDatabase.queue', {done: doneCount, total: queue.length})}</label>
-                        <div className="copy-queue">
-                            {queue.map((item) => (
-                                <div key={item.name} className={`copy-queue-item ${item.status === 'active' ? 'is-active' : ''} ${item.status === 'done' ? 'is-done' : ''}`}>
-                                    <div className="copy-queue-item-head">
-                                        <span className="copy-queue-item-name">
-                                            {item.status === 'done' ? '✓ ' : item.status === 'active' ? '↻ ' : '· '}{item.name}
-                                        </span>
-                                        <span className="copy-queue-item-status">{statusLabel(item)}</span>
-                                    </div>
-                                    {item.status === 'active' && item.total > 0 && (
-                                        <div className="update-progress-bar-track">
-                                            <div className="update-progress-bar-fill"
-                                                 style={{width: `${Math.min(100, (item.copied / item.total) * 100)}%`}}/>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                        <div className="sql-export-field-list-header sql-export-field-list-header--titled">
+                            <label className="sql-export-field-list-title">{t('dialogs.copyDatabase.collections')}</label>
+                            {!loadingCollections && collections.length > 0 && (
+                                <button className="tiny-btn" onClick={toggleAll}>
+                                    {selected.size === collections.length ? t('dialogs.fieldExport.deselectAll') : t('dialogs.fieldExport.selectAll')}
+                                </button>
+                            )}
                         </div>
-                        <div className="copy-queue-summary">{t('dialogs.copyDatabase.copiedSoFar', {count: overallCopied})}</div>
+                        {loadingCollections ? (
+                            <p className="hint-text">{t('dialogs.copyDatabase.loadingCollections')}</p>
+                        ) : (
+                            <div className="sql-export-field-list">
+                                {collections.map((c) => (
+                                    <label key={c.name} className="sql-export-field-row">
+                                        <input type="checkbox" checked={selected.has(c.name)} onChange={() => toggleCollection(c.name)} />
+                                        <span className="sql-export-field-row-name">{c.name}</span>
+                                        <span className="sql-export-field-row-count">{formatCount(c.count)}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
                     </>
                 )}
 
                 {error && <div className="error-banner">{error}</div>}
-                {result && result.ok && (
-                    <div className="info-banner">
-                        {t('dialogs.copyDatabase.copySuccess', {count: result.copiedCount, collectionCount: result.collectionCount})}
-                    </div>
-                )}
 
                 <div className="modal-actions">
                     <div className="spacer" />
-                    <button onClick={() => requestClose()}
-                            disabled={busy}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
-                    {!result && (
-                        <>
-                            <button onClick={handleCopyInBackground} disabled={busy || otherConnections.length === 0}>
-                                {t('dialogs.copyDatabase.copyInBackground')}
-                            </button>
-                            <button className="primary" onClick={handleCopy} disabled={busy || otherConnections.length === 0}>
-                                {busy ? t('dialogs.copyDatabase.copying') : t('dialogs.copyDatabase.copy')}
-                            </button>
-                        </>
-                    )}
+                    <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
+                    <button className="primary" onClick={handleCopy} disabled={otherConnections.length === 0 || loadingCollections}>
+                        {t('dialogs.copyDatabase.copy')}
+                    </button>
                 </div>
             </div>
         </div>

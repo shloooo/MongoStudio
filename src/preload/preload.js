@@ -50,6 +50,7 @@ contextBridge.exposeInMainWorld('api', {
         close: (id) => ipcRenderer.invoke('conn:close', id),
         listDatabases: (id) => ipcRenderer.invoke('conn:listDatabases', id),
         listCollections: (connId, dbName) => ipcRenderer.invoke('conn:listCollections', { connId, dbName }),
+        listCollectionsWithCounts: (connId, dbName) => ipcRenderer.invoke('conn:listCollectionsWithCounts', { connId, dbName }),
         createDatabase: (args) => ipcRenderer.invoke('conn:createDatabase', args),
         pickPrivateKey: () => ipcRenderer.invoke('conn:pickPrivateKey'),
         onDisconnected: (cb) => {
@@ -102,6 +103,7 @@ contextBridge.exposeInMainWorld('api', {
         exportDatabase: (args) => ipcRenderer.invoke('data:exportDatabase', args),
         importDatabase: (args) => ipcRenderer.invoke('data:importDatabase', args),
         copyDatabase: (args) => ipcRenderer.invoke('data:copyDatabase', args),
+        cancelCopy: (requestId) => ipcRenderer.invoke('data:cancelCopy', {requestId}),
         historyList: (args) => ipcRenderer.invoke('data:history:list', args),
         historyClear: (args) => ipcRenderer.invoke('data:history:clear', args),
         historyUndo: (args) => ipcRenderer.invoke('data:history:undo', args),

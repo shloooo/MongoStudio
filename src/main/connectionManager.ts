@@ -189,6 +189,32 @@ export function registerConnectionHandlers(ipcMain: IpcMain, store: SecureStore)
         }
     });
 
+    ipcMain.handle('conn:listCollectionsWithCounts', async (event, {connId, dbName}: { connId: string; dbName: string }) => {
+        const client = activeClients.get(connId);
+        if (!client) throw new Error('Connection is not open');
+        try {
+            const cols = await client.db(dbName).listCollections().toArray();
+            const withCounts = await Promise.all(cols.map(async (c) => {
+                let count = 0;
+                try {
+                    count = await client.db(dbName).collection(c.name).estimatedDocumentCount();
+                } catch {
+                    count = 0;
+                }
+                return {name: c.name, type: c.type, count};
+            }));
+            withCounts.sort((a, b) => a.name.localeCompare(b.name));
+            return withCounts;
+        } catch (err) {
+            if (isDeadConnectionError(err)) {
+                await cleanupClient(connId);
+                notifyDisconnected(connId);
+                throw new Error('Connection lost. Please reconnect.');
+            }
+            throw err;
+        }
+    });
+
     ipcMain.handle('conn:createDatabase', async (event, {connId, dbName, collection}: {
         connId: string;
         dbName: string;
