@@ -20,11 +20,20 @@ export function TaskQueueProvider({children}) {
             progress: null,
             result: null,
             error: null,
-            onProgress: opts.onProgress
+            onCancel: opts.onCancel || null
         };
         setTasks((prev) => [...prev, task]);
 
         promise.then((result) => {
+            if (result && result.cancelled) {
+                setTasks((prev) => prev.map((tk) => (tk.id === id ? {
+                    ...tk,
+                    status: 'cancelled',
+                    result,
+                    finishedAt: Date.now()
+                } : tk)));
+                return;
+            }
             setTasks((prev) => prev.map((tk) => (tk.id === id ? {
                 ...tk,
                 status: 'done',
@@ -33,6 +42,14 @@ export function TaskQueueProvider({children}) {
             } : tk)));
             if (opts.onDone) opts.onDone(result);
         }).catch((err) => {
+            if (err && err.message === 'CANCELLED') {
+                setTasks((prev) => prev.map((tk) => (tk.id === id ? {
+                    ...tk,
+                    status: 'cancelled',
+                    finishedAt: Date.now()
+                } : tk)));
+                return;
+            }
             setTasks((prev) => prev.map((tk) => (tk.id === id ? {
                 ...tk,
                 status: 'error',
@@ -53,6 +70,14 @@ export function TaskQueueProvider({children}) {
         setTasks((prev) => prev.filter((tk) => tk.id !== id));
     }, []);
 
+    const cancelTask = useCallback((id) => {
+        setTasks((prev) => {
+            const task = prev.find((tk) => tk.id === id);
+            if (task && task.onCancel) task.onCancel();
+            return prev.map((tk) => (tk.id === id ? {...tk, cancelling: true} : tk));
+        });
+    }, []);
+
     const clearFinished = useCallback(() => {
         setTasks((prev) => prev.filter((tk) => tk.status === 'running'));
     }, []);
@@ -60,7 +85,7 @@ export function TaskQueueProvider({children}) {
     const runningCount = tasks.filter((tk) => tk.status === 'running').length;
 
     return (
-        <TaskQueueContext.Provider value={{enqueue, updateTaskProgress, dismissTask}}>
+        <TaskQueueContext.Provider value={{enqueue, updateTaskProgress, dismissTask, cancelTask}}>
             {children}
             {tasks.length > 0 && (
                 <div className={`task-queue-panel ${collapsed ? 'is-collapsed' : ''}`}>
@@ -92,9 +117,17 @@ export function TaskQueueProvider({children}) {
                                         <i className={
                                             task.status === 'running' ? 'fa-solid fa-spinner fa-spin'
                                                 : task.status === 'done' ? 'fa-solid fa-check'
-                                                    : 'fa-solid fa-triangle-exclamation'
+                                                    : task.status === 'cancelled' ? 'fa-solid fa-ban'
+                                                        : 'fa-solid fa-triangle-exclamation'
                                         }/>
                                         <span className="task-queue-item-label">{task.label}</span>
+                                        {task.status === 'running' && task.onCancel && (
+                                            <button className="tiny-btn task-queue-cancel"
+                                                    disabled={task.cancelling}
+                                                    onClick={() => cancelTask(task.id)}>
+                                                {task.cancelling ? t('taskQueue.cancelling') : t('taskQueue.cancel')}
+                                            </button>
+                                        )}
                                         {task.status !== 'running' && (
                                             <button className="tiny-btn task-queue-dismiss"
                                                     onClick={() => dismissTask(task.id)}>×</button>
@@ -108,6 +141,22 @@ export function TaskQueueProvider({children}) {
                                     )}
                                     {task.progress && task.progress.detail && (
                                         <div className="task-queue-item-detail">{task.progress.detail}</div>
+                                    )}
+                                    {task.progress && task.progress.subitems && task.progress.subitems.length > 0 && (
+                                        <div className="task-queue-subitems">
+                                            {task.progress.subitems.map((sub) => (
+                                                <div key={sub.name}
+                                                     className={`task-queue-subitem status-${sub.status}`}>
+                                                    <span className="task-queue-subitem-icon">
+                                                        {sub.status === 'done' ? '✓' : sub.status === 'active' ? '↻' : '·'}
+                                                    </span>
+                                                    <span className="task-queue-subitem-name">{sub.name}</span>
+                                                    <span className="task-queue-subitem-count">
+                                                        {sub.total ? `${sub.copied || 0} / ${sub.total}` : (sub.copied || 0)}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                     {task.status === 'error' &&
                                         <div className="task-queue-item-error">{task.error}</div>}
