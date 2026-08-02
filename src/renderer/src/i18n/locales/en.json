@@ -466,6 +466,7 @@
     "title": "Settings",
     "general": {
       "heading": "General",
+      "desc": "Language, appearance and update preferences for the app.",
       "language": "Interface language",
       "update-channel": {
         "heading": "Update Channel",
@@ -481,6 +482,7 @@
     },
     "editor": {
       "heading": "Document Editor",
+      "desc": "Defaults for the document editor, table sorting and change history.",
       "defaultTab": "Default tab editor",
       "tab": {
         "tree": "Tree",
@@ -493,6 +495,7 @@
     },
     "security": {
       "heading": "Security",
+      "desc": "Protect stored connection credentials with a master password.",
       "notSet": "Master password is not set. Connections are stored unencrypted.",
       "enabled": "Master password is enabled.",
       "setup": "Set up",
@@ -523,6 +526,7 @@
     },
     "backup": {
       "heading": "Backup",
+      "desc": "Export or import your connections and app settings as a file.",
       "export": "Export settings & connections",
       "import": "Import settings & connections",
       "exportedTo": "Exported to {{path}}",

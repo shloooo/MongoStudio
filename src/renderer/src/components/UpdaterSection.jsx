@@ -115,7 +115,10 @@ export default function UpdaterSection() {
 
     return (
         <div className="settings-section">
-            <h3>{t('updaterSection.heading')}</h3>
+            <div className="settings-section-head">
+                <span className="settings-icon-badge"><i className="fa-solid fa-arrows-rotate"/></span>
+                <h3>{t('updaterSection.heading')}</h3>
+            </div>
 
             {phase === 'idle' && (
                 <button onClick={handleCheck}>{t('updaterSection.checkForUpdates')}</button>
