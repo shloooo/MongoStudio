@@ -586,44 +586,39 @@ export default function App() {
                             </div>
                         ))}
                     </div>
-                    {activeTabId === 'settings-tab' ? (
-                        <SettingsPage connections={connections} onImported={refreshConnections}/>
-                    ) : contentTabs.length === 0 ? (
-                        <div className="empty-state">
-                            <h2>MongoStudio</h2>
-                            <p>{t('app.emptyState.body')}</p>
+                    <div className="tab-panel-host">
+                        <div className={`tab-panel ${activeTabId === 'settings-tab' ? 'tab-panel-active' : ''}`}>
+                            <SettingsPage connections={connections} onImported={refreshConnections}/>
                         </div>
-                    ) : (
-                        <div className="tab-panel-host">
-                            {contentTabs.map((tab) => (
-                                <div key={tab.id}
-                                     className={`tab-panel ${tab.id === activeTabId ? 'tab-panel-active' : ''}`}>
-                                    {tab.kind === 'users' || tab.kind === 'collection-users' ? (
-                                        <UsersView
-                                            selection={tab}
-                                            mode={tab.kind === 'collection-users' ? 'collection' : 'database'}
-                                            reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
-                                        />
-                                    ) : tab.kind === 'shell' ? (
-                                        <ShellConsole
-                                            selection={tab}
-                                            log={tab.shellLog || []}
-                                            onLogChange={(updater) => updateTab(tab.id, (t) => ({shellLog: updater(t.shellLog || [])}))}
-                                            cmdHistory={tab.shellCmdHistory || []}
-                                            onCmdHistoryChange={(updater) => updateTab(tab.id, (t) => ({shellCmdHistory: updater(t.shellCmdHistory || [])}))}
-                                        />
-                                    ) : tab.kind === 'gridfs' ? (
-                                        <GridFSBrowser selection={tab}/>
-                                    ) : (
-                                        <CollectionView
-                                            selection={tab}
-                                            reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}
-                                        />
-                                    )}
-                                </div>
-                            ))}
+                        <div
+                            className={`tab-panel ${activeTabId !== 'settings-tab' && contentTabs.length === 0 ? 'tab-panel-active' : ''}`}>
+                            <div className="empty-state">
+                                <h2>MongoStudio</h2>
+                                <p>{t('app.emptyState.body')}</p>
+                            </div>
                         </div>
-                    )}
+                        {contentTabs.map((tab) => (
+                            <div key={tab.id}
+                                 className={`tab-panel ${tab.id === activeTabId ? 'tab-panel-active' : ''}`}>
+                                {tab.kind === 'users' || tab.kind === 'collection-users' ? (
+                                    <UsersView selection={tab}
+                                               mode={tab.kind === 'collection-users' ? 'collection' : 'database'}
+                                               reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}/>
+                                ) : tab.kind === 'shell' ? (
+                                    <ShellConsole selection={tab}
+                                                  log={tab.shellLog || []}
+                                                  onLogChange={(updater) => updateTab(tab.id, (t) => ({shellLog: updater(t.shellLog || [])}))}
+                                                  cmdHistory={tab.shellCmdHistory || []}
+                                                  onCmdHistoryChange={(updater) => updateTab(tab.id, (t) => ({shellCmdHistory: updater(t.shellCmdHistory || [])}))}/>
+                                ) : tab.kind === 'gridfs' ? (
+                                    <GridFSBrowser selection={tab}/>
+                                ) : (
+                                    <CollectionView selection={tab}
+                                                    reloadSignal={tab.id === activeTabId ? reloadSignal : undefined}/>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </main>
                 {dialogState.open && (
                     <ConnectionDialog
@@ -633,48 +628,38 @@ export default function App() {
                     />
                 )}
                 {contextMenu && (
-                    <ContextMenu
-                        x={contextMenu.x}
-                        y={contextMenu.y}
-                        items={contextMenu.items}
-                        onClose={() => setContextMenu(null)}
-                    />
+                    <ContextMenu x={contextMenu.x}
+                                 y={contextMenu.y}
+                                 items={contextMenu.items}
+                                 onClose={() => setContextMenu(null)}/>
                 )}
                 {copyDialogSource && (
-                    <CopyCollectionDialog
-                        source={copyDialogSource}
-                        openConnections={connections.filter((c) => openConnIds.has(c.id))}
-                        onClose={() => setCopyDialogSource(null)}
-                        onCopied={() => setReloadSignal((s) => s + 1)}
-                    />
+                    <CopyCollectionDialog source={copyDialogSource}
+                                          openConnections={connections.filter((c) => openConnIds.has(c.id))}
+                                          onClose={() => setCopyDialogSource(null)}
+                                          onCopied={() => setReloadSignal((s) => s + 1)}/>
                 )}
                 {sqlExportSource && (
-                    <SqlExportDialog
-                        selection={sqlExportSource}
-                        onClose={() => setSqlExportSource(null)}
-                        onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
-                        onQueued={(task, label) => enqueue(task, label, {
-                            onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
-                        })}
-                    />
+                    <SqlExportDialog selection={sqlExportSource}
+                                     onClose={() => setSqlExportSource(null)}
+                                     onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
+                                     onQueued={(task, label) => enqueue(task, label, {
+                                         onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
+                                     })}/>
                 )}
                 {jsonCsvExportSource && (
-                    <JsonCsvExportDialog
-                        selection={jsonCsvExportSource}
-                        onClose={() => setJsonCsvExportSource(null)}
-                        onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
-                        onQueued={(task, label) => enqueue(task, label, {
-                            onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
-                        })}
-                    />
+                    <JsonCsvExportDialog selection={jsonCsvExportSource}
+                                         onClose={() => setJsonCsvExportSource(null)}
+                                         onExported={(res) => setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})})}
+                                         onQueued={(task, label) => enqueue(task, label, {
+                                             onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
+                                         })}/>
                 )}
                 {copyDbDialogSource && (
-                    <CopyDatabaseDialog
-                        source={copyDbDialogSource}
-                        openConnections={connections.filter((c) => openConnIds.has(c.id))}
-                        onClose={() => setCopyDbDialogSource(null)}
-                        onCopied={() => setReloadSignal((s) => s + 1)}
-                    />
+                    <CopyDatabaseDialog source={copyDbDialogSource}
+                                        openConnections={connections.filter((c) => openConnIds.has(c.id))}
+                                        onClose={() => setCopyDbDialogSource(null)}
+                                        onCopied={() => setReloadSignal((s) => s + 1)}/>
                 )}
             </div>
         </div>
