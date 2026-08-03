@@ -4141,10 +4141,14 @@ input[type="range"]:focus-visible {
     font-weight: 600;
 }
 
+.backup-db-name-row .sql-export-field-row-name {
+    color: var(--text-primary);
+}
+
 .backup-db-collections {
     margin: 0 0 4px 22px;
     max-height: none;
     background: transparent;
     padding: 2px 0 2px 6px;
-    border-left: 1px solid var(--border-color, rgba(128, 128, 128, 0.25));
+    border-left: 1px solid var(--glass-border-strong);
 }
