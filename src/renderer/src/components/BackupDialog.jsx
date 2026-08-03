@@ -39,6 +39,7 @@ export default function BackupDialog({connection, onClose}) {
                 initial[db.name] = new Set(db.collections.map((c) => c.name));
             });
             setSelection(initial);
+            setCollapsed(new Set((dbs || []).map((db) => db.name)));
         }).catch((err) => {
             reportError(err.message, 'List backup collections');
         }).finally(() => {
@@ -200,15 +201,15 @@ export default function BackupDialog({connection, onClose}) {
                     </button>
                 </div>
 
-                <p className="hint-text">{t('dialogs.backup.excludedNote')}</p>
-
                 {tab === 'create' && (
                     <div className="backup-create-actions">
                         <div className="sql-export-field-list-header sql-export-field-list-header--titled">
                             <label className="sql-export-field-list-title">{t('dialogs.backup.collections')}</label>
                         </div>
                         {loadingDbTree ? (
-                            <p className="hint-text">{t('dialogs.backup.loadingCollections')}</p>
+                            <div className="backup-db-tree">
+                                {[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton-row"/>)}
+                            </div>
                         ) : (
                             <div className="backup-db-tree">
                                 {dbTree.map((db) => {
@@ -218,7 +219,7 @@ export default function BackupDialog({connection, onClose}) {
                                         <div key={db.name} className="backup-db-group">
                                             <div className="backup-db-header">
                                                 <button className="backup-db-collapse" onClick={() => toggleCollapsed(db.name)}>
-                                                    <i className={`fa-solid ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}`}/>
+                                                    <i className={`fa-solid fa-chevron-right backup-db-chevron ${isCollapsed ? '' : 'is-open'}`}/>
                                                 </button>
                                                 <label className="sql-export-field-row backup-db-name-row">
                                                     <input type="checkbox"
@@ -258,7 +259,6 @@ export default function BackupDialog({connection, onClose}) {
                         <button onClick={handleRestoreExternal}>
                             <i className="fa-solid fa-file-import"/> {t('dialogs.backup.restoreExternal')}
                         </button>
-                        <p className="hint-text">{t('dialogs.backup.queuedNote')}</p>
                     </div>
                 )}
 

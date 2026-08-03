@@ -315,7 +315,6 @@
       "title": "Backup & Wiederherstellen",
       "createTab": "Backup erstellen",
       "manageTab": "Backups verwalten",
-      "excludedNote": "System-Datenbanken (admin, config, local) werden nie einbezogen.",
       "createInternal": "Internes Backup speichern",
       "createExternal": "Als .tar.gz exportieren",
       "creating": "Backup wird erstellt…",
@@ -332,9 +331,7 @@
       "restoreConfirm": "Dieses Backup in die aktuelle Verbindung wiederherstellen? Bereits vorhandene Dokumente mit gleicher _id verursachen Einfüge-Fehler und werden übersprungen statt überschrieben.",
       "restoreConfirmTitle": "Backup wiederherstellen",
       "databases": "Datenbanken",
-      "queuedNote": "Backups laufen im Hintergrund — Fortschritt und Abbrechen findest du in der Aufgaben-Warteschlange.",
       "collections": "Collections",
-      "loadingCollections": "Collections werden geladen…",
       "noCollectionsSelected": "Wähle mindestens eine Collection aus."
     }
   },
