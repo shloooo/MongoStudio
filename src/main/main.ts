@@ -115,6 +115,11 @@ try {
             settingsStore = registerSettingsHandlers(ipcMain, getAppFolder(), store);
             await createWindow();
 
+            ipcMain.handle('window:openExternal', (event, url: string) => {
+                shell.openExternal(url);
+                return true;
+            })
+
             ipcMain.handle('setup:needed', () => setupNeeded);
 
             ipcMain.handle('setup:complete', (event, {language, theme, encryption, passphrase}: {

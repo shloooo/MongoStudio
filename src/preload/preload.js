@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const {contextBridge, ipcRenderer} = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
     app: {
@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('api', {
             ipcRenderer.on('window:maximized', listener);
             return () => ipcRenderer.removeListener('window:maximized', listener);
         },
+        openExternal: (url) => ipcRenderer.invoke('window:openExternal', url),
         platform: process.platform
     },
     setup: {
