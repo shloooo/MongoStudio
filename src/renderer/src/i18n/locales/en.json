@@ -332,7 +332,10 @@
       "restoreConfirm": "Restore this backup into the current connection? Existing documents with matching _id will cause insert errors, and are skipped rather than overwritten.",
       "restoreConfirmTitle": "Restore Backup",
       "databases": "Databases",
-      "queuedNote": "Backups run in the background — track progress and cancel them from the task queue."
+      "queuedNote": "Backups run in the background — track progress and cancel them from the task queue.",
+      "collections": "Collections",
+      "loadingCollections": "Loading collections…",
+      "noCollectionsSelected": "Select at least one collection."
     }
   },
   "aggregationTab": {

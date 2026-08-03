@@ -123,6 +123,7 @@ contextBridge.exposeInMainWorld('api', {
     },
     backup: {
         listDatabases: (args) => ipcRenderer.invoke('backup:listDatabases', args),
+        listCollections: (args) => ipcRenderer.invoke('backup:listCollections', args),
         createInternal: (args) => ipcRenderer.invoke('backup:createInternal', args),
         listInternal: () => ipcRenderer.invoke('backup:listInternal'),
         deleteInternal: (args) => ipcRenderer.invoke('backup:deleteInternal', args),

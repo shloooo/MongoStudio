@@ -40,6 +40,40 @@ async function collectBackupableDatabases(connId: string): Promise<string[]> {
         .filter((name) => !EXCLUDED_DATABASES.has(name));
 }
 
+interface BackupableCollection {
+    name: string;
+    count: number;
+}
+
+interface BackupableDatabase {
+    name: string;
+    collections: BackupableCollection[];
+}
+
+async function collectBackupableDatabasesWithCollections(connId: string): Promise<BackupableDatabase[]> {
+    const client = getClient(connId);
+    const dbNames = await collectBackupableDatabases(connId);
+    const result: BackupableDatabase[] = [];
+    for (const dbName of dbNames) {
+        const db = client.db(dbName);
+        const cols = (await db.listCollections().toArray()).filter((c) => c.type === 'collection');
+        const collections: BackupableCollection[] = await Promise.all(cols.map(async (c) => {
+            let count = 0;
+            try {
+                count = await db.collection(c.name).estimatedDocumentCount();
+            } catch {
+                count = 0;
+            }
+            return {name: c.name, count};
+        }));
+        collections.sort((a, b) => a.name.localeCompare(b.name));
+        result.push({name: dbName, collections});
+    }
+    return result;
+}
+
+type BackupSelection = Record<string, string[]>;
+
 interface BackupProgress {
     db: string;
     collection: string;
@@ -47,9 +81,10 @@ interface BackupProgress {
     totalCount: number;
 }
 
-async function writeBackupToDir(connId: string, connLabel: string, targetDir: string, requestId: string, onProgress?: (info: BackupProgress) => void): Promise<BackupManifest> {
+async function writeBackupToDir(connId: string, connLabel: string, targetDir: string, requestId: string, selection: BackupSelection | undefined, onProgress?: (info: BackupProgress) => void): Promise<BackupManifest> {
     const client = getClient(connId);
-    const dbNames = await collectBackupableDatabases(connId);
+    const allDbNames = await collectBackupableDatabases(connId);
+    const dbNames = selection ? allDbNames.filter((name) => (selection[name] || []).length > 0) : allDbNames;
     const manifest: BackupManifest = {
         connId,
         connLabel,
@@ -61,9 +96,13 @@ async function writeBackupToDir(connId: string, connLabel: string, targetDir: st
     let totalCount = 0;
     for (const dbName of dbNames) {
         const db = client.db(dbName);
-        const collections = (await db.listCollections().toArray())
+        let collections = (await db.listCollections().toArray())
             .filter((c) => c.type === 'collection')
             .map((c) => c.name);
+        if (selection) {
+            const wanted = new Set(selection[dbName] || []);
+            collections = collections.filter((name) => wanted.has(name));
+        }
         dbCollections.push({dbName, collections});
         totalCount += collections.length;
     }
@@ -134,19 +173,23 @@ export function registerBackupHandlers(ipcMain: IpcMain): void {
         return collectBackupableDatabases(connId);
     });
 
+    ipcMain.handle('backup:listCollections', async (event, {connId}) => {
+        return collectBackupableDatabasesWithCollections(connId);
+    });
+
     ipcMain.handle('backup:cancel', async (event, {requestId}) => {
         cancelledBackupRequests.add(requestId);
         return true;
     });
 
-    ipcMain.handle('backup:createInternal', async (event, {connId, connLabel, requestId}) => {
+    ipcMain.handle('backup:createInternal', async (event, {connId, connLabel, requestId, selection}) => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const dirName = `${sanitizeForPath(connLabel || connId)}_${timestamp}`;
         const targetDir = path.join(backupsRoot(), dirName);
         fs.mkdirSync(targetDir, {recursive: true});
         const win = BrowserWindow.getFocusedWindow();
         try {
-            const manifest = await writeBackupToDir(connId, connLabel, targetDir, requestId, (info) => {
+            const manifest = await writeBackupToDir(connId, connLabel, targetDir, requestId, selection, (info) => {
                 win?.webContents.send('backup:progress', {connId, requestId, phase: 'collection', ...info});
             });
             return {ok: true, id: dirName, manifest};
@@ -207,7 +250,7 @@ export function registerBackupHandlers(ipcMain: IpcMain): void {
         }
     });
 
-    ipcMain.handle('backup:createExternal', async (event, {connId, connLabel, requestId}) => {
+    ipcMain.handle('backup:createExternal', async (event, {connId, connLabel, requestId, selection}) => {
         const win = BrowserWindow.getFocusedWindow();
         const {canceled, filePath} = await dialog.showSaveDialog(win!, {
             defaultPath: `${sanitizeForPath(connLabel || connId)}-backup.tar.gz`,
@@ -218,7 +261,7 @@ export function registerBackupHandlers(ipcMain: IpcMain): void {
         const tmpDir = path.join(getAppFolder(), 'tmp', `backup-${crypto.randomUUID()}`);
         fs.mkdirSync(tmpDir, {recursive: true});
         try {
-            const manifest = await writeBackupToDir(connId, connLabel, tmpDir, requestId, (info) => {
+            const manifest = await writeBackupToDir(connId, connLabel, tmpDir, requestId, selection, (info) => {
                 win?.webContents.send('backup:progress', {connId, requestId, phase: 'collection', ...info});
             });
             if (cancelledBackupRequests.has(requestId)) return {ok: false, cancelled: true};

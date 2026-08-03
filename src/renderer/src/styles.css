@@ -4041,3 +4041,54 @@ input[type="range"]:focus-visible {
     gap: 6px;
     flex-shrink: 0;
 }
+
+.backup-db-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    background: var(--well-bg);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.backup-db-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.backup-db-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.backup-db-collapse {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    width: 18px;
+    flex-shrink: 0;
+    padding: 4px 0;
+}
+
+.backup-db-collapse:hover {
+    color: var(--text-primary);
+}
+
+.backup-db-name-row {
+    flex: 1;
+    font-weight: 600;
+}
+
+.backup-db-collections {
+    margin: 0 0 4px 22px;
+    max-height: none;
+    background: transparent;
+    padding: 2px 0 2px 6px;
+    border-left: 1px solid var(--border-color, rgba(128, 128, 128, 0.25));
+}
