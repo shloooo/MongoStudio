@@ -61,10 +61,22 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
   }
 
   const otherConnections = openConnections.filter((c) => c.id !== source.connId);
+  const currentConnection = openConnections.find((c) => c.id === source.connId);
+  const connectionOptions = [
+    ...(currentConnection
+        ? [{value: currentConnection.id, label: t('dialogs.copyCollection.currentConnection', {name: currentConnection.name})}]
+        : []),
+    ...otherConnections.map((c) => ({value: c.id, label: c.name}))
+  ];
+  const isSameLocation = targetConnId === source.connId && targetDb === source.dbName && targetCollection === source.collection;
 
   function handleCopy() {
     if (!targetConnId || !targetDb || !targetCollection) {
       setError(t('dialogs.copyCollection.chooseTarget'));
+      return;
+    }
+    if (isSameLocation) {
+      setError(t('dialogs.copyCollection.sameLocation'));
       return;
     }
     if (selected.size === 0) {
@@ -118,7 +130,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
                    components={{bold: <strong/>}}/>
           </p>
 
-          {otherConnections.length === 0 ? (
+          {connectionOptions.length === 0 ? (
               <div className="error-banner">{t('dialogs.copyCollection.noOtherConnections')}</div>
           ) : (
               <>
@@ -129,7 +141,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
                         value={targetConnId}
                         onChange={setTargetConnId}
                         placeholder={t('dialogs.copyCollection.selectConnection')}
-                        options={otherConnections.map((c) => ({value: c.id, label: c.name}))}
+                        options={connectionOptions}
                     />
                   </div>
                   {targetConnId && (
@@ -155,7 +167,11 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
               </>
           )}
 
-          {otherConnections.length > 0 && (
+          {isSameLocation && (
+              <div className="error-banner">{t('dialogs.copyCollection.sameLocation')}</div>
+          )}
+
+          {connectionOptions.length > 0 && (
               <>
                 <div className="sql-export-field-list-header sql-export-field-list-header--titled">
                   <label className="sql-export-field-list-title">{t('dialogs.copyCollection.fields')}</label>
@@ -185,7 +201,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
           <div className="modal-actions">
             <div className="spacer" />
             <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
-            <button className="primary" onClick={handleCopy} disabled={otherConnections.length === 0 || loadingFields}>
+            <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingFields || !targetDb || !targetCollection || isSameLocation}>
               {t('dialogs.copyCollection.copy')}
             </button>
           </div>

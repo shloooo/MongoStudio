@@ -50,10 +50,22 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
     }
 
     const otherConnections = openConnections.filter((c) => c.id !== source.connId);
+    const currentConnection = openConnections.find((c) => c.id === source.connId);
+    const connectionOptions = [
+        ...(currentConnection
+            ? [{value: currentConnection.id, label: t('dialogs.copyDatabase.currentConnection', {name: currentConnection.name})}]
+            : []),
+        ...otherConnections.map((c) => ({value: c.id, label: c.name}))
+    ];
+    const isSameLocation = targetConnId === source.connId && targetDb === source.dbName;
 
     function handleCopy() {
         if (!targetConnId || !targetDb) {
             setError(t('dialogs.copyDatabase.chooseTarget'));
+            return;
+        }
+        if (isSameLocation) {
+            setError(t('dialogs.copyDatabase.sameDatabase'));
             return;
         }
         if (selected.size === 0) {
@@ -137,7 +149,7 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                            components={{bold: <strong/>}}/>
                 </p>
 
-                {otherConnections.length === 0 ? (
+                {connectionOptions.length === 0 ? (
                     <div className="error-banner">{t('dialogs.copyDatabase.noOtherConnections')}</div>
                 ) : (
                     <div className="row">
@@ -147,7 +159,7 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                                 value={targetConnId}
                                 onChange={setTargetConnId}
                                 placeholder={t('dialogs.copyDatabase.selectConnection')}
-                                options={otherConnections.map((c) => ({value: c.id, label: c.name}))}
+                                options={connectionOptions}
                             />
                         </div>
                         <div>
@@ -157,7 +169,11 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                     </div>
                 )}
 
-                {otherConnections.length > 0 && (
+                {isSameLocation && (
+                    <div className="error-banner">{t('dialogs.copyDatabase.sameDatabase')}</div>
+                )}
+
+                {connectionOptions.length > 0 && (
                     <>
                         <div className="sql-export-field-list-header sql-export-field-list-header--titled">
                             <label className="sql-export-field-list-title">{t('dialogs.copyDatabase.collections')}</label>
@@ -188,7 +204,7 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                 <div className="modal-actions">
                     <div className="spacer" />
                     <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
-                    <button className="primary" onClick={handleCopy} disabled={otherConnections.length === 0 || loadingCollections}>
+                    <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingCollections || !targetDb || isSameLocation}>
                         {t('dialogs.copyDatabase.copy')}
                     </button>
                 </div>
