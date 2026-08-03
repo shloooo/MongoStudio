@@ -8,16 +8,22 @@ Current features include:
 - Multiple database connections
   - SSH tunnel support (password or private key authentication)
   - Replica set support
-  - Encryption with a "master password" (AES-256, unlockable on startup)
-  - Login credentials are stored locally
-- Collections can be copied from server to server
-- BSON types instead of raw data (`ObjectId`, `DBRef`, `UUID`, dates, etc. shown and edited as their real types)
+  - Vault: encrypt saved connections with a "master password"
+- Collections and entire databases can be copied between servers, between databases on the same connection, or into the current connection
+- BSON types instead of raw data (`ObjectId`, `DBRef`, `UUID`, dates, Decimal128, etc. shown and edited as their real types)
 - Tree and raw (shell-syntax) document editor, with inline cell editing in the collection view
 - Bulk operations: update many documents by ID, set/remove a field across an entire collection
-- Import and export collections as JSON or CSV
-- Custom context menus for connections, collections, table headers, and document fields
+- Aggregation pipeline builder
+- Built-in Mongo shell console with autocomplete and command history
+- Index management
+- GridFS browser
+- Collection edit history
+- Backup and restore
+- User and role management
+- Import and export collections as JSON or CSV, and export results as SQL
 - Settings export/import to back up your configuration
-- Frameless, translucent window design
+- Auto-updates
+- Language support (English, German)
 
 ### Issues
 
@@ -25,9 +31,9 @@ To help us handle your issues or requests more effectively, please use the corre
 
 ### How To compile from source
 
-To compile Mongo Studio, you need [Node.js](https://nodejs.org/en).
+To compile Mongo Studio, you need [Node.js](https://nodejs.org/en) and [Yarn](https://yarnpkg.com/) — the build scripts shell out to Yarn even when invoked via `npm run ...`.
 
-Clone this repo, run `npm install`, then `npm run dist`.
+Clone this repo, run `yarn install`, then `yarn dist`.
 
 The built app will be output to the `release/` directory.
 
@@ -36,14 +42,14 @@ The built app will be output to the `release/` directory.
 To run Mongo Studio in development mode with hot-reloading:
 
 ```bash
-npm install
-npm run dev:renderer
+yarn install
+yarn dev:renderer
 ```
 
 In a separate terminal:
 
 ```bash
-npm run electron
+yarn dev:electron
 ```
 
 ### License
