@@ -23,13 +23,71 @@ function formatEta(seconds, t) {
     return t('updaterSection.minutesSecondsRemaining', {minutes, seconds: secs});
 }
 
-const DEV_SAMPLE_RELEASE_NOTES = `## What's new
-- **New**: Collection picker in the backup dialog
-- Improved ___performance___ during sync
-- Fix: \`ObjectId\` comparison in filters
+const DEV_SAMPLE_RELEASE_NOTES = `# Release Notes - Version 2.4.0
 
-## Other
-Minor polish and translation updates. More in the [release notes](https://example.com).`;
+---
+
+## 🚀 Overview
+
+Welcome to **Version 2.4.0**! This update brings *many improvements*, ~legacy features~ have been removed, and **_core components_** have been optimized.
+
+> **Important Note:** Node.js 18+ is now required to run the application.
+
+---
+
+## 🛠️ Features & Changes
+
+### 1. Dashboard Redesign
+* New data overview panels
+* Optimized load times
+  * Sub-item: Caching enabled
+  * Sub-item: Database queries reduced
+
+### 2. API Endpoints
+1. \`/api/v1/users\`
+2. \`/api/v1/auth\`
+3. \`/api/v1/settings\`
+
+### 3. Task List
+- [x] UI Refactoring
+- [x] Dependency updates
+- [ ] Complete documentation
+
+---
+
+## 📊 System Comparison
+
+| Feature | Old (v2.3) | New (v2.4) | Status |
+| :--- | :---: | :---: | ---: |
+| Performance | Standard | 2x Faster | ✅ |
+| Dark Mode | Experimental | Fully Supported | ✅ |
+| Legacy API | Supported | Deprecated | ⚠️ |
+
+---
+
+## 💻 Code Example
+
+Application configuration:
+
+\`\`\`json
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "ssl": true
+  },
+  "features": ["auth", "dashboard", "metrics"]
+}
+
+\`\`\`
+
+Run \`npm run build\` to start the build process.
+
+---
+
+## 🔗 Links & Media
+
+Check out the [documentation](https://www.google.com/search?q=https://example.com/docs) for more details.`;
 
 const DEV_PREVIEW_PHASES = [
     {key: 'idle', label: 'Idle'},
