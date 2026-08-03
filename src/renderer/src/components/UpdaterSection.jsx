@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import Markdown from './Markdown.jsx';
 
 function formatBytes(bytes) {
     if (!bytes && bytes !== 0) return '';
@@ -26,6 +27,7 @@ export default function UpdaterSection() {
     const {t} = useTranslation();
     const [phase, setPhase] = useState('idle'); // idle | checking | not-available | available | downloading | downloaded | error | disabled
     const [version, setVersion] = useState(null);
+    const [releaseNotes, setReleaseNotes] = useState(null);
     const [progress, setProgress] = useState(null); // { percent, transferred, total, bytesPerSecond, etaSeconds }
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -39,6 +41,7 @@ export default function UpdaterSection() {
                 case 'available':
                     setPhase('available');
                     setVersion(payload.version);
+                    setReleaseNotes(payload.releaseNotes || null);
                     break;
                 case 'not-available':
                     setPhase('not-available');
@@ -51,6 +54,7 @@ export default function UpdaterSection() {
                 case 'downloaded':
                     setPhase('downloaded');
                     setVersion(payload.version);
+                    if (payload.releaseNotes) setReleaseNotes(payload.releaseNotes);
                     break;
                 case 'error':
                     setPhase('error');
@@ -66,6 +70,7 @@ export default function UpdaterSection() {
                 setPhase('disabled');
                 return;
             }
+            if (state.lastReleaseNotes) setReleaseNotes(state.lastReleaseNotes);
             if (state.downloading) {
                 setPhase('downloading');
                 return;
@@ -138,6 +143,11 @@ export default function UpdaterSection() {
             {phase === 'available' && (
                 <>
                     <div className="info-banner">{t('updaterSection.updateAvailable', {version})}</div>
+                    {releaseNotes && (
+                        <div className="changelog-box">
+                            <Markdown text={releaseNotes}/>
+                        </div>
+                    )}
                     <button className="primary" onClick={handleDownload}>{t('updaterSection.downloadUpdate')}</button>
                 </>
             )}
@@ -158,6 +168,11 @@ export default function UpdaterSection() {
             {phase === 'downloaded' && (
                 <>
                     <div className="info-banner">{t('updaterSection.downloaded', {version})}</div>
+                    {releaseNotes && (
+                        <div className="changelog-box">
+                            <Markdown text={releaseNotes}/>
+                        </div>
+                    )}
                     <button className="primary" onClick={handleInstall}>{t('updaterSection.restartAndInstall')}</button>
                 </>
             )}

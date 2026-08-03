@@ -9,12 +9,24 @@ let isDev = false;
 let checking = false;
 let downloading = false;
 let lastCheckResult: { updateAvailable: boolean; version: string } | null = null;
+let lastReleaseNotes: string | null = null;
 let settingsStoreRef: SettingsFile | null = null;
 
 function send(channel: string, payload: any): void {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(channel, payload);
     }
+}
+
+function normalizeReleaseNotes(releaseNotes: unknown): string | null {
+    if (!releaseNotes) return null;
+    if (typeof releaseNotes === 'string') return releaseNotes;
+    if (Array.isArray(releaseNotes)) {
+        return releaseNotes
+            .map((entry: any) => `## ${entry.version}\n${entry.note || ''}`)
+            .join('\n\n');
+    }
+    return null;
 }
 
 function formatEtaSeconds(bytesPerSecond: number, bytesRemaining: number): number | null {
@@ -42,7 +54,8 @@ export function initUpdater({window, devMode, settingsStore}: {
     autoUpdater.on('update-available', (info) => {
         checking = false;
         lastCheckResult = {updateAvailable: true, version: info.version};
-        send('updater:event', {type: 'available', version: info.version, releaseNotes: info.releaseNotes || null});
+        lastReleaseNotes = normalizeReleaseNotes(info.releaseNotes);
+        send('updater:event', {type: 'available', version: info.version, releaseNotes: lastReleaseNotes});
     });
 
     autoUpdater.on('update-not-available', (info) => {
@@ -71,7 +84,8 @@ export function initUpdater({window, devMode, settingsStore}: {
 
     autoUpdater.on('update-downloaded', (info) => {
         downloading = false;
-        send('updater:event', {type: 'downloaded', version: info.version});
+        lastReleaseNotes = normalizeReleaseNotes(info.releaseNotes) || lastReleaseNotes;
+        send('updater:event', {type: 'downloaded', version: info.version, releaseNotes: lastReleaseNotes});
     });
 }
 
@@ -127,5 +141,5 @@ export function quitAndInstall(): void {
 }
 
 export function getState() {
-    return {checking, downloading, lastCheckResult, isDev};
+    return {checking, downloading, lastCheckResult, lastReleaseNotes, isDev};
 }
