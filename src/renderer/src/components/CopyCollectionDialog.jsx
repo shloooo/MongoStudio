@@ -201,7 +201,7 @@ export default function CopyCollectionDialog({ source, openConnections, onClose,
           <div className="modal-actions">
             <div className="spacer" />
             <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
-            <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingFields || !targetDb || !targetCollection || isSameLocation}>
+            <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingFields || !targetDb || !targetCollection || isSameLocation || selected.size === 0}>
               {t('dialogs.copyCollection.copy')}
             </button>
           </div>

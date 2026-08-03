@@ -204,7 +204,7 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                 <div className="modal-actions">
                     <div className="spacer" />
                     <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
-                    <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingCollections || !targetDb || isSameLocation}>
+                    <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingCollections || !targetDb || isSameLocation || selected.size === 0}>
                         {t('dialogs.copyDatabase.copy')}
                     </button>
                 </div>
