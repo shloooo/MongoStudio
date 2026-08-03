@@ -150,9 +150,6 @@ function SecurityStep({t, encryption, onSelectEncryption, passphrase, onPassphra
                         placeholder={t('setup.security.confirmPlaceholder')}
                         className={error ? 'has-error' : ''}
                     />
-                    {/* Allows Enter to submit from either passphrase field without a visible extra button.
-                        Inline style (not the `hidden` attribute) because the global `button { display: ... }`
-                        rule outranks the UA [hidden] rule in the cascade. */}
                     <button type="submit" style={{display: 'none'}} disabled={busy}/>
                 </form>
             )}
