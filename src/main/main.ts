@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain} from 'electron';
+import {app, BrowserWindow, dialog, ipcMain, shell} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import fs from 'node:fs';
@@ -61,6 +61,11 @@ async function createWindow(): Promise<void> {
 
     mainWindow.on('maximize', () => mainWindow.webContents.send('window:maximized', true));
     mainWindow.on('unmaximize', () => mainWindow.webContents.send('window:maximized', false));
+
+    mainWindow.webContents.setWindowOpenHandler(({url}) => {
+        shell.openExternal(url);
+        return {action: 'deny'};
+    });
 
     const isDev = !app.isPackaged;
     if (isDev && isRendererDevMode) {
