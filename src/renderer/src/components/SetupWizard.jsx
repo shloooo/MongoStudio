@@ -7,9 +7,168 @@ const LANGUAGES = [
     {code: 'de', label: 'Deutsch'}
 ];
 
+const STEP_IDS = ['welcome', 'language', 'appearance', 'security'];
+const MIN_PASSPHRASE_LENGTH = 4;
+
+function StepProgress({stepIds, activeIndex, t}) {
+    return (
+        <div className="setup-progress" role="list">
+            {stepIds.map((id, i) => (
+                <div key={id}
+                     role="listitem"
+                     aria-current={i === activeIndex ? 'step' : undefined}
+                     className={`setup-progress-step ${i === activeIndex ? 'active' : ''} ${i < activeIndex ? 'done' : ''}`}>
+                    <span className="setup-progress-dot">
+                        {i < activeIndex && <i className="fa-solid fa-check"/>}
+                    </span>
+                    <span className="setup-progress-label">{t(`setup.steps.${id}`)}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function WelcomeStep({t}) {
+    return (
+        <div className="setup-step-content">
+            <div className="vault-icon setup-welcome-icon">
+                <i className="fa-solid fa-database"/>
+            </div>
+            <h2>{t('setup.welcome.heading')}</h2>
+            <p className="hint-text">{t('setup.welcome.hint')}</p>
+        </div>
+    );
+}
+
+function LanguageStep({t, language, onSelect}) {
+    return (
+        <div className="setup-step-content">
+            <div className="vault-icon">
+                <i className="fa-solid fa-globe"/>
+            </div>
+            <h2>{t('setup.language.heading')}</h2>
+            <p className="hint-text">{t('setup.language.hint')}</p>
+            <div className="setup-option-list">
+                {LANGUAGES.map((lang) => (
+                    <button
+                        key={lang.code}
+                        className={`setup-option ${language === lang.code ? 'selected' : ''}`}
+                        onClick={() => onSelect(lang.code)}
+                    >
+                        {lang.label}
+                        {language === lang.code && <i className="fa-solid fa-check setup-option-check"/>}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function AppearanceStep({t, theme, onSelect}) {
+    return (
+        <div className="setup-step-content">
+            <div className="vault-icon">
+                <i className="fa-solid fa-palette"/>
+            </div>
+            <h2>{t('setup.appearance.heading')}</h2>
+            <p className="hint-text">{t('setup.appearance.hint')}</p>
+            <div className="setup-option-list setup-option-list-row">
+                <button
+                    className={`setup-option ${theme === 'light' ? 'selected' : ''}`}
+                    onClick={() => onSelect('light')}
+                >
+                    <i className="fa-solid fa-sun"/>
+                    {t('setup.appearance.light')}
+                    {theme === 'light' && <i className="fa-solid fa-check setup-option-check"/>}
+                </button>
+                <button
+                    className={`setup-option ${theme === 'dark' ? 'selected' : ''}`}
+                    onClick={() => onSelect('dark')}
+                >
+                    <i className="fa-solid fa-moon"/>
+                    {t('setup.appearance.dark')}
+                    {theme === 'dark' && <i className="fa-solid fa-check setup-option-check"/>}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function SecurityStep({t, encryption, onSelectEncryption, passphrase, onPassphraseChange, confirmPassphrase, onConfirmPassphraseChange, error, onSubmit, busy}) {
+    const [showPassphrase, setShowPassphrase] = useState(false);
+    const passphraseType = showPassphrase ? 'text' : 'password';
+
+    return (
+        <div className="setup-step-content">
+            <div className="vault-icon">
+                <i className="fa-solid fa-shield-halved"/>
+            </div>
+            <h2>{t('setup.security.heading')}</h2>
+            <p className="hint-text">{t('setup.security.hint')}</p>
+            <div className="setup-option-list setup-option-list-row">
+                <button
+                    className={`setup-option ${encryption === 'unencrypted' ? 'selected' : ''}`}
+                    onClick={() => onSelectEncryption('unencrypted')}
+                >
+                    {t('setup.security.unencrypted')}
+                    {encryption === 'unencrypted' && <i className="fa-solid fa-check setup-option-check"/>}
+                </button>
+                <button
+                    className={`setup-option ${encryption === 'encrypted' ? 'selected' : ''}`}
+                    onClick={() => onSelectEncryption('encrypted')}
+                >
+                    {t('setup.security.encrypted')}
+                    {encryption === 'encrypted' && <i className="fa-solid fa-check setup-option-check"/>}
+                </button>
+            </div>
+
+            {encryption === 'encrypted' && (
+                <form className="setup-passphrase-fields" onSubmit={onSubmit}>
+                    <div className="vault-password-field">
+                        <input
+                            type={passphraseType}
+                            autoFocus
+                            value={passphrase}
+                            onChange={(e) => onPassphraseChange(e.target.value)}
+                            placeholder={t('setup.security.passphrasePlaceholder')}
+                            className={error ? 'has-error' : ''}
+                        />
+                        <button
+                            type="button"
+                            className="vault-password-toggle"
+                            onClick={() => setShowPassphrase((v) => !v)}
+                            tabIndex={-1}
+                            aria-label={t(showPassphrase ? 'dialogs.vaultGate.hidePassword' : 'dialogs.vaultGate.showPassword')}
+                        >
+                            <i className={`fa-solid ${showPassphrase ? 'fa-eye-slash' : 'fa-eye'}`}/>
+                        </button>
+                    </div>
+                    <input
+                        type={passphraseType}
+                        value={confirmPassphrase}
+                        onChange={(e) => onConfirmPassphraseChange(e.target.value)}
+                        placeholder={t('setup.security.confirmPlaceholder')}
+                        className={error ? 'has-error' : ''}
+                    />
+                    {/* Allows Enter to submit from either passphrase field without a visible extra button.
+                        Inline style (not the `hidden` attribute) because the global `button { display: ... }`
+                        rule outranks the UA [hidden] rule in the cascade. */}
+                    <button type="submit" style={{display: 'none'}} disabled={busy}/>
+                </form>
+            )}
+
+            {error && (
+                <div className="error-banner">
+                    <i className="fa-solid fa-circle-exclamation"/> {error}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function SetupWizard({onComplete}) {
     const {t} = useTranslation();
-    const [step, setStep] = useState(0);
+    const [stepIndex, setStepIndex] = useState(0);
     const [language, setLanguage] = useState(i18n.language || 'en');
     const [theme, setTheme] = useState('light');
     const [encryption, setEncryption] = useState('unencrypted');
@@ -18,7 +177,8 @@ export default function SetupWizard({onComplete}) {
     const [error, setError] = useState('');
     const [busy, setBusy] = useState(false);
 
-    const steps = [t('setup.steps.welcome'), t('setup.steps.language'), t('setup.steps.appearance'), t('setup.steps.security')];
+    const stepId = STEP_IDS[stepIndex];
+    const isLastStep = stepIndex === STEP_IDS.length - 1;
 
     async function handleLanguageSelect(code) {
         setLanguage(code);
@@ -30,27 +190,37 @@ export default function SetupWizard({onComplete}) {
         document.body.classList.toggle('dark', value === 'dark');
     }
 
+    function handleEncryptionSelect(value) {
+        setEncryption(value);
+        setError('');
+    }
+
     function goNext() {
         setError('');
-        setStep((s) => Math.min(s + 1, steps.length - 1));
+        setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
     }
 
     function goBack() {
         setError('');
-        setStep((s) => Math.max(s - 1, 0));
+        setStepIndex((i) => Math.max(i - 1, 0));
     }
 
-    async function handleFinish() {
-        if (encryption === 'encrypted') {
-            if (passphrase.length < 4) {
-                setError(t('setup.security.tooShort'));
-                return;
-            }
-            if (passphrase !== confirmPassphrase) {
-                setError(t('setup.security.mismatch'));
-                return;
-            }
+    function validatePassphrase() {
+        if (encryption !== 'encrypted') return true;
+        if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
+            setError(t('setup.security.tooShort'));
+            return false;
         }
+        if (passphrase !== confirmPassphrase) {
+            setError(t('setup.security.mismatch'));
+            return false;
+        }
+        return true;
+    }
+
+    async function handleFinish(e) {
+        e?.preventDefault();
+        if (!validatePassphrase()) return;
 
         setBusy(true);
         setError('');
@@ -71,140 +241,39 @@ export default function SetupWizard({onComplete}) {
     return (
         <div className="vault-gate setup-wizard">
             <div className="vault-card setup-card">
-                <div className="setup-progress">
-                    {steps.map((label, i) => (
-                        <div key={label} className={`setup-progress-step ${i === step ? 'active' : ''} ${i < step ? 'done' : ''}`}>
-                            <span className="setup-progress-dot"/>
-                            <span className="setup-progress-label">{label}</span>
-                        </div>
-                    ))}
+                <StepProgress stepIds={STEP_IDS} activeIndex={stepIndex} t={t}/>
+
+                <div key={stepId}>
+                    {stepId === 'welcome' && <WelcomeStep t={t}/>}
+                    {stepId === 'language' && (
+                        <LanguageStep t={t} language={language} onSelect={handleLanguageSelect}/>
+                    )}
+                    {stepId === 'appearance' && (
+                        <AppearanceStep t={t} theme={theme} onSelect={handleThemeSelect}/>
+                    )}
+                    {stepId === 'security' && (
+                        <SecurityStep
+                            t={t}
+                            encryption={encryption}
+                            onSelectEncryption={handleEncryptionSelect}
+                            passphrase={passphrase}
+                            onPassphraseChange={(v) => { setPassphrase(v); setError(''); }}
+                            confirmPassphrase={confirmPassphrase}
+                            onConfirmPassphraseChange={(v) => { setConfirmPassphrase(v); setError(''); }}
+                            error={error}
+                            onSubmit={handleFinish}
+                            busy={busy}
+                        />
+                    )}
                 </div>
 
-                {step === 0 && (
-                    <div key={step} className="setup-step-content">
-                        <div className="vault-icon setup-welcome-icon">
-                            <i className="fa-solid fa-database"/>
-                        </div>
-                        <h2>{t('setup.welcome.heading')}</h2>
-                        <p className="hint-text">{t('setup.welcome.hint')}</p>
-                    </div>
-                )}
-
-                {step === 1 && (
-                    <div key={step} className="setup-step-content">
-                        <div className="vault-icon">
-                            <i className="fa-solid fa-globe"/>
-                        </div>
-                        <h2>{t('setup.language.heading')}</h2>
-                        <p className="hint-text">{t('setup.language.hint')}</p>
-                        <div className="setup-option-list">
-                            {LANGUAGES.map((lang) => (
-                                <button
-                                    key={lang.code}
-                                    className={`setup-option ${language === lang.code ? 'selected' : ''}`}
-                                    onClick={() => handleLanguageSelect(lang.code)}
-                                >
-                                    {lang.label}
-                                    {language === lang.code && <i className="fa-solid fa-check setup-option-check"/>}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {step === 2 && (
-                    <div key={step} className="setup-step-content">
-                        <div className="vault-icon">
-                            <i className="fa-solid fa-palette"/>
-                        </div>
-                        <h2>{t('setup.appearance.heading')}</h2>
-                        <p className="hint-text">{t('setup.appearance.hint')}</p>
-                        <div className="setup-option-list setup-option-list-row">
-                            <button
-                                className={`setup-option ${theme === 'light' ? 'selected' : ''}`}
-                                onClick={() => handleThemeSelect('light')}
-                            >
-                                <i className="fa-solid fa-sun"/>
-                                {t('setup.appearance.light')}
-                                {theme === 'light' && <i className="fa-solid fa-check setup-option-check"/>}
-                            </button>
-                            <button
-                                className={`setup-option ${theme === 'dark' ? 'selected' : ''}`}
-                                onClick={() => handleThemeSelect('dark')}
-                            >
-                                <i className="fa-solid fa-moon"/>
-                                {t('setup.appearance.dark')}
-                                {theme === 'dark' && <i className="fa-solid fa-check setup-option-check"/>}
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {step === 3 && (
-                    <div key={step} className="setup-step-content">
-                        <div className="vault-icon">
-                            <i className="fa-solid fa-shield-halved"/>
-                        </div>
-                        <h2>{t('setup.security.heading')}</h2>
-                        <p className="hint-text">{t('setup.security.hint')}</p>
-                        <div className="setup-option-list setup-option-list-row">
-                            <button
-                                className={`setup-option ${encryption === 'unencrypted' ? 'selected' : ''}`}
-                                onClick={() => setEncryption('unencrypted')}
-                            >
-                                {t('setup.security.unencrypted')}
-                                {encryption === 'unencrypted' && <i className="fa-solid fa-check setup-option-check"/>}
-                            </button>
-                            <button
-                                className={`setup-option ${encryption === 'encrypted' ? 'selected' : ''}`}
-                                onClick={() => setEncryption('encrypted')}
-                            >
-                                {t('setup.security.encrypted')}
-                                {encryption === 'encrypted' && <i className="fa-solid fa-check setup-option-check"/>}
-                            </button>
-                        </div>
-
-                        {encryption === 'encrypted' && (
-                            <div className="setup-passphrase-fields">
-                                <input
-                                    type="password"
-                                    autoFocus
-                                    value={passphrase}
-                                    onChange={(e) => {
-                                        setPassphrase(e.target.value);
-                                        setError('');
-                                    }}
-                                    placeholder={t('setup.security.passphrasePlaceholder')}
-                                    className={error ? 'has-error' : ''}
-                                />
-                                <input
-                                    type="password"
-                                    value={confirmPassphrase}
-                                    onChange={(e) => {
-                                        setConfirmPassphrase(e.target.value);
-                                        setError('');
-                                    }}
-                                    placeholder={t('setup.security.confirmPlaceholder')}
-                                    className={error ? 'has-error' : ''}
-                                />
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="error-banner">
-                                <i className="fa-solid fa-circle-exclamation"/> {error}
-                            </div>
-                        )}
-                    </div>
-                )}
-
                 <div className="vault-actions setup-actions">
-                    {step > 0 && (
+                    {stepIndex > 0 && (
                         <button onClick={goBack} disabled={busy}>
                             {t('setup.back')}
                         </button>
                     )}
-                    {step < steps.length - 1 ? (
+                    {!isLastStep ? (
                         <button className="primary" onClick={goNext}>
                             {t('setup.next')}
                         </button>

@@ -2226,36 +2226,61 @@ button.danger {
 
 .setup-progress {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    gap: 6px;
     width: 100%;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
 }
 
 .setup-progress-step {
+    position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 6px;
     flex: 1;
-    justify-content: center;
+}
+
+.setup-progress-step:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--glass-border-strong);
+    z-index: 0;
+}
+
+.setup-progress-step.active::before,
+.setup-progress-step.done::before {
+    background: var(--accent);
 }
 
 .setup-progress-dot {
-    width: 8px;
-    height: 8px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    background: var(--glass-border-strong);
+    background: var(--glass-panel-strong);
+    border: 2px solid var(--glass-border-strong);
+    font-size: 8px;
+    color: var(--bg-void);
     flex-shrink: 0;
 }
 
 .setup-progress-step.active .setup-progress-dot {
-    background: var(--accent);
+    border-color: var(--accent);
     box-shadow: 0 0 0 4px var(--accent-dim);
 }
 
 .setup-progress-step.done .setup-progress-dot {
     background: var(--accent);
+    border-color: var(--accent);
 }
 
 .setup-progress-label {
@@ -2266,13 +2291,18 @@ button.danger {
 
 .setup-progress-step.active .setup-progress-label {
     color: var(--text-primary);
+    font-weight: 600;
+}
+
+.setup-progress-step.done .setup-progress-label {
+    color: var(--text-secondary);
 }
 
 .setup-option-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: 100%;
+    width: 250px;
     margin-top: 18px;
 }
 
@@ -2293,13 +2323,6 @@ button.danger {
     background: var(--glass-panel);
     color: var(--text-primary);
     font-size: 13px;
-}
-
-.setup-option .setup-option-check {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
 }
 
 .setup-option.selected {
