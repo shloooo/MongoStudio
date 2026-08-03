@@ -50,11 +50,9 @@ function LanguageStep({t, language, onSelect}) {
             <p className="hint-text">{t('setup.language.hint')}</p>
             <div className="setup-option-list">
                 {LANGUAGES.map((lang) => (
-                    <button
-                        key={lang.code}
-                        className={`setup-option ${language === lang.code ? 'selected' : ''}`}
-                        onClick={() => onSelect(lang.code)}
-                    >
+                    <button key={lang.code}
+                            className={`setup-option ${language === lang.code ? 'selected' : ''}`}
+                            onClick={() => onSelect(lang.code)}>
                         {lang.label}
                         {language === lang.code && <i className="fa-solid fa-check setup-option-check"/>}
                     </button>
@@ -73,18 +71,14 @@ function AppearanceStep({t, theme, onSelect}) {
             <h2>{t('setup.appearance.heading')}</h2>
             <p className="hint-text">{t('setup.appearance.hint')}</p>
             <div className="setup-option-list setup-option-list-row">
-                <button
-                    className={`setup-option ${theme === 'light' ? 'selected' : ''}`}
-                    onClick={() => onSelect('light')}
-                >
+                <button className={`setup-option ${theme === 'light' ? 'selected' : ''}`}
+                        onClick={() => onSelect('light')}>
                     <i className="fa-solid fa-sun"/>
                     {t('setup.appearance.light')}
                     {theme === 'light' && <i className="fa-solid fa-check setup-option-check"/>}
                 </button>
-                <button
-                    className={`setup-option ${theme === 'dark' ? 'selected' : ''}`}
-                    onClick={() => onSelect('dark')}
-                >
+                <button className={`setup-option ${theme === 'dark' ? 'selected' : ''}`}
+                        onClick={() => onSelect('dark')}>
                     <i className="fa-solid fa-moon"/>
                     {t('setup.appearance.dark')}
                     {theme === 'dark' && <i className="fa-solid fa-check setup-option-check"/>}
@@ -113,10 +107,8 @@ function SecurityStep({t, encryption, onSelectEncryption, passphrase, onPassphra
                     {t('setup.security.unencrypted')}
                     {encryption === 'unencrypted' && <i className="fa-solid fa-check setup-option-check"/>}
                 </button>
-                <button
-                    className={`setup-option ${encryption === 'encrypted' ? 'selected' : ''}`}
-                    onClick={() => onSelectEncryption('encrypted')}
-                >
+                <button className={`setup-option ${encryption === 'encrypted' ? 'selected' : ''}`}
+                        onClick={() => onSelectEncryption('encrypted')}>
                     {t('setup.security.encrypted')}
                     {encryption === 'encrypted' && <i className="fa-solid fa-check setup-option-check"/>}
                 </button>
@@ -125,31 +117,25 @@ function SecurityStep({t, encryption, onSelectEncryption, passphrase, onPassphra
             {encryption === 'encrypted' && (
                 <form className="setup-passphrase-fields" onSubmit={onSubmit}>
                     <div className="vault-password-field">
-                        <input
-                            type={passphraseType}
-                            autoFocus
-                            value={passphrase}
-                            onChange={(e) => onPassphraseChange(e.target.value)}
-                            placeholder={t('setup.security.passphrasePlaceholder')}
-                            className={error ? 'has-error' : ''}
-                        />
-                        <button
-                            type="button"
-                            className="vault-password-toggle"
-                            onClick={() => setShowPassphrase((v) => !v)}
-                            tabIndex={-1}
-                            aria-label={t(showPassphrase ? 'dialogs.vaultGate.hidePassword' : 'dialogs.vaultGate.showPassword')}
-                        >
+                        <input type={passphraseType}
+                               autoFocus
+                               value={passphrase}
+                               onChange={(e) => onPassphraseChange(e.target.value)}
+                               placeholder={t('setup.security.passphrasePlaceholder')}
+                               className={error ? 'has-error' : ''}/>
+                        <button type="button"
+                                className="vault-password-toggle"
+                                onClick={() => setShowPassphrase((v) => !v)}
+                                tabIndex={-1}
+                                aria-label={t(showPassphrase ? 'dialogs.vaultGate.hidePassword' : 'dialogs.vaultGate.showPassword')}>
                             <i className={`fa-solid ${showPassphrase ? 'fa-eye-slash' : 'fa-eye'}`}/>
                         </button>
                     </div>
-                    <input
-                        type={passphraseType}
-                        value={confirmPassphrase}
-                        onChange={(e) => onConfirmPassphraseChange(e.target.value)}
-                        placeholder={t('setup.security.confirmPlaceholder')}
-                        className={error ? 'has-error' : ''}
-                    />
+                    <input type={passphraseType}
+                           value={confirmPassphrase}
+                           onChange={(e) => onConfirmPassphraseChange(e.target.value)}
+                           placeholder={t('setup.security.confirmPlaceholder')}
+                           className={error ? 'has-error' : ''}/>
                     <button type="submit" style={{display: 'none'}} disabled={busy}/>
                 </form>
             )}
