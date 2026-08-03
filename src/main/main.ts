@@ -6,6 +6,7 @@ import log from 'electron-log';
 import SecureStore from './secureStore.js';
 import {registerConnectionHandlers} from './connectionManager.js';
 import {registerDataHandlers} from './dataHandlers.js';
+import {registerBackupHandlers} from './backupManager.js';
 import {registerSettingsHandlers, type SettingsFile} from './settingsStore.js';
 import {markSetupCompleted, shouldShowSetup} from './firstRun.js';
 import {startStaticServer, type StaticServerHandle} from './staticServer.js';
@@ -76,6 +77,7 @@ function ensureDataHandlersRegistered(): void {
     if (dataHandlersRegistered) return;
     registerConnectionHandlers(ipcMain, store);
     registerDataHandlers(ipcMain);
+    registerBackupHandlers(ipcMain);
     dataHandlersRegistered = true;
 }
 

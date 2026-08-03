@@ -33,7 +33,8 @@
       "openGridfs": "GridFS-Browser öffnen",
       "renameCollection": "Collection umbenennen",
       "exportSql": "Als SQL exportieren...",
-      "exportSubmenu": "Exportieren"
+      "exportSubmenu": "Exportieren",
+      "backup": "Backup / Wiederherstellen..."
     },
     "prompts": {
       "newDatabaseName": "Name der neuen Datenbank:",
@@ -309,6 +310,29 @@
       "title": "Als {{format}} exportieren",
       "selectAll": "Alle auswählen",
       "deselectAll": "Alle abwählen"
+    },
+    "backup": {
+      "title": "Backup & Wiederherstellen",
+      "createTab": "Backup erstellen",
+      "manageTab": "Backups verwalten",
+      "excludedNote": "System-Datenbanken (admin, config, local) werden nie einbezogen.",
+      "createInternal": "Internes Backup speichern",
+      "createExternal": "Als .tar.gz exportieren",
+      "creating": "Backup wird erstellt…",
+      "backingUp": "Sichere {{db}}.{{collection}}…",
+      "created": "Backup erstellt ({{count}} Datenbanken).",
+      "noBackups": "Noch keine internen Backups.",
+      "restoredAt": "Erstellt",
+      "restore": "Wiederherstellen",
+      "restoreExternal": "Aus .tar.gz wiederherstellen...",
+      "restoring": "Wird wiederhergestellt…",
+      "restored": "{{count}} Dokumente in {{dbCount}} Datenbanken wiederhergestellt.",
+      "deleteConfirm": "Dieses Backup löschen? Dies kann nicht rückgängig gemacht werden.",
+      "deleteConfirmTitle": "Backup löschen",
+      "restoreConfirm": "Dieses Backup in die aktuelle Verbindung wiederherstellen? Bereits vorhandene Dokumente mit gleicher _id verursachen Einfüge-Fehler und werden übersprungen statt überschrieben.",
+      "restoreConfirmTitle": "Backup wiederherstellen",
+      "databases": "Datenbanken",
+      "queuedNote": "Backups laufen im Hintergrund — Fortschritt und Abbrechen findest du in der Aufgaben-Warteschlange."
     }
   },
   "aggregationTab": {

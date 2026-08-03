@@ -120,5 +120,20 @@ contextBridge.exposeInMainWorld('api', {
             ipcRenderer.on('data:copyProgress', listener);
             return () => ipcRenderer.removeListener('data:copyProgress', listener);
         }
+    },
+    backup: {
+        listDatabases: (args) => ipcRenderer.invoke('backup:listDatabases', args),
+        createInternal: (args) => ipcRenderer.invoke('backup:createInternal', args),
+        listInternal: () => ipcRenderer.invoke('backup:listInternal'),
+        deleteInternal: (args) => ipcRenderer.invoke('backup:deleteInternal', args),
+        restoreInternal: (args) => ipcRenderer.invoke('backup:restoreInternal', args),
+        createExternal: (args) => ipcRenderer.invoke('backup:createExternal', args),
+        restoreExternal: (args) => ipcRenderer.invoke('backup:restoreExternal', args),
+        cancel: (args) => ipcRenderer.invoke('backup:cancel', args),
+        onProgress: (cb) => {
+            const listener = (event, payload) => cb(payload);
+            ipcRenderer.on('backup:progress', listener);
+            return () => ipcRenderer.removeListener('backup:progress', listener);
+        }
     }
 });

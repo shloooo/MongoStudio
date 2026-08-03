@@ -33,7 +33,8 @@
       "openGridfs": "Open GridFS Browser",
       "renameCollection": "Rename Collection",
       "exportSql": "Export as SQL",
-      "exportSubmenu": "Export"
+      "exportSubmenu": "Export",
+      "backup": "Backup / Restore..."
     },
     "prompts": {
       "newDatabaseName": "New database name:",
@@ -309,6 +310,29 @@
       "title": "Export as {{format}}",
       "selectAll": "Select all",
       "deselectAll": "Deselect all"
+    },
+    "backup": {
+      "title": "Backup & Restore",
+      "createTab": "Create Backup",
+      "manageTab": "Manage Backups",
+      "excludedNote": "System databases (admin, config, local) are never included.",
+      "createInternal": "Save Internal Backup",
+      "createExternal": "Export as .tar.gz",
+      "creating": "Creating backup…",
+      "backingUp": "Backing up {{db}}.{{collection}}…",
+      "created": "Backup created ({{count}} databases).",
+      "noBackups": "No internal backups yet.",
+      "restoredAt": "Created",
+      "restore": "Restore",
+      "restoreExternal": "Restore from .tar.gz...",
+      "restoring": "Restoring…",
+      "restored": "Restored {{count}} documents across {{dbCount}} databases.",
+      "deleteConfirm": "Delete this backup? This cannot be undone.",
+      "deleteConfirmTitle": "Delete Backup",
+      "restoreConfirm": "Restore this backup into the current connection? Existing documents with matching _id will cause insert errors, and are skipped rather than overwritten.",
+      "restoreConfirmTitle": "Restore Backup",
+      "databases": "Databases",
+      "queuedNote": "Backups run in the background — track progress and cancel them from the task queue."
     }
   },
   "aggregationTab": {

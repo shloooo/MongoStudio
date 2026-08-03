@@ -16,6 +16,7 @@ import CopyDatabaseDialog from './components/CopyDatabaseDialog.jsx';
 import ErrorToastStack from './components/ErrorToastStack.jsx';
 import SqlExportDialog from './components/SqlExportDialog.jsx';
 import JsonCsvExportDialog from './components/JsonCsvExportDialog.jsx';
+import BackupDialog from './components/BackupDialog.jsx';
 import {reportError} from './lib/errorBus.js';
 import {useConfirm, usePrompt} from './components/ConfirmProvider.jsx';
 import {useTaskQueue} from './components/TaskQueueProvider.jsx';
@@ -42,6 +43,7 @@ export default function App() {
     const [copyDialogSource, setCopyDialogSource] = useState(null);
     const [sqlExportSource, setSqlExportSource] = useState(null);
     const [jsonCsvExportSource, setJsonCsvExportSource] = useState(null);
+    const [backupSource, setBackupSource] = useState(null);
     const [copyDbDialogSource, setCopyDbDialogSource] = useState(null);
     const [openDbSignal, setOpenDbSignal] = useState(null); // { connId, dbName, force, ts }
     const [refreshDbSignal, setRefreshDbSignal] = useState(null); // { connId, ts }
@@ -445,6 +447,11 @@ export default function App() {
                         setDialogState({open: true, editing: full || conn});
                     }
                 },
+                {
+                    label: t('app.menu.backup'),
+                    disabled: !isOpen,
+                    onClick: () => setBackupSource({connId: conn.id, connLabel: conn.name})
+                },
                 {separator: true},
                 {
                     label: t('app.menu.createDatabase'),
@@ -654,6 +661,9 @@ export default function App() {
                                          onQueued={(task, label) => enqueue(task, label, {
                                              onDone: (res) => { if (res?.ok) setStatus({type: 'info', message: t('app.status.exported', {count: res.count, path: res.filePath})}); }
                                          })}/>
+                )}
+                {backupSource && (
+                    <BackupDialog connection={backupSource} onClose={() => setBackupSource(null)}/>
                 )}
                 {copyDbDialogSource && (
                     <CopyDatabaseDialog source={copyDbDialogSource}
