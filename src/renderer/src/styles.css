@@ -2627,6 +2627,37 @@ input[type="range"]:focus-visible {
     font-weight: 600;
 }
 
+.dev-preview-panel {
+    background: var(--warning-dim);
+    border: 1px solid var(--warning-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dev-preview-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--warning);
+}
+
+.dev-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tiny-btn.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #06170f;
+}
+
 .update-progress {
     display: flex;
     flex-direction: column;

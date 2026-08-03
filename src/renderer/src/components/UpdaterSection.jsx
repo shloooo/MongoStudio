@@ -23,13 +23,32 @@ function formatEta(seconds, t) {
     return t('updaterSection.minutesSecondsRemaining', {minutes, seconds: secs});
 }
 
+const DEV_SAMPLE_RELEASE_NOTES = `## What's new
+- **New**: Collection picker in the backup dialog
+- Improved ___performance___ during sync
+- Fix: \`ObjectId\` comparison in filters
+
+## Other
+Minor polish and translation updates. More in the [release notes](https://example.com).`;
+
+const DEV_PREVIEW_PHASES = [
+    {key: 'idle', label: 'Idle'},
+    {key: 'checking', label: 'Checking'},
+    {key: 'not-available', label: 'Up to date'},
+    {key: 'available', label: 'Available'},
+    {key: 'downloading', label: 'Downloading'},
+    {key: 'downloaded', label: 'Downloaded'},
+    {key: 'error', label: 'Error'}
+];
+
 export default function UpdaterSection() {
     const {t} = useTranslation();
-    const [phase, setPhase] = useState('idle'); // idle | checking | not-available | available | downloading | downloaded | error | disabled
+    const [phase, setPhase] = useState('idle'); // idle | checking | not-available | available | downloading | downloaded | error
     const [version, setVersion] = useState(null);
     const [releaseNotes, setReleaseNotes] = useState(null);
     const [progress, setProgress] = useState(null); // { percent, transferred, total, bytesPerSecond, etaSeconds }
     const [errorMessage, setErrorMessage] = useState('');
+    const [isDevMode, setIsDevMode] = useState(false);
 
     useEffect(() => {
         const unsubscribe = window.api.updater.onEvent((payload) => {
@@ -66,10 +85,7 @@ export default function UpdaterSection() {
         });
 
         window.api.updater.getState().then((state) => {
-            if (state.isDev) {
-                setPhase('disabled');
-                return;
-            }
+            setIsDevMode(!!state.isDev);
             if (state.lastReleaseNotes) setReleaseNotes(state.lastReleaseNotes);
             if (state.downloading) {
                 setPhase('downloading');
@@ -89,6 +105,7 @@ export default function UpdaterSection() {
     }, []);
 
     async function handleCheck() {
+        if (isDevMode) return;
         setErrorMessage('');
         const result = await window.api.updater.check();
         if (!result.ok) {
@@ -102,6 +119,7 @@ export default function UpdaterSection() {
     }
 
     async function handleDownload() {
+        if (isDevMode) return;
         setErrorMessage('');
         const result = await window.api.updater.download();
         if (!result.ok) {
@@ -111,11 +129,53 @@ export default function UpdaterSection() {
     }
 
     function handleInstall() {
+        if (isDevMode) return;
         window.api.updater.quitAndInstall();
     }
 
-    if (phase === 'disabled') {
-        return "";
+    function handleDevPreview(target) {
+        setErrorMessage('');
+        setReleaseNotes(null);
+        setProgress(null);
+        setVersion(null);
+        switch (target) {
+            case 'idle':
+                setPhase('idle');
+                break;
+            case 'checking':
+                setPhase('checking');
+                break;
+            case 'not-available':
+                setPhase('not-available');
+                setVersion('1.4.2');
+                break;
+            case 'available':
+                setPhase('available');
+                setVersion('1.5.0');
+                setReleaseNotes(DEV_SAMPLE_RELEASE_NOTES);
+                break;
+            case 'downloading':
+                setPhase('downloading');
+                setProgress({
+                    percent: 42,
+                    transferred: 42 * 1024 * 1024,
+                    total: 100 * 1024 * 1024,
+                    bytesPerSecond: 3.2 * 1024 * 1024,
+                    etaSeconds: 18
+                });
+                break;
+            case 'downloaded':
+                setPhase('downloaded');
+                setVersion('1.5.0');
+                setReleaseNotes(DEV_SAMPLE_RELEASE_NOTES);
+                break;
+            case 'error':
+                setPhase('error');
+                setErrorMessage('Sample error message for preview.');
+                break;
+            default:
+                break;
+        }
     }
 
     return (
@@ -124,6 +184,20 @@ export default function UpdaterSection() {
                 <span className="settings-icon-badge"><i className="fa-solid fa-arrows-rotate"/></span>
                 <h3>{t('updaterSection.heading')}</h3>
             </div>
+
+            {isDevMode && (
+                <div className="dev-preview-panel">
+                    <div className="dev-preview-label">Dev Preview</div>
+                    <div className="dev-preview-actions">
+                        {DEV_PREVIEW_PHASES.map(({key, label}) => (
+                            <button key={key} className={`tiny-btn ${phase === key ? 'is-active' : ''}`}
+                                    onClick={() => handleDevPreview(key)}>
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {phase === 'idle' && (
                 <button onClick={handleCheck}>{t('updaterSection.checkForUpdates')}</button>
