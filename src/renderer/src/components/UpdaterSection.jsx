@@ -214,6 +214,8 @@ export default function UpdaterSection() {
                 break;
             case 'downloading':
                 setPhase('downloading');
+                setVersion('1.5.0');
+                setReleaseNotes(DEV_SAMPLE_RELEASE_NOTES);
                 setProgress({
                     percent: 42,
                     transferred: 42 * 1024 * 1024,
@@ -285,16 +287,23 @@ export default function UpdaterSection() {
             )}
 
             {phase === 'downloading' && progress && (
-                <div className="update-progress">
-                    <div className="update-progress-bar-track">
-                        <div className="update-progress-bar-fill" style={{width: `${progress.percent.toFixed(1)}%`}}/>
+                <>
+                    <div className="update-progress">
+                        <div className="update-progress-bar-track">
+                            <div className="update-progress-bar-fill" style={{width: `${(progress.percent ?? 0).toFixed(1)}%`}}/>
+                        </div>
+                        <div className="update-progress-meta">
+                            <span>{(progress.percent ?? 0).toFixed(0)}%</span>
+                            <span>{formatBytes(progress.transferred)} / {formatBytes(progress.total)}</span>
+                            <span>{formatEta(progress.etaSeconds, t)}</span>
+                        </div>
                     </div>
-                    <div className="update-progress-meta">
-                        <span>{progress.percent.toFixed(0)}%</span>
-                        <span>{formatBytes(progress.transferred)} / {formatBytes(progress.total)}</span>
-                        <span>{formatEta(progress.etaSeconds, t)}</span>
-                    </div>
-                </div>
+                    {releaseNotes && (
+                        <div className="changelog-box">
+                            <Markdown text={releaseNotes}/>
+                        </div>
+                    )}
+                </>
             )}
 
             {phase === 'downloaded' && (
