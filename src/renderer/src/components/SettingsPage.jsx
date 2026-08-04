@@ -49,7 +49,7 @@ function SettingsSkeleton() {
     );
 }
 
-export default function SettingsPage({connections, onImported}) {
+export default function SettingsPage({connections, onImported, settingsSignal}) {
     const {t, i18n} = useTranslation();
     const [settings, setSettings] = useState(null);
     const [vaultStatus, setVaultStatus] = useState(null);
@@ -61,7 +61,15 @@ export default function SettingsPage({connections, onImported}) {
     const [error, setError] = useState('');
     const [info, setInfo] = useState('');
     const [busy, setBusy] = useState(false);
-    const [activeCategory, setActiveCategory] = useState('general');
+    const [activeCategory, setActiveCategory] = useState(
+        CATEGORIES.some((c) => c.id === settingsSignal?.category) ? settingsSignal.category : 'general'
+    );
+
+    useEffect(() => {
+        if (settingsSignal?.category && CATEGORIES.some((c) => c.id === settingsSignal.category)) {
+            setActiveCategory(settingsSignal.category);
+        }
+    }, [settingsSignal?.ts]);
 
     useEffect(() => {
         Promise.all([
