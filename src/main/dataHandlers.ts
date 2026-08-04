@@ -461,9 +461,14 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     const win = BrowserWindow.getFocusedWindow();
     const {canceled, filePaths} = await dialog.showOpenDialog(win!, {
       title: `Import into ${dbName} - choose folder or files`,
-      properties: ['openFile', 'openDirectory', 'multiSelections'],
+      // Electron/GTK limitation: combining 'openFile' with 'openDirectory'
+      // makes Windows and Linux show only the folder picker (only macOS
+      // supports both at once). We want direct file selection to always
+      // work, so this dialog is file-only; folders are still handled below
+      // in case a path from elsewhere (e.g. drag & drop) points at one.
+      properties: ['openFile', 'multiSelections'],
       filters: [
-        {name: 'JSON/CSV', extensions: ['json', 'csv']},
+        {name: 'JSON/CSV/SQL', extensions: ['json', 'csv', 'sql']},
         {name: 'All files', extensions: ['*']}
       ]
     });
@@ -474,7 +479,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
       const stat = fs.statSync(p);
       if (stat.isDirectory()) {
         for (const entry of fs.readdirSync(p)) {
-          if (entry.endsWith('.json') || entry.endsWith('.csv')) files.push(path.join(p, entry));
+          if (entry.endsWith('.json') || entry.endsWith('.csv') || entry.endsWith('.sql')) files.push(path.join(p, entry));
         }
       } else {
         files.push(p);
@@ -485,8 +490,33 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     const db = client.db(dbName);
     const results = [];
     for (const filePath of files) {
-      const collectionName = path.basename(filePath, path.extname(filePath));
       const raw = fs.readFileSync(filePath, 'utf-8');
+
+      if (filePath.endsWith('.sql')) {
+        // A single .sql dump can define many tables (CREATE TABLE) and rows
+        // (INSERT INTO) at once, so it is fanned out into one result entry
+        // per table instead of one entry per file.
+        const tables = parseSqlDump(raw);
+        const existingNames = new Set((await db.listCollections().toArray()).map((c) => c.name));
+        for (const [tableName, tableDocs] of tables) {
+          if (!existingNames.has(tableName)) {
+            await db.createCollection(tableName);
+            existingNames.add(tableName);
+          }
+          if (!tableDocs.length) {
+            results.push({collection: tableName, insertedCount: 0});
+            continue;
+          }
+          const result = await db.collection(tableName).insertMany(
+              tableDocs.map((d) => EJSON.deserialize(d)),
+              {ordered: false}
+          );
+          results.push({collection: tableName, insertedCount: result.insertedCount});
+        }
+        continue;
+      }
+
+      const collectionName = path.basename(filePath, path.extname(filePath));
       let docs: any[];
       if (filePath.endsWith('.csv')) {
         docs = parseCsv(raw);
@@ -1116,6 +1146,44 @@ export function buildSqlDump(tableName: string, docs: any[], fields: string[]): 
     lines.push(`INSERT INTO ${table} (${cols.map(sqlIdentifier).join(', ')}) VALUES (${values.join(', ')});`);
   }
   return lines.join('\n');
+}
+
+// Parses a full SQL dump that may define several tables at once (e.g. a
+// mysqldump-style export with `DROP TABLE` / `CREATE TABLE` / `INSERT INTO`
+// statements for multiple tables). Returns a map of table name -> parsed
+// documents. Every table found via CREATE TABLE gets an entry (an empty
+// array if it has no INSERT rows), so schema-only dumps still result in the
+// matching (empty) collections being created rather than being silently
+// dropped. Supports backtick, double-quote or unquoted identifiers, and
+// multi-row `VALUES (...), (...), (...);` inserts.
+function parseSqlDump(raw: string): Map<string, Record<string, any>[]> {
+  const tables = new Map<string, Record<string, any>[]>();
+
+  const createRe = /CREATE TABLE\s+(?:IF NOT EXISTS\s+)?[`"]?([A-Za-z0-9_]+)[`"]?/gi;
+  let createMatch: RegExpExecArray | null;
+  while ((createMatch = createRe.exec(raw))) {
+    if (!tables.has(createMatch[1])) tables.set(createMatch[1], []);
+  }
+
+  const insertRe = /INSERT INTO\s+[`"]?([A-Za-z0-9_]+)[`"]?\s*\(([^)]*)\)\s*VALUES\s*([\s\S]*?);/gi;
+  let insertMatch: RegExpExecArray | null;
+  while ((insertMatch = insertRe.exec(raw))) {
+    const tableName = insertMatch[1];
+    const columns = splitSqlList(insertMatch[2]).map((c) => c.trim().replace(/^[`"]|[`"]$/g, ''));
+    const docs = tables.get(tableName) ?? [];
+
+    const tupleRe = /\(([^()]*)\)/g;
+    let tupleMatch: RegExpExecArray | null;
+    while ((tupleMatch = tupleRe.exec(insertMatch[3]))) {
+      const values = splitSqlList(tupleMatch[1]).map((v) => parseSqlLiteral(v.trim()));
+      const doc: Record<string, any> = {};
+      columns.forEach((col, i) => { doc[col] = values[i]; });
+      docs.push(doc);
+    }
+    tables.set(tableName, docs);
+  }
+
+  return tables;
 }
 
 // Parses `INSERT INTO "table" (col1, col2) VALUES (v1, v2);` statements
