@@ -31,7 +31,7 @@ To help us handle your issues or requests more effectively, please use the corre
 
 ### How To compile from source
 
-To compile Mongo Studio, you need [Node.js](https://nodejs.org/en) and [Yarn](https://yarnpkg.com/) — the build scripts shell out to Yarn even when invoked via `npm run ...`.
+To compile Mongo Studio, you need [Node.js](https://nodejs.org/en) and [Yarn](https://yarnpkg.com/)
 
 Clone this repo, run `yarn install`, then `yarn dist`.
 
