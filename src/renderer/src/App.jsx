@@ -46,6 +46,7 @@ export default function App() {
     const [backupSource, setBackupSource] = useState(null);
     const [copyDbDialogSource, setCopyDbDialogSource] = useState(null);
     const [openDbSignal, setOpenDbSignal] = useState(null); // { connId, dbName, force, ts }
+    const [settingsSignal, setSettingsSignal] = useState(null); // { category, ts }
     const [refreshDbSignal, setRefreshDbSignal] = useState(null); // { connId, ts }
     const confirmDialog = useConfirm();
     const promptDialog = usePrompt();
@@ -90,13 +91,13 @@ export default function App() {
                 setStatus({
                     type: 'info',
                     message: t('app.status.updateAvailable', {version: payload.version}),
-                    action: {label: t('app.status.updateOpenSettings'), onClick: handleOpenSettings}
+                    action: {label: t('app.status.updateOpenSettings'), onClick: () => handleOpenSettings('updates')}
                 });
             } else if (payload.type === 'downloaded') {
                 setStatus({
                     type: 'info',
                     message: t('app.status.updateDownloaded', {version: payload.version}),
-                    action: {label: t('app.status.updateOpenSettings'), onClick: handleOpenSettings}
+                    action: {label: t('app.status.updateOpenSettings'), onClick: () => handleOpenSettings('updates')}
                 });
             }
         });
@@ -219,7 +220,8 @@ export default function App() {
         setTabs((prev) => prev.map((t) => (t.id === tabId ? {...t, ...(typeof patch === 'function' ? patch(t) : patch)} : t)));
     }
 
-    function handleOpenSettings() {
+    function handleOpenSettings(category) {
+        if (category) setSettingsSignal({category, ts: Date.now()});
         setTabs((prev) => {
             if (prev.some((t) => t.kind === 'settings')) return prev;
             return [...prev, {id: 'settings-tab', key: 'settings', kind: 'settings'}];
@@ -595,7 +597,7 @@ export default function App() {
                     </div>
                     <div className="tab-panel-host">
                         <div className={`tab-panel ${activeTabId === 'settings-tab' ? 'tab-panel-active' : ''}`}>
-                            <SettingsPage connections={connections} onImported={refreshConnections}/>
+                            <SettingsPage connections={connections} onImported={refreshConnections} settingsSignal={settingsSignal}/>
                         </div>
                         <div
                             className={`tab-panel ${activeTabId !== 'settings-tab' && contentTabs.length === 0 ? 'tab-panel-active' : ''}`}>
