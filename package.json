@@ -1,6 +1,6 @@
 {
   "name": "mongo-studio",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A free open-source alternative for Studio3T.",
   "author": "RisingMedia Solutions <shloooo@users.noreply.github.com>",
   "main": "dist-main/main.js",
