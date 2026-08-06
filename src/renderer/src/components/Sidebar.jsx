@@ -92,7 +92,7 @@ function DatabaseNode({
                     {filtered && filtered.map((c) => (
                         <div key={c.name}
                              className="tree-row leaf"
-                             onClick={() => onSelectCollection({connId, dbName, collection: c.name})}
+                             onDoubleClick={() => onSelectCollection({connId, dbName, collection: c.name, forceNew: true})}
                              onContextMenu={(e) => {
                                  e.preventDefault();
                                  onCollectionContextMenu(e, {connId, dbName, collection: c.name});
