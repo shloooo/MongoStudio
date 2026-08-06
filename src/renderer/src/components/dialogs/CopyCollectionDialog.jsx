@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {Trans, useTranslation} from 'react-i18next';
-import {useClosing} from '../lib/useClosing.js';
-import {useTaskQueue} from './TaskQueueProvider.jsx';
-import {reportError} from '../lib/errorBus.js';
-import Select from './Select.jsx';
+import {useClosing} from '../../lib/useClosing.js';
+import {useTaskQueue} from '../lib/TaskQueueProvider.jsx';
+import {reportError} from '../../lib/errorBus.js';
+import Select from '../lib/Select.jsx';
 
 export default function CopyCollectionDialog({ source, openConnections, onClose, onCopied }) {
   const { t } = useTranslation();

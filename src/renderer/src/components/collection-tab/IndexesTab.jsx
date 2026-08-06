@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell} from '../lib/shellSyntax.js';
+import {parseShell} from '../../lib/shellSyntax.js';
 
 export default function IndexesTab({ selection, reloadSignal }) {
   const {t} = useTranslation();

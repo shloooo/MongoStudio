@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import Markdown from './Markdown.jsx';
+import Markdown from './lib/Markdown.jsx';
 
 function formatBytes(bytes) {
     if (!bytes && bytes !== 0) return '';

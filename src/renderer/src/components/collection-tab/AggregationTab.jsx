@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell, toShellText, toShellTextCompact} from '../lib/shellSyntax.js';
-import ContextMenu from './ContextMenu.jsx';
+import {parseShell, toShellText, toShellTextCompact} from '../../lib/shellSyntax.js';
+import ContextMenu from '../lib/ContextMenu.jsx';
 
 const TEMPLATE = `[
   { $match: {} },

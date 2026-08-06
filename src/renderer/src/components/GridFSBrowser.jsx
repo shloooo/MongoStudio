@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {useConfirm} from './ConfirmProvider.jsx';
+import {useConfirm} from './lib/ConfirmProvider.jsx';
 import {reportError} from '../lib/errorBus.js';
-import Select from './Select.jsx';
+import Select from './lib/Select.jsx';
 
 function formatBytes(bytes) {
     if (bytes === undefined || bytes === null) return '';

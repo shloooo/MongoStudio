@@ -2,10 +2,10 @@ import React, {useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell} from '../lib/shellSyntax.js';
-import {reportError} from '../lib/errorBus.js';
-import {useClosing} from '../lib/useClosing.js';
-import i18n from '../i18n/index.js';
+import {parseShell} from '../../lib/shellSyntax.js';
+import {reportError} from '../../lib/errorBus.js';
+import {useClosing} from '../../lib/useClosing.js';
+import i18n from '../../i18n/index.js';
 
 const IDS_PLACEHOLDER = `[
   

@@ -1,8 +1,8 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useConfirm} from './ConfirmProvider.jsx';
-import UserEditorDialog from './UserEditorDialog.jsx';
-import ContextMenu from './ContextMenu.jsx';
+import {useConfirm} from './lib/ConfirmProvider.jsx';
+import UserEditorDialog from './dialogs/UserEditorDialog.jsx';
+import ContextMenu from './lib/ContextMenu.jsx';
 import {formatResource, isWildcardResource} from '../lib/mongoPrivileges.js';
 
 const ACTION_PREVIEW_COUNT = 8;

@@ -1,9 +1,9 @@
 import React, {useMemo, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Trans, useTranslation} from 'react-i18next';
-import {parseShell, toShellText} from '../lib/shellSyntax.js';
-import DocumentTree from './DocumentTree.jsx';
-import ContextMenu from './ContextMenu.jsx';
+import {parseShell, toShellText} from '../../../lib/shellSyntax.js';
+import DocumentTree from '../DocumentTree.jsx';
+import ContextMenu from '../../lib/ContextMenu.jsx';
 
 export default function DocumentEditor({ doc, onSave, onClose, defaultMode }) {
   const {t} = useTranslation();

@@ -2,15 +2,15 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell, toShellText} from '../lib/shellSyntax.js';
-import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
-import DocumentEditor from './DocumentEditor.jsx';
-import ContextMenu from './ContextMenu.jsx';
-import BulkUpdateDialog from './BulkUpdateDialog.jsx';
-import CollectionHistoryDialog from './CollectionHistoryDialog.jsx';
-import {useConfirm} from './ConfirmProvider.jsx';
-import {reportError} from '../lib/errorBus.js';
-import Select from './Select.jsx';
+import {parseShell, toShellText} from '../../lib/shellSyntax.js';
+import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../../lib/bsonTypes.js';
+import DocumentEditor from './dialogs/DocumentEditor.jsx';
+import ContextMenu from '../lib/ContextMenu.jsx';
+import BulkUpdateDialog from '../dialogs/BulkUpdateDialog.jsx';
+import CollectionHistoryDialog from '../dialogs/CollectionHistoryDialog.jsx';
+import {useConfirm} from '../lib/ConfirmProvider.jsx';
+import {reportError} from '../../lib/errorBus.js';
+import Select from '../lib/Select.jsx';
 
 const PAGE_SIZE = 50;
 

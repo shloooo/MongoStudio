@@ -1,9 +1,9 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation, Trans} from 'react-i18next';
-import {groupPrivilegesByResource, sameRole} from '../lib/mongoPrivileges.js';
-import {useClosing} from '../lib/useClosing.js';
-import Select from './Select.jsx';
+import {groupPrivilegesByResource, sameRole} from '../../lib/mongoPrivileges.js';
+import {useClosing} from '../../lib/useClosing.js';
+import Select from '../lib/Select.jsx';
 
 export default function UserEditorDialog({connId, authDb, username, onClose, onSaved}) {
     const {t} = useTranslation();

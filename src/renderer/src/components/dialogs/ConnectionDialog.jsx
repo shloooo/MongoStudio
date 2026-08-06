@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {useClosing} from '../lib/useClosing.js';
+import {useClosing} from '../../lib/useClosing.js';
 
 export const CONNECTION_COLORS = [
   {value: '', label: 'none'},

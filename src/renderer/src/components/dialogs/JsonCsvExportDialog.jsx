@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
-import {useClosing} from '../lib/useClosing.js';
-import {reportError} from '../lib/errorBus.js';
+import {useClosing} from '../../lib/useClosing.js';
+import {reportError} from '../../lib/errorBus.js';
 
-export default function SqlExportDialog({selection, onClose, onExported, onQueued}) {
+export default function JsonCsvExportDialog({selection, onClose, onExported, onQueued}) {
     const {t} = useTranslation();
+    const format = selection.format;
     const [loading, setLoading] = useState(true);
     const [fields, setFields] = useState([]);
     const [selected, setSelected] = useState(new Set());
@@ -14,16 +15,16 @@ export default function SqlExportDialog({selection, onClose, onExported, onQueue
 
     useEffect(() => {
         let cancelled = false;
-        window.api.data.analyzeSqlExport({
+        window.api.data.listCollectionFields({
             connId: selection.connId,
             dbName: selection.dbName,
             collection: selection.collection
         }).then((result) => {
             if (cancelled) return;
             setFields(result || []);
-            setSelected(new Set((result || []).filter((f) => f.sqlSafe).map((f) => f.field)));
+            setSelected(new Set(result || []));
         }).catch((err) => {
-            reportError(err.message, 'Analyze SQL export');
+            reportError(err.message, 'List collection fields');
         }).finally(() => {
             if (!cancelled) setLoading(false);
         });
@@ -41,72 +42,63 @@ export default function SqlExportDialog({selection, onClose, onExported, onQueue
         });
     }
 
+    function toggleAll() {
+        setSelected((prev) => (prev.size === fields.length ? new Set() : new Set(fields)));
+    }
+
     async function handleExport() {
-        const task = window.api.data.exportCollectionSql({
+        setExporting(true);
+        const allSelected = selected.size === fields.length;
+        const task = window.api.data.exportCollection({
             connId: selection.connId,
             dbName: selection.dbName,
             collection: selection.collection,
-            fields: Array.from(selected)
+            format,
+            fields: allSelected ? [] : Array.from(selected)
         });
         if (onQueued) {
-            onQueued(task, `${selection.collection}.sql`);
+            onQueued(task, `${selection.collection}.${format}`);
             requestClose();
             return;
         }
-        setExporting(true);
         try {
             const result = await task;
             if (result.ok && onExported) onExported(result);
             requestClose();
         } catch (err) {
-            reportError(err.message, 'Export SQL');
+            reportError(err.message, 'Export collection');
         } finally {
             setExporting(false);
         }
     }
 
-    const safeFields = fields.filter((f) => f.sqlSafe);
-    const unsafeFields = fields.filter((f) => !f.sqlSafe);
-
     return createPortal(
         <div className={`modal-backdrop ${closing ? 'is-closing' : ''}`} onClick={() => requestClose()}>
             <div className="modal wide" onClick={(e) => e.stopPropagation()}>
-                <h3>{t('dialogs.sqlExport.title')}</h3>
+                <h3>{t('dialogs.fieldExport.title', {format: format.toUpperCase()})}</h3>
 
                 {loading && <p className="hint-text">…</p>}
 
                 {!loading && (
                     <>
-                        <p className="hint-text">{t('dialogs.sqlExport.hint')}</p>
+                        <div className="sql-export-field-list-header">
+                            <button className="tiny-btn" onClick={toggleAll}>
+                                {selected.size === fields.length ? t('dialogs.fieldExport.deselectAll') : t('dialogs.fieldExport.selectAll')}
+                            </button>
+                        </div>
 
                         <div className="sql-export-field-list">
-                            {safeFields.map((f) => (
-                                <label key={f.field} className="sql-export-field-row">
+                            {fields.map((f) => (
+                                <label key={f} className="sql-export-field-row">
                                     <input
                                         type="checkbox"
-                                        checked={selected.has(f.field)}
-                                        onChange={() => toggleField(f.field)}
+                                        checked={selected.has(f)}
+                                        onChange={() => toggleField(f)}
                                     />
-                                    {f.field}
+                                    {f}
                                 </label>
                             ))}
                         </div>
-
-                        {unsafeFields.length > 0 && (
-                            <div className="sql-export-unsafe-section">
-                                <div className="sql-export-section-label">{t('dialogs.sqlExport.excludedLabel')}</div>
-                                <div className="sql-export-field-list">
-                                    {unsafeFields.map((f) => (
-                                        <div key={f.field} className="sql-export-field-row is-disabled"
-                                             title={t('dialogs.sqlExport.excludedReason')}>
-                                            <input type="checkbox" checked={false} disabled/>
-                                            {f.field}
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="hint-text">{t('dialogs.sqlExport.excludedReason')}</p>
-                            </div>
-                        )}
 
                         {fields.length === 0 && <p className="hint-text">{t('dialogs.sqlExport.noFields')}</p>}
                     </>

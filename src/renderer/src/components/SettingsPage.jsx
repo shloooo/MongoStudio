@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useTranslation} from 'react-i18next';
 import UpdaterSection from './UpdaterSection.jsx';
-import Select from './Select.jsx';
+import Select from './lib/Select.jsx';
 
 const CATEGORIES = [
     {id: 'general', icon: 'fa-sliders'},

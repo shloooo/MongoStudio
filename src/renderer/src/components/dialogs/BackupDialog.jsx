@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
-import {useClosing} from '../lib/useClosing.js';
-import {useConfirm} from './ConfirmProvider.jsx';
-import {reportError} from '../lib/errorBus.js';
-import {useTaskQueue} from './TaskQueueProvider.jsx';
+import {useClosing} from '../../lib/useClosing.js';
+import {useConfirm} from '../lib/ConfirmProvider.jsx';
+import {reportError} from '../../lib/errorBus.js';
+import {useTaskQueue} from '../lib/TaskQueueProvider.jsx';
 
 export default function BackupDialog({connection, onClose}) {
     const {t, i18n} = useTranslation();

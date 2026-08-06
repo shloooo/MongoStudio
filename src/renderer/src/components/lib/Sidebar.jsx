@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {useConfirm} from './ConfirmProvider.jsx';
-import {filterVisibleCollections} from '../lib/systemNamespaces.js';
-import {CONNECTION_COLORS} from './ConnectionDialog.jsx';
+import {filterVisibleCollections} from '../../lib/systemNamespaces.js';
+import {CONNECTION_COLORS} from '../dialogs/ConnectionDialog.jsx';
 
 function connectionColorHex(color) {
     const found = CONNECTION_COLORS.find((c) => c.value === color);

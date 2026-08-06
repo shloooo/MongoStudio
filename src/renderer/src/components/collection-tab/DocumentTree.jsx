@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../lib/bsonTypes.js';
-import {toShellText} from '../lib/shellSyntax.js';
-import Select from './Select.jsx';
+import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../../lib/bsonTypes.js';
+import {toShellText} from '../../lib/shellSyntax.js';
+import Select from '../lib/Select.jsx';
 
 function isExpandable(value) {
   const t = bsonTypeOf(value);

@@ -3,8 +3,8 @@ import {createRoot} from 'react-dom/client';
 import i18n from './i18n/index.js';
 import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
-import {ConfirmProvider} from './components/ConfirmProvider.jsx';
-import {TaskQueueProvider} from './components/TaskQueueProvider.jsx';
+import {ConfirmProvider} from './components/lib/ConfirmProvider.jsx';
+import {TaskQueueProvider} from './components/lib/TaskQueueProvider.jsx';
 
 async function bootstrap() {
     try {

@@ -2,9 +2,9 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {reportError} from '../lib/errorBus.js';
-import {useClosing} from '../lib/useClosing.js';
-import {useConfirm} from './ConfirmProvider.jsx';
+import {reportError} from '../../lib/errorBus.js';
+import {useClosing} from '../../lib/useClosing.js';
+import {useConfirm} from '../lib/ConfirmProvider.jsx';
 
 const OP_LABEL_KEY = {
     insertOne: 'opInsertOne',
