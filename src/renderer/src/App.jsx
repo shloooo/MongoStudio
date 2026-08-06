@@ -177,27 +177,30 @@ export default function App() {
         }
     }
 
-    function openTab(kind, target, key) {
+    function openTab(kind, target, key, forceNew) {
         setTabs((prev) => {
-            const existing = prev.find((t) => t.key === key);
-            if (existing) {
-                setActiveTabId(existing.id);
-                return prev;
+            if (!forceNew) {
+                const existing = prev.find((t) => t.key === key);
+                if (existing) {
+                    setActiveTabId(existing.id);
+                    return prev;
+                }
             }
-            const newTab = {id: `tab-${++tabIdCounter}`, key, kind, ...target};
+            const uniqueKey = forceNew ? `${key}#${++tabIdCounter}` : key;
+            const newTab = {id: `tab-${++tabIdCounter}`, key: uniqueKey, kind, ...target};
             setActiveTabId(newTab.id);
             return [...prev, newTab];
         });
     }
 
     function handleSelectCollection(selection) {
-        const {connId, dbName, collection} = selection;
+        const {connId, dbName, collection, forceNew} = selection;
         openTab('collection', {
             connId,
             dbName,
             collection,
             connLabel: getConnName(connId)
-        }, `collection:${connId}:${dbName}:${collection}`);
+        }, `collection:${connId}:${dbName}:${collection}`, forceNew);
     }
 
     function handleOpenDatabaseUsers({connId, dbName}) {
@@ -208,8 +211,8 @@ export default function App() {
         openTab('collection-users', {connId, dbName, collection}, `collection-users:${connId}:${dbName}:${collection}`);
     }
 
-    function handleOpenShell({connId, dbName}) {
-        openTab('shell', {connId, dbName, connLabel: getConnName(connId), shellLog: [], shellCmdHistory: []}, `shell:${connId}:${dbName}`);
+    function handleOpenShell({connId, dbName, forceNew}) {
+        openTab('shell', {connId, dbName, connLabel: getConnName(connId), shellLog: [], shellCmdHistory: []}, `shell:${connId}:${dbName}`, forceNew);
     }
 
     function handleOpenGridfs({connId, dbName}) {
@@ -361,7 +364,7 @@ export default function App() {
                     }
                 },
                 {label: t('app.menu.manageUsers'), onClick: () => handleOpenDatabaseUsers(target)},
-                {label: t('app.menu.openShell'), onClick: () => handleOpenShell(target)},
+                {label: t('app.menu.openShell'), onClick: () => handleOpenShell({...target, forceNew: true})},
                 {label: t('app.menu.openGridfs'), onClick: () => handleOpenGridfs(target)},
                 {separator: true},
                 {
