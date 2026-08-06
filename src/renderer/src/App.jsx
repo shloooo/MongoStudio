@@ -38,6 +38,8 @@ export default function App() {
     const [status, setStatus] = useState(null); // { type: 'info' | 'error', message } | null
     const statusPresence = usePresence(status, 180);
     const [closingTabIds, setClosingTabIds] = useState(new Set());
+    const [draggedTabId, setDraggedTabId] = useState(null);
+    const [dragOverTabId, setDragOverTabId] = useState(null);
     const [reloadSignal, setReloadSignal] = useState(0);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, items }
     const [copyDialogSource, setCopyDialogSource] = useState(null);
@@ -240,6 +242,19 @@ export default function App() {
                 const fallback = next[idx] || next[idx - 1] || next[0];
                 setActiveTabId(fallback ? fallback.id : null);
             }
+            return next;
+        });
+    }
+
+    function reorderTabs(draggedId, targetId) {
+        if (draggedId === targetId) return;
+        setTabs((prev) => {
+            const fromIdx = prev.findIndex((t) => t.id === draggedId);
+            const toIdx = prev.findIndex((t) => t.id === targetId);
+            if (fromIdx === -1 || toIdx === -1) return prev;
+            const next = [...prev];
+            const [moved] = next.splice(fromIdx, 1);
+            next.splice(toIdx, 0, moved);
             return next;
         });
     }
@@ -586,9 +601,31 @@ export default function App() {
                     <div className="collection-tab-bar">
                         {tabs.map((tab) => (
                             <div key={tab.id}
-                                 className={`collection-tab ${tab.id === activeTabId ? 'active' : ''} ${closingTabIds.has(tab.id) ? 'closing' : ''}`}
+                                 className={`collection-tab ${tab.id === activeTabId ? 'active' : ''} ${closingTabIds.has(tab.id) ? 'closing' : ''} ${draggedTabId === tab.id ? 'dragging' : ''} ${dragOverTabId === tab.id && draggedTabId !== tab.id ? 'drag-over' : ''}`}
                                  onClick={() => setActiveTabId(tab.id)}
-                                 title={tabTitle(tab)}>
+                                 title={tabTitle(tab)}
+                                 draggable
+                                 onDragStart={(e) => {
+                                     setDraggedTabId(tab.id);
+                                     e.dataTransfer.effectAllowed = 'move';
+                                 }}
+                                 onDragEnd={() => {
+                                     setDraggedTabId(null);
+                                     setDragOverTabId(null);
+                                 }}
+                                 onDragOver={(e) => {
+                                     e.preventDefault();
+                                     if (draggedTabId && draggedTabId !== tab.id) setDragOverTabId(tab.id);
+                                 }}
+                                 onDragLeave={() => {
+                                     setDragOverTabId((prev) => (prev === tab.id ? null : prev));
+                                 }}
+                                 onDrop={(e) => {
+                                     e.preventDefault();
+                                     if (draggedTabId) reorderTabs(draggedTabId, tab.id);
+                                     setDraggedTabId(null);
+                                     setDragOverTabId(null);
+                                 }}>
                                 <span className="collection-tab-label">{tabLabel(tab)}</span>
                                 <button className="collection-tab-close" onClick={(e) => {
                                     e.stopPropagation();

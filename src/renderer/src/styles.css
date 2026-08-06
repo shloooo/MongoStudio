@@ -1716,6 +1716,14 @@ input[type="checkbox"]:focus-visible {
     border-color: var(--glass-border);
 }
 
+.collection-tab.dragging {
+    opacity: 0.4;
+}
+
+.collection-tab.drag-over {
+    border-left: 2px solid var(--accent);
+}
+
 .collection-tab-db {
     opacity: 0.6;
 }
