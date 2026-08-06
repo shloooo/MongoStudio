@@ -153,12 +153,22 @@ select,
     -webkit-app-region: drag;
     border-bottom: 1px solid var(--glass-border);
     backdrop-filter: blur(var(--glass-blur-sm)) saturate(160%);
-    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(160%)
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(160%);
+    --titlebar-controls-width: 138px;
 }
 
 .titlebar-traffic-spacer {
     width: 76px;
     flex-shrink: 0;
+}
+
+.titlebar-end-spacer {
+    width: 76px;
+    flex-shrink: 0;
+}
+
+.titlebar.is-win .titlebar-end-spacer {
+    width: var(--titlebar-controls-width);
 }
 
 .titlebar-drag-region {
