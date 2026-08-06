@@ -85,14 +85,20 @@ function DatabaseNode({
                                onClick={(e) => e.stopPropagation()}
                                onChange={(e) => setSearch(e.target.value)}/>
                     )}
-                    {collections && collections.length === 0 && <div className="tree-empty">{t('sidebar.noCollections')}</div>}
+                    {collections && collections.length === 0 &&
+                        <div className="tree-empty">{t('sidebar.noCollections')}</div>}
                     {filtered && filtered.length === 0 && collections.length > 0 && (
                         <div className="tree-empty">{t('sidebar.noMatches')}</div>
                     )}
                     {filtered && filtered.map((c) => (
                         <div key={c.name}
                              className="tree-row leaf"
-                             onDoubleClick={() => onSelectCollection({connId, dbName, collection: c.name, forceNew: true})}
+                             onDoubleClick={() => onSelectCollection({
+                                 connId,
+                                 dbName,
+                                 collection: c.name,
+                                 forceNew: true
+                             })}
                              onContextMenu={(e) => {
                                  e.preventDefault();
                                  onCollectionContextMenu(e, {connId, dbName, collection: c.name});
@@ -167,7 +173,8 @@ function ConnectionNode({
                      e.preventDefault();
                      onConnectionContextMenu(e, conn);
                  }}>
-                <i className={`fa-solid fa-chevron-right twisty ${isOpen && expanded ? 'is-expanded' : ''}`} onClick={toggleExpand}/>
+                <i className={`fa-solid fa-chevron-right twisty ${isOpen && expanded ? 'is-expanded' : ''}`}
+                   onClick={toggleExpand}/>
                 <span className={`conn-dot ${isOpen ? 'online' : 'offline'}`}/>
                 {conn.color && (
                     <span className="conn-color-dot" style={{backgroundColor: connectionColorHex(conn.color)}}/>
@@ -179,14 +186,18 @@ function ConnectionNode({
                         <i className={`fa-solid ${isOpen ? 'fa-plug-circle-xmark' : 'fa-plug'}`}/>
                     </button>
                     {isOpen && (
-                        <button title={t('sidebar.refresh')} onClick={() => onRefresh(conn)}><i className="fa-solid fa-rotate"/></button>
+                        <button title={t('sidebar.refresh')} onClick={() => onRefresh(conn)}><i
+                            className="fa-solid fa-rotate"/></button>
                     )}
-                    <button title={t('sidebar.edit')} onClick={() => onEdit(conn)}><i className="fa-solid fa-pen"/></button>
+                    <button title={t('sidebar.edit')} onClick={() => onEdit(conn)}><i
+                        className="fa-solid fa-pen"/></button>
           <button title={t('sidebar.delete')}
                   className="delete-icon-btn"
                   onClick={handleDeleteClick}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4h12M6.5 4V2.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1V4M12.5 4l-.6 9.4a1 1 0 0 1-1 .9H5.1a1 1 0 0 1-1-.9L3.5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                  d="M2 4h12M6.5 4V2.5a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1V4M12.5 4l-.6 9.4a1 1 0 0 1-1 .9H5.1a1 1 0 0 1-1-.9L3.5 4"
+                  stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M6.5 7v4M9.5 7v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
             </svg>
           </button>

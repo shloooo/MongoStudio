@@ -125,22 +125,22 @@ export default function UserManagementTab({selection, mode = 'database', reloadS
                         </thead>
                         <tbody>
                         {users.map((u) => (
-                                    <tr key={`${u.db}.${u.user}`} onContextMenu={(e) => handleRowContextMenu(e, u)}>
-                                        <td className="col-user"><span className="user-name">{u.user}</span></td>
-                                        <td className="col-authdb"><code>{u.db}</code></td>
-                                        <td className="col-roles"><RoleChips roles={u.roles}/></td>
-                                        {isCollectionMode ? (
-                                            <>
-                                                <td className="col-granted"><ResourceChips resources={u.resources}/></td>
-                                                <td className="col-actions-list"><ActionChips actions={u.actions}/></td>
-                                            </>
-                                        ) : (
-                                            <td className="col-mechanisms">
-                                                <span className="muted-text">{(u.mechanisms || []).join(', ') || '—'}</span>
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
+                            <tr key={`${u.db}.${u.user}`} onContextMenu={(e) => handleRowContextMenu(e, u)}>
+                                <td className="col-user"><span className="user-name">{u.user}</span></td>
+                                <td className="col-authdb"><code>{u.db}</code></td>
+                                <td className="col-roles"><RoleChips roles={u.roles}/></td>
+                                {isCollectionMode ? (
+                                    <>
+                                        <td className="col-granted"><ResourceChips resources={u.resources}/></td>
+                                        <td className="col-actions-list"><ActionChips actions={u.actions}/></td>
+                                    </>
+                                ) : (
+                                    <td className="col-mechanisms">
+                                        <span className="muted-text">{(u.mechanisms || []).join(', ') || '—'}</span>
+                                    </td>
+                                )}
+                            </tr>
+                        ))}
                         {users.length === 0 && !loading && (
                             <tr>
                                 <td colSpan="4" className="tree-empty">{emptyText}</td>
@@ -182,16 +182,28 @@ function UsersTableSkeleton({isCollectionMode}) {
             <tbody>
             {[0, 1, 2, 3, 4, 5].map((i) => (
                 <tr key={i}>
-                    <td className="col-user"><div className="skeleton-line" style={{width: '90px', height: '12px'}}/></td>
-                    <td className="col-authdb"><div className="skeleton-line" style={{width: '60px', height: '12px'}}/></td>
-                    <td className="col-roles"><div className="skeleton-line" style={{width: '140px', height: '12px'}}/></td>
+                    <td className="col-user">
+                        <div className="skeleton-line" style={{width: '90px', height: '12px'}}/>
+                    </td>
+                    <td className="col-authdb">
+                        <div className="skeleton-line" style={{width: '60px', height: '12px'}}/>
+                    </td>
+                    <td className="col-roles">
+                        <div className="skeleton-line" style={{width: '140px', height: '12px'}}/>
+                    </td>
                     {isCollectionMode ? (
                         <>
-                            <td className="col-granted"><div className="skeleton-line" style={{width: '110px', height: '12px'}}/></td>
-                            <td className="col-actions-list"><div className="skeleton-line" style={{width: '160px', height: '12px'}}/></td>
+                            <td className="col-granted">
+                                <div className="skeleton-line" style={{width: '110px', height: '12px'}}/>
+                            </td>
+                            <td className="col-actions-list">
+                                <div className="skeleton-line" style={{width: '160px', height: '12px'}}/>
+                            </td>
                         </>
                     ) : (
-                        <td className="col-mechanisms"><div className="skeleton-line" style={{width: '80px', height: '12px'}}/></td>
+                        <td className="col-mechanisms">
+                            <div className="skeleton-line" style={{width: '80px', height: '12px'}}/>
+                        </td>
                     )}
                 </tr>
             ))}

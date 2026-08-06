@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {useTranslation, Trans} from 'react-i18next';
+import {Trans, useTranslation} from 'react-i18next';
 import {groupPrivilegesByResource, sameRole} from '../../lib/mongoPrivileges.js';
 import {useClosing} from '../../lib/useClosing.js';
 import Select from '../lib/Select.jsx';
@@ -192,7 +192,8 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                                 <button type="button" onClick={addRole}>{t('dialogs.userEditor.addRole')}</button>
                             </div>
                             <p className="hint-text">
-                                <Trans i18nKey="dialogs.userEditor.rolesHint" values={{admin: 'admin'}} components={{code: <code/>}}/>
+                                <Trans i18nKey="dialogs.userEditor.rolesHint" values={{admin: 'admin'}}
+                                       components={{code: <code/>}}/>
                             </p>
                             {roles.length === 0 ? (
                                 <div className="tree-empty">{t('dialogs.userEditor.noRoles')}</div>
@@ -227,7 +228,10 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
                                                     value={role.db}
                                                     onChange={(v) => updateRole(index, {db: v})}
                                                     options={[
-                                                        ...(!dbOptions.includes(role.db) ? [{value: role.db, label: role.db}] : []),
+                                                        ...(!dbOptions.includes(role.db) ? [{
+                                                            value: role.db,
+                                                            label: role.db
+                                                        }] : []),
                                                         ...dbOptions.map((db) => ({value: db, label: db}))
                                                     ]}
                                                 />
@@ -278,7 +282,8 @@ export default function UserEditorDialog({connId, authDb, username, onClose, onS
 
                 <div className="modal-actions">
                     <div className="spacer"/>
-                    <button type="button" onClick={() => requestClose()} disabled={saving}>{t('dialogs.common.cancel')}</button>
+                    <button type="button" onClick={() => requestClose()}
+                            disabled={saving}>{t('dialogs.common.cancel')}</button>
                     <button type="button" className="primary" onClick={handleSave} disabled={saving || loading}>
                         {saving ? t('dialogs.userEditor.saving') : isCreate ? t('dialogs.userEditor.createUser') : t('dialogs.userEditor.saveChanges')}
                     </button>

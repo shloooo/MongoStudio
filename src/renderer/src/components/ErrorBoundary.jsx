@@ -36,7 +36,8 @@ class ErrorBoundary extends React.Component {
                         isDev: !!info?.isDev
                     });
                 })
-                .catch(() => {});
+                .catch(() => {
+                });
         }
     }
 
@@ -68,7 +69,8 @@ class ErrorBoundary extends React.Component {
                 this.setState({copied: true});
                 setTimeout(() => this.setState({copied: false}), 2000);
             })
-            .catch(() => {});
+            .catch(() => {
+            });
     };
 
     render() {
@@ -79,9 +81,12 @@ class ErrorBoundary extends React.Component {
                 <div className="fatal-error-screen">
                     <div className="fatal-error-card">
                         <div className="fatal-error-icon">
-                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 9v4M12 17h.01M10.29 3.86l-8.18 14.18A2 2 0 0 0 3.82 21h16.36a2 2 0 0 0 1.71-2.96L13.71 3.86a2 2 0 0 0-3.42 0z"
-                                      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M12 9v4M12 17h.01M10.29 3.86l-8.18 14.18A2 2 0 0 0 3.82 21h16.36a2 2 0 0 0 1.71-2.96L13.71 3.86a2 2 0 0 0-3.42 0z"
+                                    stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+                                    strokeLinejoin="round"/>
                             </svg>
                         </div>
 
@@ -122,9 +127,11 @@ class ErrorBoundary extends React.Component {
                                 {copied ? t('dialogs.errorBoundary.copied') : t('dialogs.errorBoundary.copyDetails')}
                             </button>
                             {isDev ? (
-                                <button className="primary" onClick={this.handleReload}>{t('dialogs.errorBoundary.reload')}</button>
+                                <button className="primary"
+                                        onClick={this.handleReload}>{t('dialogs.errorBoundary.reload')}</button>
                             ) : (
-                                <button className="primary" onClick={this.handleRestart}>{t('dialogs.errorBoundary.restart')}</button>
+                                <button className="primary"
+                                        onClick={this.handleRestart}>{t('dialogs.errorBoundary.restart')}</button>
                             )}
                         </div>
                     </div>

@@ -4,8 +4,8 @@ import {useTranslation} from 'react-i18next';
 const ConfirmContext = createContext(null);
 const PromptContext = createContext(null);
 
-export function ConfirmProvider({ children }) {
-    const { t } = useTranslation();
+export function ConfirmProvider({children}) {
+    const {t} = useTranslation();
     const [state, setState] = useState(null);
     const resolverRef = useRef(null);
     const stateTokenRef = useRef(0);
@@ -36,7 +36,7 @@ export function ConfirmProvider({ children }) {
     function settle(result) {
         if (!state || state.closing) return;
         const token = stateTokenRef.current;
-        setState((s) => ({ ...s, closing: true }));
+        setState((s) => ({...s, closing: true}));
         setTimeout(() => {
             if (stateTokenRef.current !== token) return;
             setState(null);
@@ -69,7 +69,7 @@ export function ConfirmProvider({ children }) {
     function settlePrompt(result) {
         if (!promptState || promptState.closing) return;
         const token = promptTokenRef.current;
-        setPromptState((s) => ({ ...s, closing: true }));
+        setPromptState((s) => ({...s, closing: true}));
         setTimeout(() => {
             if (promptTokenRef.current !== token) return;
             setPromptState(null);
@@ -85,14 +85,16 @@ export function ConfirmProvider({ children }) {
             <PromptContext.Provider value={prompt}>
                 {children}
                 {state && (
-                    <div className={`modal-backdrop confirm-backdrop ${state.closing ? 'is-closing' : ''}`} onClick={() => settle(false)}>
+                    <div className={`modal-backdrop confirm-backdrop ${state.closing ? 'is-closing' : ''}`}
+                         onClick={() => settle(false)}>
                         <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
                             <h3>{state.title}</h3>
                             <p className="confirm-message">{state.message}</p>
                             <div className="modal-actions">
-                                <div className="spacer" />
+                                <div className="spacer"/>
                                 <button onClick={() => settle(false)}>{state.cancelLabel}</button>
-                                <button className={state.danger ? 'danger' : 'primary'} autoFocus onClick={() => settle(true)}>
+                                <button className={state.danger ? 'danger' : 'primary'} autoFocus
+                                        onClick={() => settle(true)}>
                                     {state.confirmLabel}
                                 </button>
                             </div>
@@ -100,7 +102,8 @@ export function ConfirmProvider({ children }) {
                     </div>
                 )}
                 {promptState && (
-                    <div className={`modal-backdrop confirm-backdrop ${promptState.closing ? 'is-closing' : ''}`} onClick={() => settlePrompt(null)}>
+                    <div className={`modal-backdrop confirm-backdrop ${promptState.closing ? 'is-closing' : ''}`}
+                         onClick={() => settlePrompt(null)}>
                         <div className="modal confirm-modal" onClick={(e) => e.stopPropagation()}>
                             <h3>{promptState.title}</h3>
                             <p className="confirm-message">{promptState.message}</p>
@@ -115,7 +118,7 @@ export function ConfirmProvider({ children }) {
                                 }}
                             />
                             <div className="modal-actions">
-                                <div className="spacer" />
+                                <div className="spacer"/>
                                 <button onClick={() => settlePrompt(null)}>{promptState.cancelLabel}</button>
                                 <button
                                     className="primary"

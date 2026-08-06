@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import UpdaterSection from './UpdaterSection.jsx';
 import Select from './lib/Select.jsx';
@@ -258,7 +258,8 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                                             ]}/>
                                 </div>
                                 <div className="settings-row">
-                                    <span className="settings-row-label">{t('settings.general.update-channel.heading')}</span>
+                                    <span
+                                        className="settings-row-label">{t('settings.general.update-channel.heading')}</span>
                                     <Select value={settings.updateChannel || 'stable'}
                                             onChange={updateUpdateChannel}
                                             options={[
@@ -277,7 +278,8 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                                                onChange={(e) => updateGlassIntensity(Number(e.target.value))}
                                                onMouseUp={(e) => commitGlassIntensity(Number(e.target.value))}
                                                onKeyUp={(e) => commitGlassIntensity(Number(e.target.value))}/>
-                                        <span className="settings-slider-value">{Math.round((settings.glassIntensity ?? 1) * 100)}%</span>
+                                        <span
+                                            className="settings-slider-value">{Math.round((settings.glassIntensity ?? 1) * 100)}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -302,13 +304,16 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                                 </div>
 
                                 <div className="settings-subsection">
-                                    <span className="settings-subsection-label">{t('settings.documentsTable.multiColumnSort')}</span>
+                                    <span
+                                        className="settings-subsection-label">{t('settings.documentsTable.multiColumnSort')}</span>
                                     <Toggle checked={settings.multiColumnSort} onChange={updateMultiColumnSort}/>
                                 </div>
 
                                 <div className="settings-subsection">
-                                    <span className="settings-subsection-label">{t('settings.history.showOnlyChanges')}</span>
-                                    <Toggle checked={settings.showHistoryChangesOnly} onChange={updateShowHistoryChangesOnly}/>
+                                    <span
+                                        className="settings-subsection-label">{t('settings.history.showOnlyChanges')}</span>
+                                    <Toggle checked={settings.showHistoryChangesOnly}
+                                            onChange={updateShowHistoryChangesOnly}/>
                                 </div>
                             </div>
                         )}
@@ -316,7 +321,8 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                         {activeCategory === 'security' && (
                             <div className="settings-section">
                                 <div className="settings-section-head">
-                                    <span className="settings-icon-badge"><i className="fa-solid fa-shield-halved"/></span>
+                                    <span className="settings-icon-badge"><i
+                                        className="fa-solid fa-shield-halved"/></span>
                                     <h3>{t('settings.security.heading')}</h3>
                                 </div>
                                 <p className="settings-section-desc">{t('settings.security.desc')}</p>
@@ -333,7 +339,8 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
 
                                 {vaultStatus.encryptionEnabled && !mode && (
                                     <div className="settings-row">
-                                        <span className="settings-row-label"><i className="fa-solid fa-lock" style={{color: 'var(--accent)'}}/> {t('settings.security.enabled')}</span>
+                                        <span className="settings-row-label"><i className="fa-solid fa-lock"
+                                                                                style={{color: 'var(--accent)'}}/> {t('settings.security.enabled')}</span>
                                         <div className="toolbar">
                                             <button onClick={() => {
                                                 resetForm();
@@ -351,16 +358,21 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
 
                                 {mode === 'setup' && (
                                     <form onSubmit={handleSetup} className="settings-form">
-                                        <label className="settings-form-label">{t('settings.security.newPassword')}</label>
-                                        <input type="password" placeholder={t('settings.security.placeholderMinChars')} value={newPw}
+                                        <label
+                                            className="settings-form-label">{t('settings.security.newPassword')}</label>
+                                        <input type="password" placeholder={t('settings.security.placeholderMinChars')}
+                                               value={newPw}
                                                onChange={(e) => setNewPw(e.target.value)} autoFocus/>
-                                        <label className="settings-form-label">{t('settings.security.confirmPassword')}</label>
-                                        <input type="password" placeholder={t('settings.security.placeholderRepeat')} value={confirmPw}
+                                        <label
+                                            className="settings-form-label">{t('settings.security.confirmPassword')}</label>
+                                        <input type="password" placeholder={t('settings.security.placeholderRepeat')}
+                                               value={confirmPw}
                                                onChange={(e) => setConfirmPw(e.target.value)}/>
                                         <p className="hint-text">{t('settings.security.hintSetup')}</p>
                                         <div className="modal-actions">
                                             <div className="spacer"/>
-                                            <button type="button" onClick={resetForm}>{t('settings.security.cancel')}</button>
+                                            <button type="button"
+                                                    onClick={resetForm}>{t('settings.security.cancel')}</button>
                                             <button type="submit" className="primary"
                                                     disabled={busy}>{busy ? t('settings.security.settingUp') : t('settings.security.enable')}</button>
                                         </div>
@@ -369,18 +381,25 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
 
                                 {mode === 'change' && (
                                     <form onSubmit={handleChange} className="settings-form">
-                                        <label className="settings-form-label">{t('settings.security.currentPassword')}</label>
-                                        <input type="password" placeholder={t('settings.security.placeholderCurrent')} value={currentPw}
+                                        <label
+                                            className="settings-form-label">{t('settings.security.currentPassword')}</label>
+                                        <input type="password" placeholder={t('settings.security.placeholderCurrent')}
+                                               value={currentPw}
                                                onChange={(e) => setCurrentPw(e.target.value)} autoFocus/>
-                                        <label className="settings-form-label">{t('settings.security.newPassword')}</label>
-                                        <input type="password" placeholder={t('settings.security.placeholderMinChars')} value={newPw}
+                                        <label
+                                            className="settings-form-label">{t('settings.security.newPassword')}</label>
+                                        <input type="password" placeholder={t('settings.security.placeholderMinChars')}
+                                               value={newPw}
                                                onChange={(e) => setNewPw(e.target.value)}/>
-                                        <label className="settings-form-label">{t('settings.security.confirmNewPassword')}</label>
-                                        <input type="password" placeholder={t('settings.security.placeholderRepeat')} value={confirmPw}
+                                        <label
+                                            className="settings-form-label">{t('settings.security.confirmNewPassword')}</label>
+                                        <input type="password" placeholder={t('settings.security.placeholderRepeat')}
+                                               value={confirmPw}
                                                onChange={(e) => setConfirmPw(e.target.value)}/>
                                         <div className="modal-actions">
                                             <div className="spacer"/>
-                                            <button type="button" onClick={resetForm}>{t('settings.security.cancel')}</button>
+                                            <button type="button"
+                                                    onClick={resetForm}>{t('settings.security.cancel')}</button>
                                             <button type="submit" className="primary"
                                                     disabled={busy}>{busy ? t('settings.security.changing') : t('settings.security.changeSubmit')}</button>
                                         </div>
@@ -389,13 +408,16 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
 
                                 {mode === 'disable' && (
                                     <form onSubmit={handleDisable} className="settings-form">
-                                        <label className="settings-form-label">{t('settings.security.currentPassword')}</label>
-                                        <input type="password" placeholder={t('settings.security.placeholderCurrent')} value={currentPw}
+                                        <label
+                                            className="settings-form-label">{t('settings.security.currentPassword')}</label>
+                                        <input type="password" placeholder={t('settings.security.placeholderCurrent')}
+                                               value={currentPw}
                                                onChange={(e) => setCurrentPw(e.target.value)} autoFocus/>
                                         <p className="hint-text">{t('settings.security.hintDisable')}</p>
                                         <div className="modal-actions">
                                             <div className="spacer"/>
-                                            <button type="button" onClick={resetForm}>{t('settings.security.cancel')}</button>
+                                            <button type="button"
+                                                    onClick={resetForm}>{t('settings.security.cancel')}</button>
                                             <button type="submit" className="danger"
                                                     disabled={busy}>{busy ? t('settings.security.removing') : t('settings.security.removeSubmit')}</button>
                                         </div>
@@ -407,13 +429,16 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                         {activeCategory === 'backup' && (
                             <div className="settings-section">
                                 <div className="settings-section-head">
-                                    <span className="settings-icon-badge"><i className="fa-solid fa-box-archive"/></span>
+                                    <span className="settings-icon-badge"><i
+                                        className="fa-solid fa-box-archive"/></span>
                                     <h3>{t('settings.backup.heading')}</h3>
                                 </div>
                                 <p className="settings-section-desc">{t('settings.backup.desc')}</p>
                                 <div className="update-toolbar">
-                                    <button onClick={handleExport}><i className="fa-solid fa-file-export"/> {t('settings.backup.export')}</button>
-                                    <button onClick={handleImport}><i className="fa-solid fa-file-import"/> {t('settings.backup.import')}</button>
+                                    <button onClick={handleExport}><i
+                                        className="fa-solid fa-file-export"/> {t('settings.backup.export')}</button>
+                                    <button onClick={handleImport}><i
+                                        className="fa-solid fa-file-import"/> {t('settings.backup.import')}</button>
                                 </div>
                             </div>
                         )}
@@ -423,7 +448,8 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                         {activeCategory === 'about' && (
                             <div className="settings-section">
                                 <div className="settings-section-head">
-                                    <span className="settings-icon-badge"><i className="fa-solid fa-circle-info"/></span>
+                                    <span className="settings-icon-badge"><i
+                                        className="fa-solid fa-circle-info"/></span>
                                     <h3>{t('settings.about.heading')}</h3>
                                 </div>
                                 <div className="settings-row">
@@ -434,7 +460,8 @@ export default function SettingsPage({connections, onImported, settingsSignal}) 
                                     <span className="settings-row-label">{t('settings.about.git')}</span>
                                     <span className="settings-row-value">
                                         {appInfo.commit ? appInfo.commit : t('settings.about.unknown')}
-                                        <span className="settings-row-value-child">    @ {appInfo.branch || t('settings.about.unknown')}</span>
+                                        <span
+                                            className="settings-row-value-child">    @ {appInfo.branch || t('settings.about.unknown')}</span>
                                     </span>
                                 </div>
                             </div>

@@ -15,7 +15,7 @@ function tabStorageKey(selection) {
     return `mongostudio.collectionTab.${selection.connId}.${selection.dbName}.${selection.collection}`;
 }
 
-export default function CollectionView({ selection, reloadSignal }) {
+export default function CollectionView({selection, reloadSignal}) {
     const {t} = useTranslation();
     const [tab, setTab] = useState(() => {
         const saved = localStorage.getItem(tabStorageKey(selection));
@@ -49,7 +49,8 @@ export default function CollectionView({ selection, reloadSignal }) {
                     <DocumentsTab selection={selection} reloadSignal={reloadSignal} filterRequest={filterRequest}/>
                 </div>
                 <div className={`tab-slot ${tab === 'Aggregation' ? '' : 'tab-slot-hidden'}`}>
-                    <AggregationTab selection={selection} reloadSignal={reloadSignal} onShowInDocuments={handleShowInDocuments}/>
+                    <AggregationTab selection={selection} reloadSignal={reloadSignal}
+                                    onShowInDocuments={handleShowInDocuments}/>
                 </div>
                 <div className={`tab-slot ${tab === 'Indexes' ? '' : 'tab-slot-hidden'}`}>
                     <IndexesTab selection={selection} reloadSignal={reloadSignal}/>

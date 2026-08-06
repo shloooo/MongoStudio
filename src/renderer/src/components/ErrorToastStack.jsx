@@ -29,10 +29,13 @@ export default function ErrorToastStack() {
                 <div key={toast.id} className="error-toast">
                     <span className="error-toast-icon">⚠</span>
                     <div className="error-toast-body">
-                        <div className="error-toast-title">{toast.source ? t('dialogs.errorToast.errorWithSource', {source: toast.source}) : t('dialogs.errorToast.error')}</div>
+                        <div
+                            className="error-toast-title">{toast.source ? t('dialogs.errorToast.errorWithSource', {source: toast.source}) : t('dialogs.errorToast.error')}</div>
                         <div className="error-toast-message">{toast.message}</div>
                     </div>
-                    <button className="error-toast-close" onClick={() => dismiss(toast.id)} title={t('dialogs.errorToast.dismiss')}>×</button>
+                    <button className="error-toast-close" onClick={() => dismiss(toast.id)}
+                            title={t('dialogs.errorToast.dismiss')}>×
+                    </button>
                 </div>
             ))}
         </div>

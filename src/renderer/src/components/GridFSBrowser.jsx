@@ -71,7 +71,11 @@ export default function GridFSBrowser({selection}) {
         const name = newBucketName.trim();
         if (!name) return;
         try {
-            await window.api.data.gridfsCreateBucket({connId: selection.connId, dbName: selection.dbName, bucketName: name});
+            await window.api.data.gridfsCreateBucket({
+                connId: selection.connId,
+                dbName: selection.dbName,
+                bucketName: name
+            });
             setShowNewBucket(false);
             setNewBucketName('fs');
             await loadBuckets(name);
@@ -88,7 +92,11 @@ export default function GridFSBrowser({selection}) {
         });
         if (!ok) return;
         try {
-            await window.api.data.gridfsDropBucket({connId: selection.connId, dbName: selection.dbName, bucketName: activeBucket});
+            await window.api.data.gridfsDropBucket({
+                connId: selection.connId,
+                dbName: selection.dbName,
+                bucketName: activeBucket
+            });
             setActiveBucket(null);
             setFiles(null);
             await loadBuckets();
@@ -212,10 +220,12 @@ export default function GridFSBrowser({selection}) {
                                     <td>{f.uploadDate ? new Date(f.uploadDate).toLocaleString() : '—'}</td>
                                     <td>{f.contentType || f.metadata?.contentType || '—'}</td>
                                     <td className="gridfs-actions-cell">
-                                        <button className="tiny-btn" disabled={downloadingId === idStr} onClick={() => handleDownload(f)}>
+                                        <button className="tiny-btn" disabled={downloadingId === idStr}
+                                                onClick={() => handleDownload(f)}>
                                             {downloadingId === idStr ? '…' : t('gridfs.download')}
                                         </button>
-                                        <button className="tiny-btn tiny-btn-danger-outline" onClick={() => handleDelete(f)}>
+                                        <button className="tiny-btn tiny-btn-danger-outline"
+                                                onClick={() => handleDelete(f)}>
                                             {t('dialogs.common.delete')}
                                         </button>
                                     </td>

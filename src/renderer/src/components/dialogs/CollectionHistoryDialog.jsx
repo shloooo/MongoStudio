@@ -34,7 +34,10 @@ function stableStringify(value) {
     const sortKeys = (val) => {
         if (Array.isArray(val)) return val.map(sortKeys);
         if (val && typeof val === 'object') {
-            return Object.keys(val).sort().reduce((acc, k) => { acc[k] = sortKeys(val[k]); return acc; }, {});
+            return Object.keys(val).sort().reduce((acc, k) => {
+                acc[k] = sortKeys(val[k]);
+                return acc;
+            }, {});
         }
         return val;
     };
@@ -103,7 +106,8 @@ function DocDiff({diff, t, onlyChanged}) {
                 <div key={field} className={`history-diff-field-row status-${status}`}>
                     <div className="history-diff-field-name">{field}</div>
                     <div className="history-diff-field-before">
-                        {hasBefore ? <pre>{formatValue(beforeVal)}</pre> : <span className="history-diff-empty">—</span>}
+                        {hasBefore ? <pre>{formatValue(beforeVal)}</pre> :
+                            <span className="history-diff-empty">—</span>}
                     </div>
                     <div className="history-diff-field-after">
                         {hasAfter ? <pre>{formatValue(afterVal)}</pre> : <span className="history-diff-empty">—</span>}
@@ -237,7 +241,8 @@ export default function CollectionHistoryDialog({selection, onClose, onUndone}) 
                 <div className="history-header-row">
                     <h3>{t('dialogs.history.title')}</h3>
                     <label className="history-only-changed-toggle">
-                        <input type="checkbox" checked={onlyChanged} onChange={(e) => handleToggleOnlyChanged(e.target.checked)}/>
+                        <input type="checkbox" checked={onlyChanged}
+                               onChange={(e) => handleToggleOnlyChanged(e.target.checked)}/>
                         {t('dialogs.history.onlyChanged')}
                     </label>
                 </div>
@@ -248,7 +253,8 @@ export default function CollectionHistoryDialog({selection, onClose, onUndone}) 
                 ) : (
                     <div className="history-list">
                         {entries.map((entry) => (
-                            <HistoryEntryRow key={entry.id} entry={entry} t={t} onUndo={handleUndo} undoingId={undoingId} onlyChanged={onlyChanged}/>
+                            <HistoryEntryRow key={entry.id} entry={entry} t={t} onUndo={handleUndo}
+                                             undoingId={undoingId} onlyChanged={onlyChanged}/>
                         ))}
                     </div>
                 )}

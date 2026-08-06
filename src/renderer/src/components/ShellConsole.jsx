@@ -42,8 +42,11 @@ export default function ShellConsole({selection, log, onLogChange, cmdHistory, o
         window.api.conn.listCollections(selection.connId, selection.dbName).then((cols) => {
             if (cancelled) return;
             setCollectionNames((cols || []).map((c) => (typeof c === 'string' ? c : c.name)));
-        }).catch(() => {});
-        return () => { cancelled = true; };
+        }).catch(() => {
+        });
+        return () => {
+            cancelled = true;
+        };
     }, [selection.connId, selection.dbName]);
 
     useEffect(() => {
@@ -167,7 +170,8 @@ export default function ShellConsole({selection, log, onLogChange, cmdHistory, o
                 )}
                 {log.map((entry, i) => (
                     <div key={i} className={`shell-log-entry shell-log-${entry.type}`}>
-                        {entry.type === 'input' ? <span className="shell-log-prompt shell-log-prompt-noselect">{'>'}</span> : null}
+                        {entry.type === 'input' ?
+                            <span className="shell-log-prompt shell-log-prompt-noselect">{'>'}</span> : null}
                         <pre>{entry.text}</pre>
                     </div>
                 ))}
@@ -193,7 +197,10 @@ export default function ShellConsole({selection, log, onLogChange, cmdHistory, o
                                 <div
                                     key={opt}
                                     className={`shell-autocomplete-item ${i === suggestion.activeIndex ? 'is-active' : ''}`}
-                                    onMouseDown={(e) => { e.preventDefault(); applySuggestion(opt); }}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        applySuggestion(opt);
+                                    }}
                                 >
                                     {opt}
                                 </div>

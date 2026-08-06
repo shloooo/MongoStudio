@@ -21,7 +21,10 @@ function buildUpdateDoc(parsedUpdate) {
     const plainKeys = keys.filter((k) => !k.startsWith('$'));
 
     if (opKeys.length && plainKeys.length) {
-        throw new Error(i18n.t('dialogs.bulkUpdate.errorMixedFields', {plainKeys: plainKeys.join(', '), opKeys: opKeys.join(', ')}));
+        throw new Error(i18n.t('dialogs.bulkUpdate.errorMixedFields', {
+            plainKeys: plainKeys.join(', '),
+            opKeys: opKeys.join(', ')
+        }));
     }
 
     if (opKeys.length) {
@@ -127,7 +130,8 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
             <div className="modal wide" onClick={(e) => e.stopPropagation()}>
                 <h3>{t('dialogs.bulkUpdate.title')}</h3>
                 <div className="wizard-steps">
-                    <span className={`wizard-step ${step === 1 ? 'active' : 'done'}`}>{t('dialogs.bulkUpdate.step1')}</span>
+                    <span
+                        className={`wizard-step ${step === 1 ? 'active' : 'done'}`}>{t('dialogs.bulkUpdate.step1')}</span>
                     <span className="wizard-step-sep">→</span>
                     <span className={`wizard-step ${step === 2 ? 'active' : ''}`}>{t('dialogs.bulkUpdate.step2')}</span>
                 </div>
@@ -149,7 +153,8 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                         <div className="modal-actions">
                             <div className="spacer"/>
                             <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
-                            <button className="primary" onClick={goToStep2} disabled={!idsParsed.ok}>{t('dialogs.bulkUpdate.continue')}</button>
+                            <button className="primary" onClick={goToStep2}
+                                    disabled={!idsParsed.ok}>{t('dialogs.bulkUpdate.continue')}</button>
                         </div>
                     </>
                 )}
@@ -171,13 +176,18 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                         {error && <div className="error-banner">{error}</div>}
                         {result && (
                             <div className="info-banner">
-                                {t('dialogs.bulkUpdate.result', {matched: result.matchedCount, modified: result.modifiedCount})}
+                                {t('dialogs.bulkUpdate.result', {
+                                    matched: result.matchedCount,
+                                    modified: result.modifiedCount
+                                })}
                             </div>
                         )}
                         <div className="modal-actions">
-                            <button onClick={() => setStep(1)} disabled={applying}>{t('dialogs.bulkUpdate.back')}</button>
+                            <button onClick={() => setStep(1)}
+                                    disabled={applying}>{t('dialogs.bulkUpdate.back')}</button>
                             <div className="spacer"/>
-                            <button onClick={() => requestClose()}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
+                            <button
+                                onClick={() => requestClose()}>{result ? t('dialogs.common.close') : t('dialogs.common.cancel')}</button>
                             {!result && (
                                 <button className="primary" onClick={handleApply}
                                         disabled={!updateParsed.ok || applying}>

@@ -45,7 +45,9 @@ export default function BackupDialog({connection, onClose}) {
         }).finally(() => {
             if (!cancelled) setLoadingDbTree(false);
         });
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, [connection.connId]);
 
     function formatCount(count) {
@@ -218,16 +220,20 @@ export default function BackupDialog({connection, onClose}) {
                                     return (
                                         <div key={db.name} className="backup-db-group">
                                             <div className="backup-db-header">
-                                                <button className="backup-db-collapse" onClick={() => toggleCollapsed(db.name)}>
+                                                <button className="backup-db-collapse"
+                                                        onClick={() => toggleCollapsed(db.name)}>
                                                     <i className={`fa-solid fa-chevron-right backup-db-chevron ${isCollapsed ? '' : 'is-open'}`}/>
                                                 </button>
                                                 <label className="sql-export-field-row backup-db-name-row">
                                                     <input type="checkbox"
                                                            checked={db.collections.length > 0 && selected.size === db.collections.length}
-                                                           ref={(el) => { if (el) el.indeterminate = selected.size > 0 && selected.size < db.collections.length; }}
+                                                           ref={(el) => {
+                                                               if (el) el.indeterminate = selected.size > 0 && selected.size < db.collections.length;
+                                                           }}
                                                            onChange={() => toggleDb(db.name)}/>
                                                     <span className="sql-export-field-row-name">{db.name}</span>
-                                                    <span className="sql-export-field-row-count">{selected.size}/{db.collections.length}</span>
+                                                    <span
+                                                        className="sql-export-field-row-count">{selected.size}/{db.collections.length}</span>
                                                 </label>
                                             </div>
                                             {!isCollapsed && (
@@ -237,7 +243,8 @@ export default function BackupDialog({connection, onClose}) {
                                                             <input type="checkbox" checked={selected.has(c.name)}
                                                                    onChange={() => toggleCollection(db.name, c.name)}/>
                                                             <span className="sql-export-field-row-name">{c.name}</span>
-                                                            <span className="sql-export-field-row-count">{formatCount(c.count)}</span>
+                                                            <span
+                                                                className="sql-export-field-row-count">{formatCount(c.count)}</span>
                                                         </label>
                                                     ))}
                                                 </div>
@@ -250,10 +257,12 @@ export default function BackupDialog({connection, onClose}) {
                         {!loadingDbTree && selectedCollectionCount() === 0 &&
                             <div className="error-banner">{t('dialogs.backup.noCollectionsSelected')}</div>}
 
-                        <button className="primary" onClick={handleCreateInternal} disabled={loadingDbTree || selectedCollectionCount() === 0}>
+                        <button className="primary" onClick={handleCreateInternal}
+                                disabled={loadingDbTree || selectedCollectionCount() === 0}>
                             <i className="fa-solid fa-floppy-disk"/> {t('dialogs.backup.createInternal')}
                         </button>
-                        <button onClick={handleCreateExternal} disabled={loadingDbTree || selectedCollectionCount() === 0}>
+                        <button onClick={handleCreateExternal}
+                                disabled={loadingDbTree || selectedCollectionCount() === 0}>
                             <i className="fa-solid fa-file-zipper"/> {t('dialogs.backup.createExternal')}
                         </button>
                         <button onClick={handleRestoreExternal}>

@@ -290,7 +290,8 @@ export default function UpdaterSection() {
                 <>
                     <div className="update-progress">
                         <div className="update-progress-bar-track">
-                            <div className="update-progress-bar-fill" style={{width: `${(progress.percent ?? 0).toFixed(1)}%`}}/>
+                            <div className="update-progress-bar-fill"
+                                 style={{width: `${(progress.percent ?? 0).toFixed(1)}%`}}/>
                         </div>
                         <div className="update-progress-meta">
                             <span>{(progress.percent ?? 0).toFixed(0)}%</span>

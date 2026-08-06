@@ -71,7 +71,7 @@ function HtmlReleaseNotes({html, className}) {
     );
 }
 
-export default function Markdown({ text, className }) {
+export default function Markdown({text, className}) {
     if (!text) return null;
 
     if (looksLikeHtml(text)) {
@@ -83,7 +83,7 @@ export default function Markdown({ text, className }) {
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    a: ({ href, children }) => (
+                    a: ({href, children}) => (
                         <a href={href}
                            onClick={(e) => {
                                e.preventDefault();
@@ -93,7 +93,8 @@ export default function Markdown({ text, className }) {
                            }}>
                             {children}
                         </a>
-                    )}}>
+                    )
+                }}>
                 {text}
             </ReactMarkdown>
         </div>

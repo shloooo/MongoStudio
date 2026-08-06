@@ -5,8 +5,8 @@ import {useTaskQueue} from '../lib/TaskQueueProvider.jsx';
 import {reportError} from '../../lib/errorBus.js';
 import Select from '../lib/Select.jsx';
 
-export default function CopyDatabaseDialog({ source, openConnections, onClose, onCopied }) {
-    const { t, i18n } = useTranslation();
+export default function CopyDatabaseDialog({source, openConnections, onClose, onCopied}) {
+    const {t, i18n} = useTranslation();
     const {closing, requestClose} = useClosing(onClose);
     const {enqueue, updateTaskProgress} = useTaskQueue();
     const [targetConnId, setTargetConnId] = useState('');
@@ -29,7 +29,9 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
         }).finally(() => {
             if (!cancelled) setLoadingCollections(false);
         });
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+        };
     }, [source.connId, source.dbName]);
 
     function toggleCollection(name) {
@@ -53,7 +55,10 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
     const currentConnection = openConnections.find((c) => c.id === source.connId);
     const connectionOptions = [
         ...(currentConnection
-            ? [{value: currentConnection.id, label: t('dialogs.copyDatabase.currentConnection', {name: currentConnection.name})}]
+            ? [{
+                value: currentConnection.id,
+                label: t('dialogs.copyDatabase.currentConnection', {name: currentConnection.name})
+            }]
             : []),
         ...otherConnections.map((c) => ({value: c.id, label: c.name}))
     ];
@@ -86,12 +91,15 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
 
         const label = t('dialogs.copyDatabase.taskLabel', {dbName: source.dbName, targetDb});
         const id = enqueue(task, label, {
-            onDone: () => { if (onCopied) onCopied(); },
+            onDone: () => {
+                if (onCopied) onCopied();
+            },
             onCancel: () => window.api.data.cancelCopy(requestId)
         });
 
         let bgQueue = [];
         let bgOverallCopied = 0;
+
         function reportProgress() {
             if (bgQueue.length === 0) return;
             const doneCount = bgQueue.filter((item) => item.status === 'done').length;
@@ -102,27 +110,42 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                 subitems: bgQueue
             });
         }
+
         const unsubscribeQueueProgress = window.api.data.onCopyProgress((payload) => {
             if (payload.requestId !== requestId) return;
             switch (payload.phase) {
                 case 'start':
-                    bgQueue = (payload.collections || []).map((name) => ({ name, status: 'pending', copied: 0, total: 0 }));
+                    bgQueue = (payload.collections || []).map((name) => ({
+                        name,
+                        status: 'pending',
+                        copied: 0,
+                        total: 0
+                    }));
                     bgOverallCopied = 0;
                     break;
                 case 'collection-start':
                     bgQueue = bgQueue.map((item) => item.name === payload.collection
-                        ? { ...item, status: 'active', total: payload.totalInCollection || 0 }
+                        ? {...item, status: 'active', total: payload.totalInCollection || 0}
                         : item);
                     break;
                 case 'progress':
                     bgQueue = bgQueue.map((item) => item.name === payload.collection
-                        ? { ...item, copied: payload.copiedInCollection || 0, total: payload.totalInCollection ?? item.total }
+                        ? {
+                            ...item,
+                            copied: payload.copiedInCollection || 0,
+                            total: payload.totalInCollection ?? item.total
+                        }
                         : item);
                     if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
                     break;
                 case 'collection-done':
                     bgQueue = bgQueue.map((item) => item.name === payload.collection
-                        ? { ...item, status: 'done', copied: payload.copiedInCollection ?? item.copied, total: payload.totalInCollection ?? item.total }
+                        ? {
+                            ...item,
+                            status: 'done',
+                            copied: payload.copiedInCollection ?? item.copied,
+                            total: payload.totalInCollection ?? item.total
+                        }
                         : item);
                     if (payload.copiedCount !== undefined) bgOverallCopied = payload.copiedCount;
                     break;
@@ -164,7 +187,7 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                         </div>
                         <div>
                             <label>{t('dialogs.copyDatabase.targetDatabaseName')}</label>
-                            <input value={targetDb} onChange={(e) => setTargetDb(e.target.value)} />
+                            <input value={targetDb} onChange={(e) => setTargetDb(e.target.value)}/>
                         </div>
                     </div>
                 )}
@@ -176,7 +199,8 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                 {connectionOptions.length > 0 && (
                     <>
                         <div className="sql-export-field-list-header sql-export-field-list-header--titled">
-                            <label className="sql-export-field-list-title">{t('dialogs.copyDatabase.collections')}</label>
+                            <label
+                                className="sql-export-field-list-title">{t('dialogs.copyDatabase.collections')}</label>
                             {!loadingCollections && collections.length > 0 && (
                                 <button className="tiny-btn" onClick={toggleAll}>
                                     {selected.size === collections.length ? t('dialogs.fieldExport.deselectAll') : t('dialogs.fieldExport.selectAll')}
@@ -189,7 +213,8 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                             <div className="sql-export-field-list">
                                 {collections.map((c) => (
                                     <label key={c.name} className="sql-export-field-row">
-                                        <input type="checkbox" checked={selected.has(c.name)} onChange={() => toggleCollection(c.name)} />
+                                        <input type="checkbox" checked={selected.has(c.name)}
+                                               onChange={() => toggleCollection(c.name)}/>
                                         <span className="sql-export-field-row-name">{c.name}</span>
                                         <span className="sql-export-field-row-count">{formatCount(c.count)}</span>
                                     </label>
@@ -202,9 +227,10 @@ export default function CopyDatabaseDialog({ source, openConnections, onClose, o
                 {error && <div className="error-banner">{error}</div>}
 
                 <div className="modal-actions">
-                    <div className="spacer" />
+                    <div className="spacer"/>
                     <button onClick={() => requestClose()}>{t('dialogs.common.cancel')}</button>
-                    <button className="primary" onClick={handleCopy} disabled={connectionOptions.length === 0 || loadingCollections || !targetDb || isSameLocation || selected.size === 0}>
+                    <button className="primary" onClick={handleCopy}
+                            disabled={connectionOptions.length === 0 || loadingCollections || !targetDb || isSameLocation || selected.size === 0}>
                         {t('dialogs.copyDatabase.copy')}
                     </button>
                 </div>

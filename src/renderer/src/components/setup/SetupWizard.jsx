@@ -88,7 +88,18 @@ function AppearanceStep({t, theme, onSelect}) {
     );
 }
 
-function SecurityStep({t, encryption, onSelectEncryption, passphrase, onPassphraseChange, confirmPassphrase, onConfirmPassphraseChange, error, onSubmit, busy}) {
+function SecurityStep({
+                          t,
+                          encryption,
+                          onSelectEncryption,
+                          passphrase,
+                          onPassphraseChange,
+                          confirmPassphrase,
+                          onConfirmPassphraseChange,
+                          error,
+                          onSubmit,
+                          busy
+                      }) {
     const [showPassphrase, setShowPassphrase] = useState(false);
     const passphraseType = showPassphrase ? 'text' : 'password';
 
@@ -240,9 +251,15 @@ export default function SetupWizard({onComplete}) {
                             encryption={encryption}
                             onSelectEncryption={handleEncryptionSelect}
                             passphrase={passphrase}
-                            onPassphraseChange={(v) => { setPassphrase(v); setError(''); }}
+                            onPassphraseChange={(v) => {
+                                setPassphrase(v);
+                                setError('');
+                            }}
                             confirmPassphrase={confirmPassphrase}
-                            onConfirmPassphraseChange={(v) => { setConfirmPassphrase(v); setError(''); }}
+                            onConfirmPassphraseChange={(v) => {
+                                setConfirmPassphrase(v);
+                                setError('');
+                            }}
                             error={error}
                             onSubmit={handleFinish}
                             busy={busy}
