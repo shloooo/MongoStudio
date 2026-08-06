@@ -1,7 +1,9 @@
 {
   "app": {
     "emptyState": {
-      "body": "Wähle eine Verbindung um zu starten."
+      "body": "Wähle eine Verbindung um zu starten.",
+      "newConnection": "Neue Verbindung",
+      "lastUsed": "Zuletzt verwendet"
     },
     "tabs": {
       "settings": "Einstellungen"

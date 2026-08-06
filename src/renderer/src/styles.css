@@ -524,6 +524,72 @@ select,
     margin-bottom: 2px;
 }
 
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    background: var(--accent-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.empty-state-icon i {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.empty-state-cta {
+    margin-top: 16px;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.empty-state-cta:hover {
+    background: var(--accent-hover);
+}
+
+.empty-state-last-conn {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.empty-state-last-conn:hover {
+    color: var(--text-secondary);
+    border-color: var(--glass-border-strong);
+}
+
+.empty-state-last-conn i {
+    font-size: 11px;
+}
+
+.empty-state-last-conn-text {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.empty-state-last-conn-name {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
 .collection-view {
     display: flex;
     flex-direction: column;

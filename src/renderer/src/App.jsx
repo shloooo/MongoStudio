@@ -547,6 +547,9 @@ export default function App() {
     }
 
     const contentTabs = tabs.filter((t) => t.kind !== 'settings');
+    const lastUsedConnection = connections
+        .filter((c) => c.lastUsedAt)
+        .sort((a, b) => b.lastUsedAt - a.lastUsedAt)[0] || null;
 
     if (setupNeeded === null) {
         return null;
@@ -642,8 +645,25 @@ export default function App() {
                         <div
                             className={`tab-panel ${activeTabId !== 'settings-tab' && contentTabs.length === 0 ? 'tab-panel-active' : ''}`}>
                             <div className="empty-state">
+                                <div className="empty-state-icon">
+                                    <i className="fa-solid fa-database"/>
+                                </div>
                                 <h2>MongoStudio</h2>
                                 <p>{t('app.emptyState.body')}</p>
+                                <button className="empty-state-cta" onClick={() => setDialogState({open: true, editing: null})}>
+                                    {t('app.emptyState.newConnection')}
+                                </button>
+                                {lastUsedConnection && (
+                                    <button className="empty-state-last-conn" onClick={() => {
+                                        if (!openConnIds.has(lastUsedConnection.id)) handleToggleConnection(lastUsedConnection);
+                                    }}>
+                                        <i className="fa-solid fa-clock-rotate-left"/>
+                                        <span className="empty-state-last-conn-text">
+                                            <span className="empty-state-last-conn-label">{t('app.emptyState.lastUsed')}</span>
+                                            <span className="empty-state-last-conn-name">{lastUsedConnection.name}</span>
+                                        </span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                         {contentTabs.map((tab) => (

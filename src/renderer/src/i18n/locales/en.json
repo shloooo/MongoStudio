@@ -1,7 +1,9 @@
 {
   "app": {
     "emptyState": {
-      "body": "Select a connection to get started."
+      "body": "Select a connection to get started.",
+      "newConnection": "New connection",
+      "lastUsed": "Last used"
     },
     "tabs": {
       "settings": "Settings"
