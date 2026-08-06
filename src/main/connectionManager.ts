@@ -21,6 +21,7 @@ export interface ConnectionConfig {
     useSsh?: boolean;
     srv?: boolean;
     ssh: SshConfig;
+    lastUsedAt?: number;
 }
 
 const activeClients = new Map<string, MongoClient>();
@@ -102,7 +103,7 @@ export function registerConnectionHandlers(ipcMain: IpcMain, store: SecureStore)
         const conns = store.get('connections', []);
         if (!conn.id) conn.id = crypto.randomUUID();
         const idx = conns.findIndex((c: ConnectionConfig) => c.id === conn.id);
-        if (idx >= 0) conns[idx] = conn;
+        if (idx >= 0) conns[idx] = {...conns[idx], ...conn};
         else conns.push(conn);
         store.set('connections', conns);
         return conn;
@@ -146,6 +147,12 @@ export function registerConnectionHandlers(ipcMain: IpcMain, store: SecureStore)
             await client.connect();
             activeClients.set(conn.id, client);
             if (tunnel) activeTunnels.set(conn.id, tunnel);
+            const conns = store.get('connections', []);
+            const idx = conns.findIndex((c: ConnectionConfig) => c.id === conn.id);
+            if (idx >= 0) {
+                conns[idx] = {...conns[idx], lastUsedAt: Date.now()};
+                store.set('connections', conns);
+            }
             return {ok: true};
         } catch (err) {
             return {ok: false, error: describeError(err)};
