@@ -116,12 +116,13 @@ const CONSTRUCTORS = {
   Timestamp: (args) => new Timestamp({ t: Number(args[0]) || 0, i: Number(args[1]) || 0 }),
   BinData: (args) => new Binary(Buffer.from(String(args[1] ?? ''), 'base64'), Number(args[0]) || 0),
   DBRef: (args) => {
-    const [namespace, oid, db] = args;
-    if (typeof namespace === 'string' && namespace.includes('.') && db === undefined) {
-      const [dbName, ...rest] = namespace.split('.');
-      return new DBRef(rest.join('.'), oid, dbName);
-    }
-    return new DBRef(namespace, oid, db);
+    const [collection, oid] = args;
+    const ref = Object.create(DBRef.prototype);
+    ref.collection = collection;
+    ref.oid = oid;
+    ref.db = undefined;
+    ref.fields = {};
+    return ref;
   },
   MinKey: () => new MinKey(),
   MaxKey: () => new MaxKey(),

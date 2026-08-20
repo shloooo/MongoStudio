@@ -1,4 +1,4 @@
-import {EJSON} from 'bson';
+import {EJSON, DBRef} from 'bson';
 import fs from 'node:fs';
 import path from 'node:path';
 import {BrowserWindow, dialog, type IpcMain, type IpcMainInvokeEvent} from 'electron';
@@ -12,11 +12,35 @@ import {
   markUndone,
   serializeDocs
 } from './historyStore.js';
+import log from "electron-log";
+
+// DBRef should only ever carry collection + target, never a separate db.
+// EJSON.parse rebuilds DBRef via `new DBRef($ref, $id, $db)`, which splits any
+// "." in $ref into db+collection — fold db back into collection so the full
+// qualified name always stays a single $ref string, regardless of how the
+// value reached this point (fresh parse, stored document, history undo).
+function normalizeDBRefs(node: any): any {
+  if (node instanceof DBRef) {
+    if (node.db) {
+      node.collection = `${node.db}.${node.collection}`;
+      node.db = undefined;
+    }
+    return node;
+  }
+  if (Array.isArray(node)) {
+    for (const item of node) normalizeDBRefs(item);
+    return node;
+  }
+  if (node !== null && typeof node === 'object') {
+    for (const key of Object.keys(node)) normalizeDBRefs(node[key]);
+  }
+  return node;
+}
 
 function parseEjson(input: any): any {
   if (input === undefined || input === null || input === '') return {};
-  if (typeof input === 'object') return input;
-  return EJSON.parse(input);
+  if (typeof input === 'object') return normalizeDBRefs(input);
+  return normalizeDBRefs(EJSON.parse(input));
 }
 
 export function registerDataHandlers(ipcMain: IpcMain): void {
@@ -79,6 +103,11 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
         after: serializeDocs(after)
       });
     }
+
+    log.info(JSON.stringify(u));
+    log.info('----')
+    log.info(JSON.stringify(result));
+
     return {
       matchedCount: result.matchedCount,
       modifiedCount: result.modifiedCount,
