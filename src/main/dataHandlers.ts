@@ -103,11 +103,6 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
         after: serializeDocs(after)
       });
     }
-
-    log.info(JSON.stringify(u));
-    log.info('----')
-    log.info(JSON.stringify(result));
-
     return {
       matchedCount: result.matchedCount,
       modifiedCount: result.modifiedCount,
