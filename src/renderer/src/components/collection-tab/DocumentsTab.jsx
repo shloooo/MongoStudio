@@ -47,6 +47,7 @@ function InlineCellEditor({value, onCommit, onCancel}) {
 
     useEffect(() => {
         function handleClickOutside(e) {
+            if (e.target.closest('.custom-select-menu')) return;
             if (containerRef.current && !containerRef.current.contains(e.target)) {
                 onCancel();
             }
