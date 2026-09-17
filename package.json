@@ -17,7 +17,12 @@
     "dist": "yarn generate:gitinfo && yarn build:main && yarn build:renderer && electron-builder"
   },
   "dependencies": {
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/view": "^6.43.12",
+    "@uiw/react-codemirror": "^4.25.11",
     "bson": "^7.3.3",
+    "codemirror": "^6.0.2",
     "electron-log": "^5.4.4",
     "electron-updater": "^6.8.9",
     "i18next": "^26.4.2",
