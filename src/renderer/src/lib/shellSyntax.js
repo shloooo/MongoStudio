@@ -1,4 +1,18 @@
-import { ObjectId, DBRef, UUID, Long, Decimal128, Binary, Timestamp, MinKey, MaxKey, Int32, Double } from 'bson';
+import { ObjectId, DBRef, UUID, Long, Decimal128, Binary, Timestamp, MinKey, MaxKey, Int32, Double, EJSON } from 'bson';
+
+/**
+ * EJSON's relaxed mode (the default) renders Long/Int32/Decimal128 as plain
+ * JS numbers, which loses precision for 64-bit integers above 2^53. These
+ * wrappers force canonical mode everywhere the app talks to the backend or
+ * MongoDB, so a value like NumberLong("1550181416267153498") survives intact.
+ */
+export function ejsonStringify(value) {
+  return EJSON.stringify(value, undefined, undefined, { relaxed: false });
+}
+
+export function ejsonParse(text) {
+  return EJSON.parse(text, { relaxed: false });
+}
 
 // ---------------------------------------------------------------------------
 // Tokenizer

@@ -2,11 +2,11 @@ import React, {useEffect, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
 import {parseShellCommand} from '../lib/shellCommand.js';
-import {toShellText} from '../lib/shellSyntax.js';
+import {toShellText, ejsonStringify} from '../lib/shellSyntax.js';
 import {getSuggestions} from '../lib/shellAutocomplete.js';
 
 function serializeArgsForTransport(args) {
-    return (args || []).map((a) => EJSON.stringify(a));
+    return (args || []).map((a) => ejsonStringify(a));
 }
 
 function formatResult(result) {

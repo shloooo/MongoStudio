@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell, toShellText} from '../../lib/shellSyntax.js';
+import {parseShell, toShellText, ejsonStringify} from '../../lib/shellSyntax.js';
 import {bsonTypeOf, coerceToType, FIELD_TYPES, shortLabel, toEditableRaw} from '../../lib/bsonTypes.js';
 import DocumentEditor from './dialogs/DocumentEditor.jsx';
 import ContextMenu from '../lib/ContextMenu.jsx';
@@ -199,8 +199,8 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                filter: EJSON.stringify(filterValue),
-                sort: EJSON.stringify(sortValue),
+                filter: ejsonStringify(filterValue),
+                sort: ejsonStringify(sortValue),
                 limit: PAGE_SIZE,
                 skip: (overrides.page ?? page) * PAGE_SIZE
             });
@@ -306,7 +306,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                filter: EJSON.stringify({_id: id.value}),
+                filter: ejsonStringify({_id: id.value}),
                 connLabel: selection.connLabel
             });
         }
@@ -324,7 +324,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                filter: EJSON.stringify({_id: doc._id}),
+                filter: ejsonStringify({_id: doc._id}),
                 connLabel: selection.connLabel
             });
             runQuery();
@@ -347,7 +347,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 {separator: true},
                 {
                     label: t('documentActions.copyDocumentRaw'),
-                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))
+                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc, {relaxed: false})))
                 },
                 {label: t('documentActions.copyDocumentShell'), onClick: () => copyToClipboard(toShellText(doc))},
                 {separator: true},
@@ -379,7 +379,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 {
                     label: t('documentActions.copyFieldRaw'),
                     disabled: !hasValue,
-                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field])))
+                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc[field], {relaxed: false})))
                 },
                 {
                     label: t('documentActions.copyFieldShell'),
@@ -389,7 +389,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 {separator: true},
                 {
                     label: t('documentActions.copyDocumentRaw'),
-                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))
+                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc, {relaxed: false})))
                 },
                 {label: t('documentActions.copyDocumentShell'), onClick: () => copyToClipboard(toShellText(doc))},
                 {separator: true},
@@ -435,7 +435,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
     }
 
     async function persistFieldUpdate(doc, field, newValue) {
-        const idFilter = EJSON.stringify({_id: doc._id});
+        const idFilter = ejsonStringify({_id: doc._id});
         const update = newValue === undefined
             ? {$unset: {[field]: ''}}
             : {$set: {[field]: newValue}};
@@ -444,7 +444,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
             dbName: selection.dbName,
             collection: selection.collection,
             filter: idFilter,
-            update: EJSON.stringify(update),
+            update: ejsonStringify(update),
             connLabel: selection.connLabel
         });
     }
@@ -470,11 +470,11 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                doc: EJSON.stringify(value),
+                doc: ejsonStringify(value),
                 connLabel: selection.connLabel
             });
         } else {
-            const idFilter = EJSON.stringify({_id: value._id});
+            const idFilter = ejsonStringify({_id: value._id});
             const update = {...value};
             delete update._id;
             await window.api.data.updateOne({
@@ -482,7 +482,7 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
                 dbName: selection.dbName,
                 collection: selection.collection,
                 filter: idFilter,
-                update: EJSON.stringify({$set: update}),
+                update: ejsonStringify({$set: update}),
                 connLabel: selection.connLabel
             });
         }
@@ -518,8 +518,8 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
             connId: selection.connId,
             dbName: selection.dbName,
             collection: selection.collection,
-            filter: EJSON.stringify(filterValue),
-            update: EJSON.stringify({$unset: {[field]: ''}}),
+            filter: ejsonStringify(filterValue),
+            update: ejsonStringify({$unset: {[field]: ''}}),
             connLabel: selection.connLabel
         });
         runQuery();
@@ -531,8 +531,8 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
             connId: selection.connId,
             dbName: selection.dbName,
             collection: selection.collection,
-            filter: EJSON.stringify(filterValue),
-            update: EJSON.stringify({$set: {[field]: value}}),
+            filter: ejsonStringify(filterValue),
+            update: ejsonStringify({$set: {[field]: value}}),
             connLabel: selection.connLabel
         });
         setSetValueField(null);

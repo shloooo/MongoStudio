@@ -2,7 +2,7 @@ import React, {useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell} from '../../lib/shellSyntax.js';
+import {parseShell, ejsonStringify} from '../../lib/shellSyntax.js';
 import {reportError} from '../../lib/errorBus.js';
 import {useClosing} from '../../lib/useClosing.js';
 import i18n from '../../i18n/index.js';
@@ -111,8 +111,8 @@ export default function BulkUpdateDialog({selection, onClose, onApplied}) {
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                filter: EJSON.stringify({_id: {$in: ids}}),
-                update: EJSON.stringify(updateDoc),
+                filter: ejsonStringify({_id: {$in: ids}}),
+                update: ejsonStringify(updateDoc),
                 connLabel: selection.connLabel
             });
             setResult(res);

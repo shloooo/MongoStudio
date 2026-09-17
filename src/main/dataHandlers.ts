@@ -40,7 +40,7 @@ function normalizeDBRefs(node: any): any {
 function parseEjson(input: any): any {
   if (input === undefined || input === null || input === '') return {};
   if (typeof input === 'object') return normalizeDBRefs(input);
-  return normalizeDBRefs(EJSON.parse(input));
+  return normalizeDBRefs(EJSON.parse(input, {relaxed: false}));
 }
 
 function ejsonOut(input: any): any {

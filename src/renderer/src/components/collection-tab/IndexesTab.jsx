@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell} from '../../lib/shellSyntax.js';
+import {parseShell, ejsonStringify} from '../../lib/shellSyntax.js';
 
 export default function IndexesTab({selection, reloadSignal}) {
     const {t} = useTranslation();
@@ -35,8 +35,8 @@ export default function IndexesTab({selection, reloadSignal}) {
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                spec: EJSON.stringify(specValue),
-                options: EJSON.stringify(optionsValue)
+                spec: ejsonStringify(specValue),
+                options: ejsonStringify(optionsValue)
             });
             load();
         } catch (err) {

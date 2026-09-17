@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {EJSON} from 'bson';
-import {parseShell, toShellText, toShellTextCompact} from '../../lib/shellSyntax.js';
+import {parseShell, toShellText, toShellTextCompact, ejsonStringify} from '../../lib/shellSyntax.js';
 import ContextMenu from '../lib/ContextMenu.jsx';
 
 const TEMPLATE = `[
@@ -28,7 +28,7 @@ export default function AggregationTab({selection, reloadSignal, onShowInDocumen
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
-                pipeline: EJSON.stringify(pipeline)
+                pipeline: ejsonStringify(pipeline)
             });
             setResults(docs.map((d) => EJSON.parse(JSON.stringify(d), {relaxed: false})));
         } catch (err) {
@@ -63,7 +63,7 @@ export default function AggregationTab({selection, reloadSignal, onShowInDocumen
             items: [
                 {
                     label: t('documentActions.copyDocumentRaw'),
-                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc)))
+                    onClick: () => copyToClipboard(JSON.stringify(EJSON.serialize(doc, {relaxed: false})))
                 },
                 {label: t('documentActions.copyDocumentShell'), onClick: () => copyToClipboard(toShellText(doc))},
                 {separator: true},
