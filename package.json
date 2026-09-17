@@ -20,6 +20,7 @@
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/language": "^6.12.4",
     "@codemirror/view": "^6.43.12",
+    "@lezer/highlight": "^1.2.3",
     "@uiw/react-codemirror": "^4.25.11",
     "bson": "^7.3.3",
     "codemirror": "^6.0.2",

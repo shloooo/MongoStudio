@@ -1,9 +1,10 @@
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Trans, useTranslation} from 'react-i18next';
 import {parseShell, toShellText} from '../../../lib/shellSyntax.js';
 import DocumentTree from '../DocumentTree.jsx';
 import ContextMenu from '../../lib/ContextMenu.jsx';
+import ShellCodeEditor from '../../lib/ShellCodeEditor.jsx';
 
 export default function DocumentEditor({doc, onSave, onClose, defaultMode}) {
     const {t} = useTranslation();
@@ -17,7 +18,6 @@ export default function DocumentEditor({doc, onSave, onClose, defaultMode}) {
     const [showFindReplace, setShowFindReplace] = useState(false);
     const [findText, setFindText] = useState('');
     const [replaceText, setReplaceText] = useState('');
-    const textareaRef = useRef(null);
     const [nodeContextMenu, setNodeContextMenu] = useState(null);
 
     const rawParsed = useMemo(() => {
@@ -147,12 +147,10 @@ export default function DocumentEditor({doc, onSave, onClose, defaultMode}) {
                                       onNodeContextMenu={handleNodeContextMenu}/>
                     </div>
                 ) : (
-                    <textarea
-                        ref={textareaRef}
-                        className={`json-editor ${!rawParsed.ok ? 'has-error' : ''}`}
+                    <ShellCodeEditor
                         value={rawText}
-                        onChange={(e) => setRawText(e.target.value)}
-                        spellCheck={false}
+                        onChange={setRawText}
+                        hasError={!rawParsed.ok}
                         rows={20}
                     />
                 )}

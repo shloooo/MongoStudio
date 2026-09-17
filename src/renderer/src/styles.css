@@ -1687,6 +1687,37 @@ input[type="checkbox"]:focus-visible {
     box-shadow: 0 0 0 3px var(--danger-dim);
 }
 
+.shell-code-editor {
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: var(--field-bg);
+    width: 100%;
+}
+
+.shell-code-editor.has-error {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-dim);
+}
+
+.shell-code-editor:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.shell-code-editor.has-error:focus-within {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-dim);
+}
+
+.shell-code-editor .cm-editor {
+    height: 100%;
+}
+
+.shell-code-editor .cm-scroller {
+    border-radius: var(--radius-sm);
+}
+
 .aggregation-tab {
     flex-direction: row;
     gap: 18px;
