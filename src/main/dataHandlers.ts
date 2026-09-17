@@ -989,7 +989,7 @@ async function copyCollectionDocs(
   let batch: any[] = [];
   let copiedCount = 0;
   while (await cursor.hasNext()) {
-    batch.push(project(await cursor.next()));
+    batch.push(normalizeDBRefs(project(await cursor.next())));
     if (batch.length >= COPY_BATCH_SIZE) {
       if (isCancelled && isCancelled()) throw new CopyCancelledError();
       const result = await targetColl.insertMany(batch, {ordered: false});
