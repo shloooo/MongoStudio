@@ -43,6 +43,10 @@ function parseEjson(input: any): any {
   return normalizeDBRefs(EJSON.parse(input));
 }
 
+function ejsonOut(input: any): any {
+  return EJSON.serialize(input, {relaxed: false});
+}
+
 export function registerDataHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('data:find', async (event, {connId, dbName, collection, filter, sort, projection, limit, skip}) => {
     const client = getClient(connId);
@@ -56,7 +60,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     cursor = cursor.limit(Math.min(Number(limit) || 100, 5000));
     const docs = await cursor.toArray();
     const count = await coll.countDocuments(q);
-    return {docs: EJSON.serialize(docs), totalCount: count};
+    return {docs: ejsonOut(docs), totalCount: count};
   });
 
   ipcMain.handle('data:aggregate', async (event, {connId, dbName, collection, pipeline}) => {
@@ -65,7 +69,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     const p = parseEjson(pipeline);
     if (!Array.isArray(p)) throw new Error('Pipeline muss ein Array sein');
     const docs = await coll.aggregate(p, {allowDiskUse: true}).toArray();
-    return EJSON.serialize(docs);
+    return ejsonOut(docs);
   });
 
   ipcMain.handle('data:insertOne', async (event, {connId, dbName, collection, doc, connLabel, skipHistory}) => {
@@ -82,7 +86,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
         after: serializeDocs([inserted])
       });
     }
-    return {insertedId: EJSON.serialize(result.insertedId)};
+    return {insertedId: ejsonOut(result.insertedId)};
   });
 
   ipcMain.handle('data:updateOne', async (event, {connId, dbName, collection, filter, update, upsert, connLabel, skipHistory}) => {
@@ -106,7 +110,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     return {
       matchedCount: result.matchedCount,
       modifiedCount: result.modifiedCount,
-      upsertedId: EJSON.serialize(result.upsertedId)
+      upsertedId: ejsonOut(result.upsertedId)
     };
   });
 
@@ -194,7 +198,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
       }
       if (root.name === 'stats') {
         const stats = await db.stats();
-        return {type: 'value', value: EJSON.serialize(stats)};
+        return {type: 'value', value: ejsonOut(stats)};
       }
       throw new Error(`Unsupported db-level method "${root.name}"`);
     }
@@ -205,24 +209,24 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
       case 'find': {
         const cursor = applyChain(coll.find(args[0] || {}, {projection: args[1]}));
         const docs = await cursor.limit(1000).toArray();
-        return {type: 'documents', value: EJSON.serialize(docs)};
+        return {type: 'documents', value: ejsonOut(docs)};
       }
       case 'findOne': {
         const doc = await coll.findOne(args[0] || {}, {projection: args[1]});
-        return {type: 'value', value: doc ? EJSON.serialize(doc) : null};
+        return {type: 'value', value: doc ? ejsonOut(doc) : null};
       }
       case 'insertOne': {
         const result = await coll.insertOne(args[0]);
         return {
           type: 'value',
-          value: EJSON.serialize({insertedId: result.insertedId, acknowledged: result.acknowledged})
+          value: ejsonOut({insertedId: result.insertedId, acknowledged: result.acknowledged})
         };
       }
       case 'insertMany': {
         const result = await coll.insertMany(args[0] || []);
         return {
           type: 'value',
-          value: EJSON.serialize({insertedCount: result.insertedCount, insertedIds: result.insertedIds})
+          value: ejsonOut({insertedCount: result.insertedCount, insertedIds: result.insertedIds})
         };
       }
       case 'updateOne': {
@@ -232,7 +236,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
           value: {
             matchedCount: result.matchedCount,
             modifiedCount: result.modifiedCount,
-            upsertedId: result.upsertedId ? EJSON.serialize(result.upsertedId) : null
+            upsertedId: result.upsertedId ? ejsonOut(result.upsertedId) : null
           }
         };
       }
@@ -256,7 +260,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
         if (!Array.isArray(args[0])) throw new Error('aggregate() expects a pipeline array');
         const cursor = coll.aggregate(args[0], {allowDiskUse: true});
         const docs = await cursor.limit(1000).toArray();
-        return {type: 'documents', value: EJSON.serialize(docs)};
+        return {type: 'documents', value: ejsonOut(docs)};
       }
       case 'createIndex': {
         const name = await coll.createIndex(args[0] || {}, args[1] || {});
@@ -264,7 +268,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
       }
       case 'getIndexes': {
         const idx = await coll.indexes();
-        return {type: 'value', value: EJSON.serialize(idx)};
+        return {type: 'value', value: ejsonOut(idx)};
       }
       case 'drop': {
         const result = await coll.drop();
@@ -272,7 +276,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
       }
       case 'distinct': {
         const values = await coll.distinct(args[0], args[1] || {});
-        return {type: 'value', value: EJSON.serialize(values)};
+        return {type: 'value', value: ejsonOut(values)};
       }
       default:
         throw new Error(`Unsupported method "${root.name}"`);
@@ -322,7 +326,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
           const hasAfter = Object.prototype.hasOwnProperty.call(afterDoc, field);
           const beforeVal = hadBefore ? beforeDoc[field] : undefined;
           const afterVal = hasAfter ? afterDoc[field] : undefined;
-          if (JSON.stringify(EJSON.serialize({v: beforeVal})) === JSON.stringify(EJSON.serialize({v: afterVal}))) continue;
+          if (JSON.stringify(ejsonOut({v: beforeVal})) === JSON.stringify(ejsonOut({v: afterVal}))) continue;
           if (hadBefore) set[field] = beforeVal;
           else unset[field] = '';
         }
@@ -460,7 +464,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     let totalCount = 0;
     const perCollection = [];
     for (const c of collections) {
-      const docs = EJSON.serialize(await db.collection(c.name).find({}).toArray());
+      const docs = ejsonOut(await db.collection(c.name).find({}).toArray());
       const ext = format === 'csv' ? 'csv' : 'json';
       const filePath = path.join(targetDir, `${c.name}.${ext}`);
       if (format === 'csv') {
@@ -624,7 +628,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('data:listCollectionFields', async (event, {connId, dbName, collection}) => {
     const client = getClient(connId);
-    const sample = EJSON.serialize(await client.db(dbName).collection(collection).find({}).limit(200).toArray()) as any as any[];
+    const sample = ejsonOut(await client.db(dbName).collection(collection).find({}).limit(200).toArray()) as any as any[];
     const fields = new Set<string>();
     for (const doc of sample) Object.keys(doc || {}).forEach((k) => fields.add(k));
     return Array.from(fields).sort();
@@ -632,7 +636,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('data:exportCollection', async (event, {connId, dbName, collection, format, fields}) => {
     const client = getClient(connId);
-    const allDocs = EJSON.serialize(await client.db(dbName).collection(collection).find({}).toArray()) as any as any[];
+    const allDocs = ejsonOut(await client.db(dbName).collection(collection).find({}).toArray()) as any as any[];
     const fieldSet: string[] | null = Array.isArray(fields) && fields.length ? fields : null;
     const docs = fieldSet
         ? allDocs.map((d) => {
@@ -666,13 +670,13 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('data:analyzeSqlExport', async (event, {connId, dbName, collection}) => {
     const client = getClient(connId);
-    const sample = EJSON.serialize(await client.db(dbName).collection(collection).find({}).limit(200).toArray()) as any as any[];
+    const sample = ejsonOut(await client.db(dbName).collection(collection).find({}).limit(200).toArray()) as any as any[];
     return analyzeFieldsForSql(sample);
   });
 
   ipcMain.handle('data:exportCollectionSql', async (event, {connId, dbName, collection, fields}) => {
     const client = getClient(connId);
-    const docs = EJSON.serialize(await client.db(dbName).collection(collection).find({}).toArray()) as any as any[];
+    const docs = ejsonOut(await client.db(dbName).collection(collection).find({}).toArray()) as any as any[];
     const win = BrowserWindow.getFocusedWindow();
     const {canceled, filePath} = await dialog.showSaveDialog(win!, {
       defaultPath: `${collection}.sql`,
@@ -822,7 +826,7 @@ export function registerDataHandlers(ipcMain: IpcMain): void {
     const client = getClient(connId);
     const filesColl = client.db(dbName).collection(`${bucketName}.files`);
     const files = await filesColl.find({}).sort({uploadDate: -1}).limit(1000).toArray();
-    return EJSON.serialize(files);
+    return ejsonOut(files);
   });
 
   ipcMain.handle('data:gridfs:upload', async (event, {connId, dbName, bucketName}) => {

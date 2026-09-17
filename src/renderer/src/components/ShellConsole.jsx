@@ -11,7 +11,7 @@ function serializeArgsForTransport(args) {
 
 function formatResult(result) {
     if (result.type === 'documents') {
-        const docs = result.value.map((d) => EJSON.deserialize(d));
+        const docs = result.value.map((d) => EJSON.deserialize(d, {relaxed: false}));
         if (docs.length === 0) return '[]';
         return docs.map((d) => toShellText(d)).join('\n');
     }
@@ -19,7 +19,7 @@ function formatResult(result) {
     if (value === null || value === undefined) return 'null';
     if (typeof value !== 'object') return String(value);
     try {
-        return toShellText(EJSON.deserialize(value));
+        return toShellText(EJSON.deserialize(value, {relaxed: false}));
     } catch {
         return JSON.stringify(value, null, 2);
     }

@@ -55,7 +55,7 @@ export default function GridFSBrowser({selection}) {
                 dbName: selection.dbName,
                 bucketName
             });
-            setFiles((result || []).map((f) => EJSON.deserialize(f)));
+            setFiles((result || []).map((f) => EJSON.deserialize(f, {relaxed: false})));
         } catch (err) {
             reportError(err.message, 'Load GridFS files');
         } finally {

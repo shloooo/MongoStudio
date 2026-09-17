@@ -30,7 +30,7 @@ export default function AggregationTab({selection, reloadSignal, onShowInDocumen
                 collection: selection.collection,
                 pipeline: EJSON.stringify(pipeline)
             });
-            setResults(docs.map((d) => EJSON.parse(JSON.stringify(d))));
+            setResults(docs.map((d) => EJSON.parse(JSON.stringify(d), {relaxed: false})));
         } catch (err) {
             setError(err.message);
         } finally {

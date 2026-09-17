@@ -16,7 +16,7 @@ const OP_LABEL_KEY = {
 
 function toPlain(doc) {
     try {
-        return EJSON.deserialize(doc);
+        return EJSON.deserialize(doc, {relaxed: false});
     } catch {
         return doc;
     }
