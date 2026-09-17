@@ -477,12 +477,20 @@ export default function DocumentsTab({selection, reloadSignal, filterRequest}) {
             const idFilter = ejsonStringify({_id: value._id});
             const update = {...value};
             delete update._id;
+            const original = modalDoc && modalDoc !== 'new' ? modalDoc : {};
+            const removedFields = Object.keys(original).filter(
+                (k) => k !== '_id' && !Object.prototype.hasOwnProperty.call(update, k)
+            );
+            const updateOp = {$set: update};
+            if (removedFields.length) {
+                updateOp.$unset = Object.fromEntries(removedFields.map((k) => [k, '']));
+            }
             await window.api.data.updateOne({
                 connId: selection.connId,
                 dbName: selection.dbName,
                 collection: selection.collection,
                 filter: idFilter,
-                update: ejsonStringify({$set: update}),
+                update: ejsonStringify(updateOp),
                 connLabel: selection.connLabel
             });
         }
