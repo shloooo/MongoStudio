@@ -26,6 +26,19 @@ export function bsonTypeOf(value) {
   return 'Unknown';
 }
 
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes}B`;
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let value = bytes / 1024;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex++;
+  }
+  const formatted = Math.round(value * 10) / 10;
+  return `${formatted}${units[unitIndex]}`;
+}
+
 /** Short, human label shown in table cells / tree rows for a value. */
 export function shortLabel(value) {
   const type = bsonTypeOf(value);
@@ -41,7 +54,7 @@ export function shortLabel(value) {
     case 'Date': return value.toISOString();
     case 'Long': return value.toString();
     case 'Decimal128': return value.toString();
-    case 'Binary': return `Binary(${value.sub_type})`;
+    case 'Binary': return `Binary ${formatBytes(value.length())}`;
     case 'Timestamp': return `Timestamp(${value.t}, ${value.i})`;
     case 'MinKey': return 'MinKey()';
     case 'MaxKey': return 'MaxKey()';
