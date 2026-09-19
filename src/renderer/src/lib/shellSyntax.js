@@ -1,5 +1,16 @@
 import { ObjectId, DBRef, UUID, Long, Decimal128, Binary, Timestamp, MinKey, MaxKey, Int32, Double, EJSON } from 'bson';
 
+// Buffer is a Node.js global and isn't available in the renderer's browser
+// context, so base64 payloads for BinData(...) are decoded with atob instead.
+function base64ToUint8Array(base64) {
+  const binaryStr = atob(base64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return bytes;
+}
+
 /**
  * EJSON's relaxed mode (the default) renders Long/Int32/Decimal128 as plain
  * JS numbers, which loses precision for 64-bit integers above 2^53. These
@@ -128,7 +139,7 @@ const CONSTRUCTORS = {
   NumberInt: (args) => new Int32(Number.parseInt(args[0], 10)),
   NumberDecimal: (args) => Decimal128.fromString(String(args[0])),
   Timestamp: (args) => new Timestamp({ t: Number(args[0]) || 0, i: Number(args[1]) || 0 }),
-  BinData: (args) => new Binary(Buffer.from(String(args[1] ?? ''), 'base64'), Number(args[0]) || 0),
+  BinData: (args) => new Binary(base64ToUint8Array(String(args[1] ?? '')), Number(args[0]) || 0),
   DBRef: (args) => {
     const [collection, oid] = args;
     const ref = Object.create(DBRef.prototype);
